@@ -1,5 +1,6 @@
 import numpy as np
 import torch
+import IPython
 
 from datasets import get_dataset_simple, GrowingNumpyDataSet
 from models import (
@@ -83,12 +84,18 @@ def train_epsilon_greedy(dataset, baseline_model, num_batches, batch_size,
             predictions = model.get_thresholded_predictions(batch_X, threshold)
             baseline_predictions = baseline_model.get_thresholded_predictions(batch_X, threshold)
 
-            epsilon_greedy_mask = torch.bernoulli(torch.ones(predictions.shape)*epsilon*eps_multiplier).bool().cuda()
+            if torch.cuda.is_available():
+                epsilon_greedy_mask = torch.bernoulli(torch.ones(predictions.shape)*epsilon*eps_multiplier).bool().cuda()
+            else:
+                epsilon_greedy_mask = torch.bernoulli(torch.ones(predictions.shape)*epsilon*eps_multiplier).bool()
+
             mask = torch.max(epsilon_greedy_mask,predictions)
 
             boolean_labels_y = batch_y.bool()
             accuracy = (torch.sum(mask*boolean_labels_y) +torch.sum( ~mask*~boolean_labels_y))*1.0/batch_size
-           
+            #IPython.embed()
+            #raise ValueError("aslkdfm")
+
             accuracy_baseline = (torch.sum(baseline_predictions*boolean_labels_y) +torch.sum( ~baseline_predictions*~boolean_labels_y))*1.0/batch_size
             instantaneous_regret = accuracy_baseline - accuracy
 
@@ -110,6 +117,7 @@ def train_epsilon_greedy(dataset, baseline_model, num_batches, batch_size,
                 
     print("Finished training epsilon-greedy model {}".format(epsilon))
     test_accuracy = evaluate_model(test_dataset, model, threshold).item()
+    print("Final model test accuracy {}".format(test_accuracy))
     return instantaneous_regrets, instantaneous_accuracies, test_accuracy
 
 
