@@ -133,6 +133,13 @@ class CorralHyperparam:
 
 
 
+
+
+class BalancingHyperParam:
+    
+
+
+
 def train_epsilon_greedy_modsel(dataset, baseline_model, num_batches, batch_size, 
     num_opt_steps, opt_batch_size, MLP = True, 
     representation_layer_size = 10, threshold = .5, epsilons = [.1, .05, .01],
