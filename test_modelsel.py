@@ -24,7 +24,7 @@ PLOT_EPSILON = True
 PLOT_MAHALANOBIS = True
 
 
-
+## What is the fractrion of rejected labels for each algorithm and each dataset. 
 dataset = "Adult" ## "Adult", "Bank", "German"
 num_batches = 2000
 epsilon = .1
@@ -262,7 +262,7 @@ if PLOT_EPSILON:
 	plt.legend(fontsize=8, loc="upper left")
 
 
-	plt.savefig("modsel_regret-epsilons_{}_{}.png".dataset(modselalgo,dataset))
+	plt.savefig("modsel_regret-epsilons_{}_{}.png".format(modselalgo,dataset))
 
 	plt.close("all")
 
@@ -343,7 +343,7 @@ if PLOT_MAHALANOBIS:
 
 
 
-	plt.savefig("modsel_regret-mahalanobis_{}.png".format(dataset))
+	plt.savefig("modsel_regret-mahalanobis_{} {}.png".format(modselalgo,dataset))
 	plt.close("all")
 
 
