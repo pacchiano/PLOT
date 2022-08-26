@@ -20,7 +20,7 @@ def process_results(results_list):
 
 USE_RAY = True
 
-PLOT_EPSILON = False
+PLOT_EPSILON = True
 PLOT_MAHALANOBIS = True
 
 
@@ -189,7 +189,7 @@ if PLOT_EPSILON:
 
 	probs =[x[-1] for x in epsilon_modsel_results]
 
-
+	color_index = 1
 
 	#IPython.embed()
 	mean_probs = np.mean(probs, 0)
@@ -202,11 +202,11 @@ if PLOT_EPSILON:
 		color_index+=1
 
 
-	plt.title("Probabilities evolution")
+	plt.title("Probabilities evolution {} {}".format(modselalgo, dataset))
 	plt.xlabel("Number of batches")
 	plt.legend(fontsize=8, loc="upper left")
 
-	plt.savefig("modsel_probabilities-epsilon.png")
+	plt.savefig("modsel_probabilities-epsilon_{}.png".format(dataset))
 
 	plt.close("all")
 	color_index = 0
@@ -254,7 +254,17 @@ if PLOT_EPSILON:
 
 
 
+	plt.title("Regrets {} {}".format(modselalgo, dataset))
+	plt.xlabel("Number of batches")
 
+	plt.ylabel("Regret")
+	# plt.legend(bbox_to_anchor=(1.05, 1), fontsize=8, loc="upper left")
+	plt.legend(fontsize=8, loc="upper left")
+
+
+	plt.savefig("modsel_regret-epsilons_{}_{}.png".dataset(modselalgo,dataset))
+
+	plt.close("all")
 
 
 if PLOT_MAHALANOBIS:
@@ -270,6 +280,7 @@ if PLOT_MAHALANOBIS:
 	mean_probs = np.mean(probs, 0)
 	std_probs = np.std(probs, 0)
 
+	color_index = 1
 	for i in range(len(alphas)):
 		plt.plot(Ts, mean_probs[:, i], color = colors[color_index], label = "alpha {}".format(alphas[i]))
 		plt.fill_between(Ts, mean_probs[:, i] - .5*std_probs[:, i], mean_probs[:, i] + .5*std_probs[:, i], color = colors[color_index], alpha = .2)
@@ -277,11 +288,11 @@ if PLOT_MAHALANOBIS:
 		color_index+=1
 
 
-	plt.title("Probabilities evolution")
+	plt.title("Probabilities evolution {} {}".format(modselalgo,dataset))
 	plt.xlabel("Number of batches")
 	plt.legend(fontsize=8, loc="upper left")
 
-	plt.savefig("modsel_probabilities-mahalanobis.png")
+	plt.savefig("modsel_probabilities-mahalanobis_{}_{}.png".format(modselalgo,dataset))
 
 	plt.close("all")
 
@@ -312,7 +323,7 @@ if PLOT_MAHALANOBIS:
 		cummulative_mahalanobis_regrets_mean = np.mean(cummulative_mahalanobis_regrets,0)
 		cummulative_mahalanobis_regrets_std = np.std(cummulative_mahalanobis_regrets,0)
 
-		plt.plot(Ts, cummulative_mahalanobis_regrets_mean, color = colors[color_index] ,  label = "alpha-{}".format(epsilon))
+		plt.plot(Ts, cummulative_mahalanobis_regrets_mean, color = colors[color_index] ,  label = "alpha-{}".format(alpha))
 		plt.fill_between(Ts, cummulative_mahalanobis_regrets_mean-.5*cummulative_mahalanobis_regrets_std, 
 			cummulative_mahalanobis_regrets_mean+.5*cummulative_mahalanobis_regrets_std, color = colors[color_index], alpha = .2)
 
@@ -323,19 +334,16 @@ if PLOT_MAHALANOBIS:
 
 
 
-plt.title("Regrets {}".format(dataset))
-plt.xlabel("Number of batches")
+	plt.title("Regrets {} {}".format(modselalgo, dataset))
+	plt.xlabel("Number of batches")
 
-plt.ylabel("Regret")
-# plt.legend(bbox_to_anchor=(1.05, 1), fontsize=8, loc="upper left")
-plt.legend(fontsize=8, loc="upper left")
+	plt.ylabel("Regret")
+	# plt.legend(bbox_to_anchor=(1.05, 1), fontsize=8, loc="upper left")
+	plt.legend(fontsize=8, loc="upper left")
 
 
-if PLOT_EPSILON:
-	plt.savefig("modsel_regret-epsilons.png")
 
-if PLOT_MAHALANOBIS:
-	plt.savefig("modsel_regret-mahalanobis.png")
-
+	plt.savefig("modsel_regret-mahalanobis_{}.png".format(dataset))
+	plt.close("all")
 
 
