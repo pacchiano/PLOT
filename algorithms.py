@@ -152,9 +152,16 @@ def train_mahalanobis(dataset, baseline_model, num_batches, batch_size,
     instantaneous_accuracies = []
 
     if not MLP:
-        covariance  = lambda_reg*torch.eye(dataset_dimension).cuda()
+        if torch.cuda.is_available():
+            covariance  = lambda_reg*torch.eye(dataset_dimension).cuda()
+        else:
+            covariance  = lambda_reg*torch.eye(dataset_dimension)
+
     else:
-        covariance = lambda_reg*torch.eye(representation_layer_size).cuda()
+        if torch.cuda.is_available():
+            covariance = lambda_reg*torch.eye(representation_layer_size).cuda()
+        else:
+            covariance = lambda_reg*torch.eye(representation_layer_size)
 
     for i in range(num_batches):
         if verbose:

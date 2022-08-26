@@ -136,7 +136,7 @@ class CorralHyperparam:
 
 
 # class BalancingHyperParam:
-    
+
 
 
 
@@ -176,6 +176,8 @@ def train_epsilon_greedy_modsel(dataset, baseline_model, num_batches, batch_size
     instantaneous_accuracies = []
     eps_multiplier = 1.0
 
+    modselect_info = []
+
     for i in range(num_batches):
         if verbose:
             print("Processing modsel epsilon greedy batch ", i)
@@ -194,6 +196,9 @@ def train_epsilon_greedy_modsel(dataset, baseline_model, num_batches, batch_size
             epsilon = epsilons[sample_idx]
             print(i, " sample epsilon ", epsilon)
             print("Epsilons distribution ", modsel_manager.get_distribution())
+
+
+            modselect_info.append(modsel_manager.get_distribution())
 
 
             if torch.cuda.is_available():
@@ -233,7 +238,7 @@ def train_epsilon_greedy_modsel(dataset, baseline_model, num_batches, batch_size
     print("Finished training modsel epsilon-greedy model {}".format(epsilon))
     test_accuracy = evaluate_model(test_dataset, model, threshold).item()
     print("Final model test accuracy {}".format(test_accuracy))
-    return instantaneous_regrets, instantaneous_accuracies, test_accuracy
+    return instantaneous_regrets, instantaneous_accuracies, test_accuracy, modselect_info
 
 
 
@@ -245,9 +250,11 @@ def train_mahalanobis_modsel(dataset, baseline_model, num_batches, batch_size,
     restart_model_full_minimization = False, modselalgo = "Corral"):
     
     if modselalgo == "Corral":
-        modsel_manager = CorralHyperparam(len(epsilons), T = min(num_batches, 1000)) ### hack
+        modsel_manager = CorralHyperparam(len(alphas), T = num_batches) ### hack
     else:
         raise ValueError("Modselalgo type {} not recognized.".format(modselalgo))
+    alpha = alphas[0]
+
 
 
     (
@@ -273,11 +280,16 @@ def train_mahalanobis_modsel(dataset, baseline_model, num_batches, batch_size,
     growing_training_dataset = GrowingNumpyDataSet()
     instantaneous_regrets = []
     instantaneous_accuracies = []
-
+    modselect_info = []
     if not MLP:
         covariance  = lambda_reg*torch.eye(dataset_dimension).cuda()
     else:
-        covariance = lambda_reg*torch.eye(representation_layer_size).cuda()
+        if torch.cuda.is_available():
+
+            covariance = lambda_reg*torch.eye(representation_layer_size).cuda()
+        else:
+            covariance = lambda_reg*torch.eye(representation_layer_size)
+
 
     for i in range(num_batches):
         if verbose:
@@ -294,7 +306,7 @@ def train_mahalanobis_modsel(dataset, baseline_model, num_batches, batch_size,
             print("Alphas distribution ", modsel_manager.get_distribution())
             model.alpha = alpha
 
-
+            modselect_info.append(modsel_manager.get_distribution())
 
 
             inverse_covariance = torch.linalg.inv(covariance)
@@ -308,7 +320,7 @@ def train_mahalanobis_modsel(dataset, baseline_model, num_batches, batch_size,
             
 
             ### Update mod selection manager
-            modesel_reward = (2*torch.sum(mask*boolean_labels_y) - torch.sum(mask))/batch_size
+            modesel_reward = (2*torch.sum(optimistic_predictions*boolean_labels_y) - torch.sum(optimistic_predictions))/batch_size
             modsel_manager.update_distribution(sample_idx, modesel_reward.item())
 
 
@@ -340,7 +352,7 @@ def train_mahalanobis_modsel(dataset, baseline_model, num_batches, batch_size,
                 
     print("Finished training mahalanobis model alpha - {}".format(alpha))
     test_accuracy = evaluate_model(test_dataset, model, threshold).item()
-    return instantaneous_regrets, instantaneous_accuracies, test_accuracy
+    return instantaneous_regrets, instantaneous_accuracies, test_accuracy, modselect_info
 
 
 

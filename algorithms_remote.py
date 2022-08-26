@@ -39,3 +39,41 @@ def train_epsilon_greedy_modsel_remote(dataset, baseline_model,
     representation_layer_size=representation_layer_size , threshold=threshold , verbose=verbose , 
     decaying_epsilon=decaying_epsilon , epsilons=epsilons ,
     restart_model_full_minimization=restart_model_full_minimization , modselalgo=modselalgo )
+
+
+
+@ray.remote
+def train_mahalanobis_remote(dataset, baseline_model, num_batches, batch_size, 
+    num_opt_steps, opt_batch_size, MLP = True, 
+    representation_layer_size = 10, threshold = .5, alpha = 1, lambda_reg = 1,
+    verbose = False, fit_intercept = True, 
+    restart_model_full_minimization = False):
+
+
+    return train_mahalanobis(dataset=dataset, baseline_model=baseline_model, num_batches=num_batches, batch_size=batch_size, 
+    num_opt_steps=num_opt_steps, opt_batch_size=opt_batch_size, MLP = MLP, 
+    representation_layer_size = representation_layer_size, threshold = threshold, 
+    alpha = alpha, lambda_reg = lambda_reg,
+    verbose = verbose, fit_intercept = fit_intercept, 
+    restart_model_full_minimization = restart_model_full_minimization)
+
+
+
+
+@ray.remote
+def train_mahalanobis_modsel_remote(dataset, baseline_model, num_batches, batch_size, 
+    num_opt_steps, opt_batch_size, MLP = True, 
+    representation_layer_size = 10, threshold = .5, alphas = [1, .1, .01], lambda_reg = 1,
+    verbose = False, fit_intercept = True, 
+    restart_model_full_minimization = False, modselalgo = "Corral"):
+
+
+
+	return train_mahalanobis_modsel(dataset=dataset, baseline_model=baseline_model, num_batches=num_batches, batch_size=batch_size, 
+    num_opt_steps=num_opt_steps, opt_batch_size=opt_batch_size, MLP = MLP, 
+    representation_layer_size = representation_layer_size, threshold = threshold, alphas = alphas, lambda_reg = lambda_reg,
+    verbose = verbose, fit_intercept = fit_intercept, 
+    restart_model_full_minimization = restart_model_full_minimization, modselalgo = modselalgo)
+
+
+
