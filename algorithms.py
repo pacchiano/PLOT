@@ -95,6 +95,9 @@ def train_epsilon_greedy(dataset, baseline_model, num_batches, batch_size,
             accuracy = (torch.sum(mask*boolean_labels_y) +torch.sum( ~mask*~boolean_labels_y))*1.0/batch_size
             #IPython.embed()
             #raise ValueError("aslkdfm")
+            #### 
+                        
+
 
             accuracy_baseline = (torch.sum(baseline_predictions*boolean_labels_y) +torch.sum( ~baseline_predictions*~boolean_labels_y))*1.0/batch_size
             instantaneous_regret = accuracy_baseline - accuracy
