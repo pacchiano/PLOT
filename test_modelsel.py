@@ -35,15 +35,17 @@ def run_train_baseline(dataset, num_experiments, batch_size = 32, num_timesteps 
 	return baseline_results, baseline_model
 
 
-def run_epsilon_greedy_experiments(dataset, epsilons, modselalgo, num_experiments, baseline_model, num_batches, batch_size, decaying_epsilon, num_opt_steps = 1000, 
+def run_epsilon_greedy_experiments(dataset, epsilons, modselalgo, num_experiments, baseline_model, 
+	num_batches, batch_size, decaying_epsilon, num_opt_steps = 1000, 
 	opt_batch_size = 20, representation_layer_size = 10, restart_model_full_minimization = False):
 	if USE_RAY:
 		
 		epsilon_greedy_modsel_results = [train_epsilon_greedy_modsel_remote.remote(dataset, baseline_model, 
 	    num_batches = num_batches, batch_size = batch_size, 
 	    num_opt_steps = num_opt_steps, opt_batch_size = opt_batch_size, MLP = True, 
-	    representation_layer_size = representation_layer_size, threshold = .5, verbose = True, decaying_epsilon = decaying_epsilon, epsilons = epsilons,
-	    restart_model_full_minimization = restart_model_full_minimization, modselalgo = modselalgo) for _ in range(num_experiments)]
+	    representation_layer_size = representation_layer_size, threshold = .5, verbose = True, decaying_epsilon = decaying_epsilon, 
+	    		epsilons = epsilons, restart_model_full_minimization = restart_model_full_minimization, 
+	    		modselalgo = modselalgo) for _ in range(num_experiments)]
 		epsilon_greedy_modsel_results = ray.get(epsilon_greedy_modsel_results)
 
 	else:
@@ -52,8 +54,9 @@ def run_epsilon_greedy_experiments(dataset, epsilons, modselalgo, num_experiment
 		epsilon_greedy_modsel_results = [train_epsilon_greedy_modsel(dataset, baseline_model, 
 	    num_batches = num_batches, batch_size = batch_size, 
 	    num_opt_steps = num_opt_steps, opt_batch_size = opt_batch_size, MLP = True, 
-	    representation_layer_size = representation_layer_size, threshold = .5, verbose = True, decaying_epsilon = decaying_epsilon, epsilons = epsilons,
-	    restart_model_full_minimization = restart_model_full_minimization, modselalgo = modselalgo) for _ in range(num_experiments)]
+	    representation_layer_size = representation_layer_size, threshold = .5, verbose = True, decaying_epsilon = decaying_epsilon, 
+	    	epsilons = epsilons, restart_model_full_minimization = restart_model_full_minimization, 
+	    	modselalgo = modselalgo) for _ in range(num_experiments)]
 		
 
 	#results_dictionary["epsilon {}".format(modselalgo)] = epsilon_greedy_modsel_results
@@ -68,8 +71,9 @@ def run_epsilon_greedy_experiments(dataset, epsilons, modselalgo, num_experiment
 			epsilon_greedy_results =  [train_epsilon_greedy_remote.remote(dataset, baseline_model, 
 			    num_batches = num_batches, batch_size = batch_size, 
 			    num_opt_steps = num_opt_steps, opt_batch_size = opt_batch_size, MLP = True, 
-			    representation_layer_size = representation_layer_size, threshold = .5, verbose = True, decaying_epsilon = decaying_epsilon, epsilon = epsilon,
-			    restart_model_full_minimization = restart_model_full_minimization) for _ in range(num_experiments)]
+			    representation_layer_size = representation_layer_size, threshold = .5, verbose = True, 
+			    	decaying_epsilon = decaying_epsilon, epsilon = epsilon,
+			    	restart_model_full_minimization = restart_model_full_minimization) for _ in range(num_experiments)]
 			epsilon_greedy_results = ray.get(epsilon_greedy_results)
 		else:
 
@@ -90,7 +94,8 @@ def run_epsilon_greedy_experiments(dataset, epsilons, modselalgo, num_experiment
 
 
 
-def run_mahalanobis_experiments(dataset, alphas, modselalgo, num_experiments, baseline_model, num_batches, batch_size, decaying_epsilon, num_opt_steps = 1000, 
+def run_mahalanobis_experiments(dataset, alphas, modselalgo, num_experiments, baseline_model, num_batches, 
+	batch_size, decaying_epsilon, num_opt_steps = 1000, 
 	opt_batch_size = 20, representation_layer_size = 10, restart_model_full_minimization = False):
 
 
@@ -125,8 +130,8 @@ def run_mahalanobis_experiments(dataset, alphas, modselalgo, num_experiments, ba
 			mahalanobis_results = [ train_mahalanobis_remote.remote(dataset, baseline_model, 
 	   				 num_batches = num_batches, batch_size = batch_size, 
 	   				 num_opt_steps = num_opt_steps, opt_batch_size = opt_batch_size, MLP = True, 
-	   				 representation_layer_size = representation_layer_size, threshold = .5, verbose = True,  alpha = alpha, lambda_reg = 1, 
-	   				 restart_model_full_minimization = False) for _ in range(num_experiments)]
+	   				 representation_layer_size = representation_layer_size, threshold = .5, verbose = True,  alpha = alpha, 
+	   				 lambda_reg = 1, restart_model_full_minimization = False) for _ in range(num_experiments)]
 
 			mahalanobis_results = ray.get(mahalanobis_results)
 
@@ -136,13 +141,162 @@ def run_mahalanobis_experiments(dataset, alphas, modselalgo, num_experiments, ba
 			mahalanobis_results = [train_mahalanobis(dataset, baseline_model, 
 	   				 num_batches = num_batches, batch_size = batch_size, 
 	   				 num_opt_steps = num_opt_steps, opt_batch_size = opt_batch_size, MLP = True, 
-	   				 representation_layer_size = representation_layer_size, threshold = .5, verbose = True,  alpha = alpha, lambda_reg = 1, 
-	   				 restart_model_full_minimization = False) for _ in range(num_experiments)]
+	   				 representation_layer_size = representation_layer_size, threshold = .5, verbose = True,  alpha = alpha, 
+	   				 lambda_reg = 1, restart_model_full_minimization = False) for _ in range(num_experiments)]
 
 		mahalanobis_results_list.append(("alpha-{}".format(alpha), mahalanobis_results))
 		#results_dictionary["alpha-{}".format(alpha)] = mahalanobis_results
 	
 	return ("alpha {}".format(modselalgo),mahalanobis_modsel_results ), mahalanobis_results_list
+
+
+def plot_modsel_probabilities(algo_name, dataset, num_batches, batch_size, modselalgo, 
+	results_dictionary, hyperparams, colors):
+	modsel_results = results_dictionary["{} {}".format(algo_name, modselalgo)]
+
+
+	probs =[x["modselect_info"] for x in modsel_results]
+
+	color_index = 1
+
+	#IPython.embed()
+	mean_probs = np.mean(probs, 0)
+	std_probs = np.std(probs, 0)
+
+	for i in range(len(hyperparams)):
+		plt.plot(Ts, mean_probs[:, i], color = colors[color_index], label = "{} {}".format(algo_name, hyperparams[i]))
+		plt.fill_between(Ts, mean_probs[:, i] - .5*std_probs[:, i], mean_probs[:, i] + .5*std_probs[:, i], 
+			color = colors[color_index], alpha = .2)
+
+		color_index+=1
+
+
+	plt.title("Probabilities evolution {} {} B{}".format(modselalgo, dataset, batch_size))
+	plt.xlabel("Number of batches")
+	plt.legend(fontsize=8, loc="upper left")
+
+	plt.savefig("./ModselResults/modsel_probabilities-{}_{}_T{}_B{}.png".format(algo_name, dataset,num_batches,batch_size))
+
+	plt.close("all")
+	
+
+
+
+
+
+def plot_results(algo_name, dataset, results_type, num_batches, batch_size, modselalgo, 
+	results_dictionary, hyperparams, colors, cummulative_plot = False ):
+
+
+	if results_type != "instantaneous_regrets" and cummulative_plot == True:
+		raise ValueError("Results type {} does not support cummulative plot".format(results_type))
+
+
+	##### PLOTTING instantaneous regrets.
+	modsel_results = results_dictionary["{} {}".format(algo_name, modselalgo)]
+
+	color_index = 0
+
+
+	if cummulative_plot:
+		modsel_stats = [np.cumsum(x[results_type]) for x in modsel_results]
+	else:
+		modsel_stats = [x[results_type] for x in modsel_results]
+
+
+	modsel_stat_mean = np.mean(modsel_stats,0)
+	modsel_stat_std = np.std(modsel_stats,0)
+
+
+
+	plt.plot(Ts, modsel_stat_mean, color = colors[color_index] ,  label = "{} {}".format(algo_name, modselalgo))
+	plt.fill_between(Ts, modsel_stat_mean-.5*modsel_stat_std, 
+		modsel_stat_mean+.5*modsel_stat_std, color = colors[color_index], alpha = .2)
+
+	color_index += 1
+
+
+	
+	# Plot epsilon-greedy models
+
+	for hyperparam in hyperparams:
+
+		hyperparam_results = results_dictionary["{}-{}".format(algo_name, hyperparam)] 
+		if cummulative_plot:
+			hyperparam_stats = [np.cumsum(x[results_type]) for x in hyperparam_results]
+		else:
+			hyperparam_stats = [x[results_type] for x in hyperparam_results]
+
+		#IPython.embed()
+
+
+		hyperparam_results_mean = np.mean(hyperparam_stats,0)
+		hyperparam_results_std = np.std(hyperparam_stats,0)
+
+		plt.plot(Ts, hyperparam_results_mean, color = colors[color_index] ,  label = "{}-{}".format(algo_name,hyperparam))
+		plt.fill_between(Ts, hyperparam_results_mean-.5*hyperparam_results_std, 
+			hyperparam_results_mean+.5*hyperparam_results_std, color = colors[color_index], alpha = .2)
+
+
+		color_index += 1
+
+		# IPython.embed()
+		# raise ValueError("asldfkm")
+
+
+
+
+	##### get label
+	label = results_type
+	if results_type == "instantaneous_regrets" and cummulative_plot == True:
+		label = "Regret"
+
+	elif results_type == "instantaneous_regrets" and cummulative_plot == False:
+		label = "Instantaneous regrets"
+
+
+	elif results_type == "instantaneous_accuracies":
+		label = "Instantaneous accuracies"
+
+	elif results_type == "num_negatives":
+		label = "Negatives"
+
+	elif results_type == "num_positives":
+		label = "Positives"
+
+	elif results_type == "false_neg_rates":
+		label = "False Negatives"
+
+	elif results_type == "false_positive_rates":
+		label = "False Positives"
+	else:
+		raise ValueError("Unrecognized option {}".format(results_type))
+
+
+	plt.title("{} {} {} B{}".format( label, modselalgo, dataset, batch_size))
+	plt.xlabel("Number of batches")
+
+	plt.ylabel(label)
+	# plt.legend(bbox_to_anchor=(1.05, 1), fontsize=8, loc="upper left")
+	plt.legend(fontsize=8, loc="upper left")
+
+
+	plt.savefig("./ModselResults/modsel_{}_cum_{}-{}_{}_{}_T{}_B{}.png".format(results_type, cummulative_plot, 
+		algo_name, modselalgo,dataset, num_batches, batch_size))
+
+	plt.close("all")
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 USE_RAY = True
@@ -212,170 +366,79 @@ pickle_results_filename = "results_modsel_{}_T{}_B{}.p".format(dataset, num_batc
 pickle.dump(results_dictionary, 
     open("ModselResults/{}".format(pickle_results_filename), "wb"))
 
+
+
+# IPython.embed()
+# raise ValueError("asldkfm")
+
 if PLOT_EPSILON:
 
 
-	# Plot epsilon-greedy model selection
 	epsilon_modsel_results = results_dictionary["epsilon {}".format(modselalgo)]
 
 
-	probs =[x[-1] for x in epsilon_modsel_results]
 
-	color_index = 1
-
-	#IPython.embed()
-	mean_probs = np.mean(probs, 0)
-	std_probs = np.std(probs, 0)
-
-	for i in range(len(epsilons)):
-		plt.plot(Ts, mean_probs[:, i], color = colors[color_index], label = "epsilon {}".format(epsilons[i]))
-		plt.fill_between(Ts, mean_probs[:, i] - .5*std_probs[:, i], mean_probs[:, i] + .5*std_probs[:, i], color = colors[color_index], alpha = .2)
-
-		color_index+=1
-
-
-	plt.title("Probabilities evolution {} {} B{}".format(modselalgo, dataset, batch_size))
-	plt.xlabel("Number of batches")
-	plt.legend(fontsize=8, loc="upper left")
-
-	plt.savefig("./ModselResults/modsel_probabilities-epsilon_{}_T{}_B{}.png".format(dataset,num_batches,batch_size))
-
-	plt.close("all")
-	color_index = 0
+	plot_modsel_probabilities("epsilon", dataset, num_batches, batch_size, modselalgo, 
+		results_dictionary, epsilons, colors)
 
 
 
-	cummulative_epsilon_modsel_regrets = [np.cumsum(x[0]) for x in epsilon_modsel_results]
-	cummulative_epsilon_modsel_regrets_mean = np.mean(cummulative_epsilon_modsel_regrets,0)
-	cummulative_epsilon_modsel_regrets_std = np.std(cummulative_epsilon_modsel_regrets,0)
+	plot_results("epsilon", dataset, "instantaneous_regrets", num_batches, batch_size, modselalgo, 
+		results_dictionary, epsilons, colors, cummulative_plot = True )
 
-	plt.plot(Ts, cummulative_epsilon_modsel_regrets_mean, color = colors[color_index] ,  label = "epsilon {}".format(modselalgo))
-	plt.fill_between(Ts, cummulative_epsilon_modsel_regrets_mean-.5*cummulative_epsilon_modsel_regrets_std, 
-		cummulative_epsilon_modsel_regrets_mean+.5*cummulative_epsilon_modsel_regrets_std, color = colors[color_index], alpha = .2)
 
-	color_index += 1
+	plot_results("epsilon", dataset, "instantaneous_accuracies", num_batches, batch_size, modselalgo, 
+		results_dictionary, epsilons, colors, cummulative_plot = False )
+
+	plot_results("epsilon", dataset, "num_negatives", num_batches, batch_size, modselalgo, 
+		results_dictionary, epsilons, colors, cummulative_plot = False )
+
+	plot_results("epsilon", dataset, "num_positives", num_batches, batch_size, modselalgo, 
+		results_dictionary, epsilons, colors, cummulative_plot = False )
+
+	plot_results("epsilon", dataset, "false_neg_rates", num_batches, batch_size, modselalgo, 
+		results_dictionary, epsilons, colors, cummulative_plot = False )
+
+	plot_results("epsilon", dataset, "false_positive_rates", num_batches, batch_size, modselalgo, 
+		results_dictionary, epsilons, colors, cummulative_plot = False )
 
 
 
 
 
-
-
-
-
-
-	# Plot epsilon-greedy models
-
-	for epsilon in epsilons:
-
-		epsilon_results = results_dictionary["epsilon-{}".format(epsilon)] 
-		cummulative_epsilon_regrets = [np.cumsum(x[0]) for x in epsilon_results]
-		cummulative_epsilon_regrets_mean = np.mean(cummulative_epsilon_regrets,0)
-		cummulative_epsilon_regrets_std = np.std(cummulative_epsilon_regrets,0)
-
-		plt.plot(Ts, cummulative_epsilon_regrets_mean, color = colors[color_index] ,  label = "epsilon-{}".format(epsilon))
-		plt.fill_between(Ts, cummulative_epsilon_regrets_mean-.5*cummulative_epsilon_regrets_std, 
-			cummulative_epsilon_regrets_mean+.5*cummulative_epsilon_regrets_std, color = colors[color_index], alpha = .2)
-
-
-		color_index += 1
-
-		# IPython.embed()
-		# raise ValueError("asldfkm")
-
-
-
-
-	plt.title("Regrets {} {} B{}".format(modselalgo, dataset, batch_size))
-	plt.xlabel("Number of batches")
-
-	plt.ylabel("Regret")
-	# plt.legend(bbox_to_anchor=(1.05, 1), fontsize=8, loc="upper left")
-	plt.legend(fontsize=8, loc="upper left")
-
-
-	plt.savefig("./ModselResults/modsel_regret-epsilons_{}_{}_T{}_B{}.png".format(modselalgo,dataset, num_batches, batch_size))
-
-	plt.close("all")
 
 
 if PLOT_MAHALANOBIS:
 
 
-	# Plot epsilon-greedy model selection
-	mahalanobis_modsel_results = results_dictionary["alpha {}".format(modselalgo)]
-	probs =[x[-1] for x in mahalanobis_modsel_results]
+	plot_modsel_probabilities("alpha", dataset, num_batches, batch_size, modselalgo, 
+		results_dictionary, alphas, colors)
+
+
+	# # Plot epsilon-greedy model selection
+	# probs =[x["modselect_info"] for x in mahalanobis_modsel_results]
 
 
 
-	#IPython.embed()
-	mean_probs = np.mean(probs, 0)
-	std_probs = np.std(probs, 0)
-
-	color_index = 1
-	for i in range(len(alphas)):
-		plt.plot(Ts, mean_probs[:, i], color = colors[color_index], label = "alpha {}".format(alphas[i]))
-		plt.fill_between(Ts, mean_probs[:, i] - .5*std_probs[:, i], mean_probs[:, i] + .5*std_probs[:, i], color = colors[color_index], alpha = .2)
-
-		color_index+=1
+	plot_results("alpha", dataset, "instantaneous_regrets", num_batches, batch_size, modselalgo, 
+		results_dictionary, alphas, colors, cummulative_plot = True )
 
 
-	plt.title("Probabilities evolution {} {} B{}".format(modselalgo,dataset, batch_size))
-	plt.xlabel("Number of batches")
-	plt.legend(fontsize=8, loc="upper left")
+	plot_results("alpha", dataset, "instantaneous_accuracies", num_batches, batch_size, modselalgo, 
+		results_dictionary, alphas, colors, cummulative_plot = False )
 
-	plt.savefig("./ModselResults/modsel_probabilities-mahalanobis_{}_{}_T{}_B{}.png".format(modselalgo,dataset, num_batches, batch_size))
+	plot_results("alpha", dataset, "num_negatives", num_batches, batch_size, modselalgo, 
+		results_dictionary, alphas, colors, cummulative_plot = False )
 
-	plt.close("all")
+	plot_results("alpha", dataset, "num_positives", num_batches, batch_size, modselalgo, 
+		results_dictionary, alphas, colors, cummulative_plot = False )
 
+	plot_results("alpha", dataset, "false_neg_rates", num_batches, batch_size, modselalgo, 
+		results_dictionary, alphas, colors, cummulative_plot = False )
 
-	#IPython.embed()
-
-	color_index = 0
-
-	cummulative_mahalanobis_modsel_regrets = [np.cumsum(x[0]) for x in mahalanobis_modsel_results]
-	cummulative_mahalanobis_modsel_regrets_mean = np.mean(cummulative_mahalanobis_modsel_regrets,0)
-	cummulative_mahalanobis_modsel_regrets_std = np.std(cummulative_mahalanobis_modsel_regrets,0)
-
-	plt.plot(Ts, cummulative_mahalanobis_modsel_regrets_mean, color = colors[color_index] ,  label = "alpha {}".format(modselalgo))
-	plt.fill_between(Ts, cummulative_mahalanobis_modsel_regrets_mean-.5*cummulative_mahalanobis_modsel_regrets_std, 
-		cummulative_mahalanobis_modsel_regrets_mean+.5*cummulative_mahalanobis_modsel_regrets_std, color = colors[color_index], alpha = .2)
-
-	color_index += 1
+	plot_results("alpha", dataset, "false_positive_rates", num_batches, batch_size, modselalgo, 
+		results_dictionary, alphas, colors, cummulative_plot = False )
 
 
-
-
-	# Plot epsilon-greedy models
-
-	for alpha in alphas:
-
-		mahalanobis_results = results_dictionary["alpha-{}".format(alpha)] 
-		cummulative_mahalanobis_regrets = [np.cumsum(x[0]) for x in mahalanobis_results]
-		cummulative_mahalanobis_regrets_mean = np.mean(cummulative_mahalanobis_regrets,0)
-		cummulative_mahalanobis_regrets_std = np.std(cummulative_mahalanobis_regrets,0)
-
-		plt.plot(Ts, cummulative_mahalanobis_regrets_mean, color = colors[color_index] ,  label = "alpha-{}".format(alpha))
-		plt.fill_between(Ts, cummulative_mahalanobis_regrets_mean-.5*cummulative_mahalanobis_regrets_std, 
-			cummulative_mahalanobis_regrets_mean+.5*cummulative_mahalanobis_regrets_std, color = colors[color_index], alpha = .2)
-
-
-		color_index += 1
-
-
-
-
-
-	plt.title("Regrets {} {}".format(modselalgo, dataset))
-	plt.xlabel("Number of batches")
-
-	plt.ylabel("Regret")
-	# plt.legend(bbox_to_anchor=(1.05, 1), fontsize=8, loc="upper left")
-	plt.legend(fontsize=8, loc="upper left")
-
-
-
-	plt.savefig("./ModselResults/modsel_regret-mahalanobis_{} {} T{} B{}.png".format(modselalgo,dataset, num_batches, batch_size))
-	plt.close("all")
 
 

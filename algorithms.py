@@ -72,6 +72,12 @@ def train_epsilon_greedy(dataset, baseline_model, num_batches, batch_size,
     instantaneous_accuracies = []
     eps_multiplier = 1.0
 
+    num_positives = []
+    num_negatives = []
+    false_neg_rates = []
+    false_positive_rates = []
+
+
     for i in range(num_batches):
         if verbose:
             print("Processing epsilon greedy batch ", i)
@@ -93,10 +99,27 @@ def train_epsilon_greedy(dataset, baseline_model, num_batches, batch_size,
 
             boolean_labels_y = batch_y.bool()
             accuracy = (torch.sum(mask*boolean_labels_y) +torch.sum( ~mask*~boolean_labels_y))*1.0/batch_size
-            #IPython.embed()
-            #raise ValueError("aslkdfm")
-            #### 
-                        
+            
+            #### TOTAL NUM POSITIVES
+            total_num_positives = torch.sum(mask)
+
+            #### TOTAL NUM NEGATIVES   
+            total_num_negatives = torch.sum(~mask)
+
+            #### FALSE NEGATIVE RATE
+            false_neg_rate = torch.sum(~mask*~boolean_labels_y)*1.0/(torch.sum(~mask)+.00000000001)
+
+
+            #### FALSE POSITIVE RATE            
+            false_positive_rate = torch.sum(mask*boolean_labels_y)*1.0/(torch.sum(mask)+.00000000001)
+
+
+
+            num_positives.append(total_num_positives.item())
+            num_negatives.append(total_num_negatives.item())
+            false_neg_rates.append(false_neg_rate.item())
+            false_positive_rates.append(false_positive_rate)            
+
 
 
             accuracy_baseline = (torch.sum(baseline_predictions*boolean_labels_y) +torch.sum( ~baseline_predictions*~boolean_labels_y))*1.0/batch_size
@@ -117,11 +140,23 @@ def train_epsilon_greedy(dataset, baseline_model, num_batches, batch_size,
                 growing_training_dataset, opt_batch_size, 
                 restart_model_full_minimization = restart_model_full_minimization)
 
-                
+
+
+                 
     print("Finished training epsilon-greedy model {}".format(epsilon))
     test_accuracy = evaluate_model(test_dataset, model, threshold).item()
     print("Final model test accuracy {}".format(test_accuracy))
-    return instantaneous_regrets, instantaneous_accuracies, test_accuracy
+
+    results = dict([])
+    results["instantaneous_regrets"] = instantaneous_regrets
+    results["test_accuracy"] = test_accuracy
+    results["instantaneous_accuracies"] = instantaneous_accuracies
+    results["num_negatives"] = num_negatives
+    results["num_positives"] = num_positives
+    results["false_neg_rates"] = false_neg_rates
+    results["false_positive_rates"] = false_positive_rates
+
+    return results# instantaneous_regrets, instantaneous_accuracies, test_accuracy
 
 
 def train_mahalanobis(dataset, baseline_model, num_batches, batch_size, 
@@ -154,6 +189,14 @@ def train_mahalanobis(dataset, baseline_model, num_batches, batch_size,
     instantaneous_regrets = []
     instantaneous_accuracies = []
 
+
+    num_positives = []
+    num_negatives = []
+    false_neg_rates = []
+    false_positive_rates = []
+
+
+
     if not MLP:
         if torch.cuda.is_available():
             covariance  = lambda_reg*torch.eye(dataset_dimension).cuda()
@@ -183,6 +226,29 @@ def train_mahalanobis(dataset, baseline_model, num_batches, batch_size,
             boolean_labels_y = batch_y.bool()
             accuracy = (torch.sum(optimistic_predictions*boolean_labels_y) +torch.sum( ~optimistic_predictions*~boolean_labels_y))*1.0/batch_size
            
+
+            #### TOTAL NUM POSITIVES
+            total_num_positives = torch.sum(optimistic_predictions)
+
+            #### TOTAL NUM NEGATIVES   
+            total_num_negatives = torch.sum(~optimistic_predictions)
+
+            #### FALSE NEGATIVE RATE
+            false_neg_rate = torch.sum(~optimistic_predictions*~boolean_labels_y)*1.0/(torch.sum(~optimistic_predictions)+.00000000001)
+
+
+            #### FALSE POSITIVE RATE            
+            false_positive_rate = torch.sum(optimistic_predictions*boolean_labels_y)*1.0/(torch.sum(optimistic_predictions)+.00000000001)
+            
+            num_positives.append(total_num_positives.item())
+            num_negatives.append(total_num_negatives.item())
+            false_neg_rates.append(false_neg_rate.item())
+            false_positive_rates.append(false_positive_rate)            
+
+
+
+
+
             accuracy_baseline = (torch.sum(baseline_predictions*boolean_labels_y) +torch.sum( ~baseline_predictions*~boolean_labels_y))*1.0/batch_size
             instantaneous_regret = accuracy_baseline - accuracy
 
@@ -208,10 +274,22 @@ def train_mahalanobis(dataset, baseline_model, num_batches, batch_size,
                 growing_training_dataset, opt_batch_size, 
                 restart_model_full_minimization = restart_model_full_minimization)
 
-                
     print("Finished training mahalanobis model alpha - {}".format(alpha))
     test_accuracy = evaluate_model(test_dataset, model, threshold).item()
-    return instantaneous_regrets, instantaneous_accuracies, test_accuracy
+
+
+    results = dict([])
+    results["instantaneous_regrets"] = instantaneous_regrets
+    results["test_accuracy"] = test_accuracy
+    results["instantaneous_accuracies"] = instantaneous_accuracies
+    results["num_negatives"] = num_negatives
+    results["num_positives"] = num_positives
+    results["false_neg_rates"] = false_neg_rates
+    results["false_positive_rates"] = false_positive_rates
+
+
+                
+    return results#instantaneous_regrets, instantaneous_accuracies, test_accuracy
 
 
 def train_PLOT(dataset, baseline_model, num_batches, batch_size, 
