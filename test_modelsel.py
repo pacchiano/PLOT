@@ -306,7 +306,7 @@ PLOT_MAHALANOBIS = True
 
 
 ## What is the fractrion of rejected labels for each algorithm and each dataset. 
-dataset = "Adult"
+dataset = "Bank"
 num_batches = 2000
 epsilon = .1
 alpha = 10
