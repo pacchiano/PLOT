@@ -226,11 +226,11 @@ def train_epsilon_greedy_modsel(dataset, baseline_model, num_batches, batch_size
             total_num_negatives = torch.sum(~mask)
 
             #### FALSE NEGATIVE RATE
-            false_neg_rate = torch.sum(~mask*~boolean_labels_y)*1.0/(torch.sum(~mask)+.00000000001)
+            false_neg_rate = torch.sum(~mask*boolean_labels_y)*1.0/(torch.sum(~mask)+.00000000001)
 
 
             #### FALSE POSITIVE RATE            
-            false_positive_rate = torch.sum(mask*boolean_labels_y)*1.0/(torch.sum(mask)+.00000000001)
+            false_positive_rate = torch.sum(mask*~boolean_labels_y)*1.0/(torch.sum(mask)+.00000000001)
             
             # IPython.embed()
             # raise ValueError("sdfsdf")
@@ -379,12 +379,15 @@ def train_mahalanobis_modsel(dataset, baseline_model, num_batches, batch_size,
             total_num_negatives = torch.sum(~optimistic_predictions)
 
             #### FALSE NEGATIVE RATE
-            false_neg_rate = torch.sum(~optimistic_predictions*~boolean_labels_y)*1.0/(torch.sum(~optimistic_predictions)+.00000000001)
+            false_neg_rate = torch.sum(~optimistic_predictions*boolean_labels_y)*1.0/(torch.sum(~optimistic_predictions)+.00000000001)
 
 
             #### FALSE POSITIVE RATE            
-            false_positive_rate = torch.sum(optimistic_predictions*boolean_labels_y)*1.0/(torch.sum(optimistic_predictions)+.00000000001)
+            false_positive_rate = torch.sum(optimistic_predictions*~boolean_labels_y)*1.0/(torch.sum(optimistic_predictions)+.00000000001)
             
+
+
+
 
 
 

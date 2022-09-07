@@ -151,11 +151,16 @@ def run_mahalanobis_experiments(dataset, alphas, modselalgo, num_experiments, ba
 
 
 def plot_modsel_probabilities(algo_name, dataset, num_batches, batch_size, modselalgo, 
-	results_dictionary, hyperparams, colors):
+	results_dictionary, hyperparams, colors, averaging_window = 1):
+
+	Ts = np.arange(num_batches)+1
+	color_index = 0
+
+
 	modsel_results = results_dictionary["{} {}".format(algo_name, modselalgo)]
 
 
-	probs =[x["modselect_info"] for x in modsel_results]
+	probs =np.array([x["modselect_info"] for x in modsel_results])
 
 	color_index = 1
 
@@ -185,27 +190,37 @@ def plot_modsel_probabilities(algo_name, dataset, num_batches, batch_size, modse
 
 
 def plot_results(algo_name, dataset, results_type, num_batches, batch_size, modselalgo, 
-	results_dictionary, hyperparams, colors, cummulative_plot = False ):
+	results_dictionary, hyperparams, colors, cummulative_plot = False, averaging_window = 1 ):
+
+
+	Ts = (np.arange(num_batches/averaging_window)+1)*averaging_window
+	color_index = 0
 
 
 	if results_type != "instantaneous_regrets" and cummulative_plot == True:
 		raise ValueError("Results type {} does not support cummulative plot".format(results_type))
 
 
-	##### PLOTTING instantaneous regrets.
+	##### PLOTTING modsel results.
 	modsel_results = results_dictionary["{} {}".format(algo_name, modselalgo)]
 
 	color_index = 0
 
 
 	if cummulative_plot:
-		modsel_stats = [np.cumsum(x[results_type]) for x in modsel_results]
+		modsel_stats = np.array([np.cumsum(x[results_type]) for x in modsel_results])
 	else:
-		modsel_stats = [x[results_type] for x in modsel_results]
+		modsel_stats = np.array([x[results_type] for x in modsel_results])
 
 
 	modsel_stat_mean = np.mean(modsel_stats,0)
 	modsel_stat_std = np.std(modsel_stats,0)
+
+
+	#IPython.embed()
+
+	modsel_stat_mean = np.mean(modsel_stat_mean.reshape(int(num_batches/averaging_window), averaging_window), 1)
+	modsel_stat_std = np.mean(modsel_stat_std.reshape(int(num_batches/averaging_window), averaging_window), 1)
 
 
 
@@ -217,21 +232,39 @@ def plot_results(algo_name, dataset, results_type, num_batches, batch_size, mods
 
 
 	
-	# Plot epsilon-greedy models
+	# Plot hyper sweep results
 
 	for hyperparam in hyperparams:
 
 		hyperparam_results = results_dictionary["{}-{}".format(algo_name, hyperparam)] 
 		if cummulative_plot:
-			hyperparam_stats = [np.cumsum(x[results_type]) for x in hyperparam_results]
+			hyperparam_stats = np.array([np.cumsum(x[results_type]) for x in hyperparam_results])
 		else:
-			hyperparam_stats = [x[results_type] for x in hyperparam_results]
+			hyperparam_stats = np.array([x[results_type] for x in hyperparam_results])
 
-		#IPython.embed()
+
+
 
 
 		hyperparam_results_mean = np.mean(hyperparam_stats,0)
 		hyperparam_results_std = np.std(hyperparam_stats,0)
+
+
+
+
+		hyperparam_results_mean = np.mean(hyperparam_results_mean.reshape(int(num_batches/averaging_window), averaging_window), 1)
+		hyperparam_results_std = np.mean(hyperparam_results_std.reshape(int(num_batches/averaging_window), averaging_window), 1)
+
+
+
+
+
+
+
+
+		#IPython.embed()
+		
+
 
 		plt.plot(Ts, hyperparam_results_mean, color = colors[color_index] ,  label = "{}-{}".format(algo_name,hyperparam))
 		plt.fill_between(Ts, hyperparam_results_mean-.5*hyperparam_results_std, 
@@ -301,8 +334,11 @@ def plot_results(algo_name, dataset, results_type, num_batches, batch_size, mods
 
 USE_RAY = True
 
+RUN_EPSILON = False
 PLOT_EPSILON = True
+
 PLOT_MAHALANOBIS = True
+RUN_MAHALANOBIS = False
 
 
 ## What is the fractrion of rejected labels for each algorithm and each dataset. 
@@ -324,9 +360,14 @@ num_experiments = 10
 
 results_dictionary = dict([])
 
-baseline_results, baseline_model = run_train_baseline(dataset, num_experiments)
 
-results_dictionary["baseline"] = [x[1] for x in baseline_results]
+
+
+if RUN_EPSILON or RUN_MAHALANOBIS:
+
+	baseline_results, baseline_model = run_train_baseline(dataset, num_experiments)
+
+	results_dictionary["baseline"] = [x[1] for x in baseline_results]
 
 
 # results_dictionary["epsilon {}".format(modselalgo)] = epsilon_greedy_modsel_results
@@ -335,7 +376,7 @@ results_dictionary["baseline"] = [x[1] for x in baseline_results]
 ### Run epsilon-greedy model selection experiments
 
 
-if PLOT_EPSILON:
+if RUN_EPSILON:
 
 	epsilon_greedy_modsel_results_tuple, epsilon_greedy_results_list  =	run_epsilon_greedy_experiments(dataset, epsilons, modselalgo, num_experiments, baseline_model, num_batches, batch_size, decaying_epsilon, num_opt_steps = 1000, 
 		opt_batch_size = 20, representation_layer_size = 10, restart_model_full_minimization = False)
@@ -346,7 +387,7 @@ if PLOT_EPSILON:
 		results_dictionary[eps_res_tuple[0]] = eps_res_tuple[1]
 
 
-if PLOT_MAHALANOBIS:
+if RUN_MAHALANOBIS:
 	mahalanobis_modsel_results_tuple, mahalanobis_results_list = run_mahalanobis_experiments(dataset, alphas, modselalgo, num_experiments, baseline_model, num_batches, batch_size, decaying_epsilon, num_opt_steps = 1000, 
 		opt_batch_size = 20, representation_layer_size = 10, restart_model_full_minimization = False)
 
@@ -355,17 +396,22 @@ if PLOT_MAHALANOBIS:
 		results_dictionary[mahalanobis_res_tuple[0]] = mahalanobis_res_tuple[1]	
 
 
-Ts = np.arange(num_batches)+1
-color_index = 0
+
 
 
 
 pickle_results_filename = "results_modsel_{}_T{}_B{}.p".format(dataset, num_batches,batch_size )
 
+if RUN_EPSILON or RUN_MAHALANOBIS:
+	pickle.dump(results_dictionary, 
+	    open("ModselResults/{}".format(pickle_results_filename), "wb"))
 
-pickle.dump(results_dictionary, 
-    open("ModselResults/{}".format(pickle_results_filename), "wb"))
 
+results_dictionary = pickle.load(open("ModselResults/{}".format(pickle_results_filename), "rb")) 
+
+
+Ts = np.arange(num_batches)+1
+color_index = 0
 
 
 # IPython.embed()
@@ -384,23 +430,23 @@ if PLOT_EPSILON:
 
 
 	plot_results("epsilon", dataset, "instantaneous_regrets", num_batches, batch_size, modselalgo, 
-		results_dictionary, epsilons, colors, cummulative_plot = True )
+		results_dictionary, epsilons, colors, cummulative_plot = True , averaging_window = 50)
 
 
 	plot_results("epsilon", dataset, "instantaneous_accuracies", num_batches, batch_size, modselalgo, 
-		results_dictionary, epsilons, colors, cummulative_plot = False )
+		results_dictionary, epsilons, colors, cummulative_plot = False, averaging_window = 50 )
 
 	plot_results("epsilon", dataset, "num_negatives", num_batches, batch_size, modselalgo, 
-		results_dictionary, epsilons, colors, cummulative_plot = False )
+		results_dictionary, epsilons, colors, cummulative_plot = False, averaging_window = 50 )
 
 	plot_results("epsilon", dataset, "num_positives", num_batches, batch_size, modselalgo, 
-		results_dictionary, epsilons, colors, cummulative_plot = False )
+		results_dictionary, epsilons, colors, cummulative_plot = False, averaging_window = 50 )
 
 	plot_results("epsilon", dataset, "false_neg_rates", num_batches, batch_size, modselalgo, 
-		results_dictionary, epsilons, colors, cummulative_plot = False )
+		results_dictionary, epsilons, colors, cummulative_plot = False, averaging_window = 50 )
 
 	plot_results("epsilon", dataset, "false_positive_rates", num_batches, batch_size, modselalgo, 
-		results_dictionary, epsilons, colors, cummulative_plot = False )
+		results_dictionary, epsilons, colors, cummulative_plot = False, averaging_window = 50 )
 
 
 
@@ -421,23 +467,23 @@ if PLOT_MAHALANOBIS:
 
 
 	plot_results("alpha", dataset, "instantaneous_regrets", num_batches, batch_size, modselalgo, 
-		results_dictionary, alphas, colors, cummulative_plot = True )
+		results_dictionary, alphas, colors, cummulative_plot = True , averaging_window = 50)
 
 
 	plot_results("alpha", dataset, "instantaneous_accuracies", num_batches, batch_size, modselalgo, 
-		results_dictionary, alphas, colors, cummulative_plot = False )
+		results_dictionary, alphas, colors, cummulative_plot = False, averaging_window = 50 )
 
 	plot_results("alpha", dataset, "num_negatives", num_batches, batch_size, modselalgo, 
-		results_dictionary, alphas, colors, cummulative_plot = False )
+		results_dictionary, alphas, colors, cummulative_plot = False , averaging_window = 50)
 
 	plot_results("alpha", dataset, "num_positives", num_batches, batch_size, modselalgo, 
-		results_dictionary, alphas, colors, cummulative_plot = False )
+		results_dictionary, alphas, colors, cummulative_plot = False , averaging_window = 50)
 
 	plot_results("alpha", dataset, "false_neg_rates", num_batches, batch_size, modselalgo, 
-		results_dictionary, alphas, colors, cummulative_plot = False )
+		results_dictionary, alphas, colors, cummulative_plot = False , averaging_window = 50)
 
 	plot_results("alpha", dataset, "false_positive_rates", num_batches, batch_size, modselalgo, 
-		results_dictionary, alphas, colors, cummulative_plot = False )
+		results_dictionary, alphas, colors, cummulative_plot = False , averaging_window = 50)
 
 
 
