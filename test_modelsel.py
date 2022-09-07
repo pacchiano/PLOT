@@ -334,11 +334,11 @@ def plot_results(algo_name, dataset, results_type, num_batches, batch_size, mods
 
 USE_RAY = True
 
-RUN_EPSILON = False
+RUN_EPSILON = True
 PLOT_EPSILON = True
 
 PLOT_MAHALANOBIS = True
-RUN_MAHALANOBIS = False
+RUN_MAHALANOBIS = True
 
 
 ## What is the fractrion of rejected labels for each algorithm and each dataset. 
