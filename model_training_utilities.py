@@ -26,7 +26,7 @@ def train_model(
     weight_decay=0.0
 ):
     if restart_model_full_minimization: 
-        model.reinitialize_model()
+        model.reset_weights()
 
     optimizer = torch.optim.Adam(model.network.parameters(), lr=0.01, weight_decay=weight_decay )
 

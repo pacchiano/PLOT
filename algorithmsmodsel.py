@@ -9,7 +9,7 @@ import sys
 import IPython
 
 from dataclasses import dataclass
-from torchvision import datasets, transforms
+#from torchvision import datasets, transforms
 from typing import Any
 
 from math import log, exp
@@ -20,6 +20,7 @@ from model_training_utilities import evaluate_model, train_model
 
 from datasets import get_batches, get_dataset_simple, GrowingNumpyDataSet
 from models import (
+    TorchMultilayerBinaryLogisticRegression,
     TorchBinaryLogisticRegression,
     get_predictions,
     get_accuracies,
@@ -52,7 +53,7 @@ def binary_search(func,xmin,xmax,tol=1e-5):
 
 class CorralHyperparam:
 
-    def __init__(self,m,T=1000,eta=0.1):
+    def __init__(self,m,T=1000,eta=0.1, anytime = False):
         #self.hyperparam_list = hyperparam_list
         self.m = m# len(self.hyperparam_list)
         self.base_probas = np.ones(self.m)/self.m
@@ -62,6 +63,9 @@ class CorralHyperparam:
         self.etas = np.ones(self.m)*eta
         self.T = T
         self.counter = 0
+        self.anytime = False
+        if self.anytime:
+            self.T = 1
 
 
     def sample_base_index(self):
@@ -88,6 +92,8 @@ class CorralHyperparam:
       self.update_etas()
 
       self.counter += 1
+      if self.anytime:
+          self.T += 1
 
 
     def update_etas(self):
@@ -136,13 +142,93 @@ class CorralHyperparam:
 
 
 # class BalancingHyperParam:
+class SimpleBalancingHyperparam:
+
+    def __init__(self, m, putative_bounds_multipliers, delta =0.01, importance_weighted = True ):
+        #self.hyperparam_list = hyperparam_list
+        self.m = m
+        self.putative_bounds_multipliers = putative_bounds_multipliers
+        self.T = 1
+        self.delta = delta
+        self.algorithm_mask = [1 for _ in range(self.m)]
+        self.counter = 0
+        self.distribution_base_parameters = [1.0/(x**2) for x in self.putative_bounds_multipliers]
+        self.reward_statistics = [0 for _ in range(m)]
+        self.normalize_distribution()
+        self.importance_weighted = importance_weighted
+        self.pulls_per_arm = [0 for _ in range(m)]
+
+    def sample_base_index(self):
+        sample_array = np.random.choice(range(self.m), 1, p=self.base_probas)
+        return sample_array[0]
 
 
+    def normalize_distribution(self):
+        masked_distribution_base_params = [x*y for (x,y) in zip(self.algorithm_mask, self.distribution_base_parameters)]
+        normalization_factor = np.sum(masked_distribution_base_params)
+        self.base_probas = [x/normalization_factor for x in masked_distribution_base_params]
+       
+
+    
+
+    def get_distribution(self):
+        return self.base_probas
+
+
+    def update_distribution(self, algo_idx, reward):
+        proba = self.base_probas[algo_idx]
+        self.pulls_per_arm[algo_idx] += 1
+        if proba == 0:
+            raise ValueError("Probability of taking this action was zero in balancing")
+        if self.importance_weighted:
+            self.reward_statistics[algo_idx] += reward/proba
+        else:
+            curr_arm_pulls = self.pulls_per_arm[algo_idx]
+            curr_avg = self.reward_statistics[algo_idx]
+            self.reward_statistics[algo_idx] = (curr_avg*(curr_arm_pulls-1) + reward)/curr_arm_pulls
+
+
+        upper_bounds = []
+        lower_bounds = []
+
+
+        for i in range(self.m):
+            putative_multiplier = self.putative_bounds_multipliers[i]
+
+            if self.importance_weighted:
+                upper_bounds.append(self.reward_statistics[i] + (putative_multiplier**2)*np.sqrt(self.T) )
+                lower_bounds.append(self.reward_statistics[i] - putative_multiplier*np.sqrt(self.T) )
+            else:
+                upper_bounds.append(self.reward_statistics[i] + (putative_multiplier+1)/np.sqrt(self.pulls_per_arm[i]) )
+                lower_bounds.append(self.reward_statistics[i] - 1.0/np.sqrt(self.pulls_per_arm[i]) )
+
+
+        print("Rewards statistics ", self.reward_statistics)
+        print("pulls per arm ", self.pulls_per_arm)
+        print("Balancing Upper Bounds ", upper_bounds)
+        print("Balancing Lower Bounds ", lower_bounds)
+        print("Balancing algorithm masks ", self.algorithm_mask)
+
+        max_lower_bound = np.max(lower_bounds)
+
+
+        for i, mask in enumerate(self.algorithm_mask):
+            if mask  == 0: ## If the mask equals zero, get rid of the 
+                continue
+
+            if upper_bounds[i] < max_lower_bound:
+
+                print("The balancing algorithm eliminated a base learner.")
+                self.algorithm_mask[i] = 0
+
+        self.T += 1
+
+        self.normalize_distribution()
 
 
 def train_epsilon_greedy_modsel(dataset, baseline_model, num_batches, batch_size, 
-    num_opt_steps, opt_batch_size, MLP = True, 
-    representation_layer_size = 10, threshold = .5, epsilons = [.1, .05, .01],
+    num_opt_steps, opt_batch_size, 
+    representation_layer_sizes = [10, 10], threshold = .5, epsilons = [.1, .05, .01],
     verbose = False, fit_intercept = True, decaying_epsilon = False, 
     restart_model_full_minimization = False, modselalgo = "Corral"):
     
@@ -150,7 +236,12 @@ def train_epsilon_greedy_modsel(dataset, baseline_model, num_batches, batch_size
     # raise ValueError("asldfkmalsdkfm")
 
     if modselalgo == "Corral":
-        modsel_manager = CorralHyperparam(len(epsilons), T = num_batches) ### hack
+        modsel_manager = CorralHyperparam(len(epsilons), T = num_batches) 
+    elif modselalgo == "CorralAnytime":
+        modsel_manager = CorralHyperparam(len(epsilons), T = num_batches, anytime = True) 
+    elif modselalgo == "BalancingSimple":
+        modsel_manager = SimpleBalancingHyperparam(len(epsilons), 
+            [1 for _ in range(len(epsilons))], delta =0.01)
     else:
         raise ValueError("Modselalgo type {} not recognized.".format(modselalgo))
 
@@ -163,13 +254,21 @@ def train_epsilon_greedy_modsel(dataset, baseline_model, num_batches, batch_size
         test_batch_size=10000000, 
         fit_intercept = True)
 
-    model = TorchBinaryLogisticRegression(
-        random_init=True,
+
+    model = TorchMultilayerBinaryLogisticRegression(
         alpha=0,
-        MLP=MLP,
-        representation_layer_size=representation_layer_size,
+        representation_layer_sizes=representation_layer_sizes,
         dim = train_dataset.dimension
     )
+
+
+    # model = TorchBinaryLogisticRegression(
+    #     random_init=True,
+    #     alpha=0,
+    #     MLP=MLP,
+    #     representation_layer_size=representation_layer_size,
+    #     dim = train_dataset.dimension
+    # )
 
     growing_training_dataset = GrowingNumpyDataSet()
     instantaneous_regrets = []
@@ -287,13 +386,19 @@ def train_epsilon_greedy_modsel(dataset, baseline_model, num_batches, batch_size
 
 
 def train_mahalanobis_modsel(dataset, baseline_model, num_batches, batch_size, 
-    num_opt_steps, opt_batch_size, MLP = True, 
-    representation_layer_size = 10, threshold = .5, alphas = [1, .1, .01], lambda_reg = 1,
+    num_opt_steps, opt_batch_size,
+    representation_layer_sizes = [10, 10], threshold = .5, alphas = [1, .1, .01], lambda_reg = 1,
     verbose = False, fit_intercept = True, 
     restart_model_full_minimization = False, modselalgo = "Corral"):
     
     if modselalgo == "Corral":
         modsel_manager = CorralHyperparam(len(alphas), T = num_batches) ### hack
+    elif modselalgo == "CorralAnytime":
+        modsel_manager = CorralHyperparam(len(alphas), T = num_batches, anytime = True) 
+    elif modselalgo == "BalancingSimple":
+        modsel_manager = SimpleBalancingHyperparam(len(alphas), 
+           alphas, delta =0.01)
+
     else:
         raise ValueError("Modselalgo type {} not recognized.".format(modselalgo))
     alpha = alphas[0]
@@ -311,14 +416,21 @@ def train_mahalanobis_modsel(dataset, baseline_model, num_batches, batch_size,
 
     dataset_dimension = train_dataset.dimension
 
-    
-    model = TorchBinaryLogisticRegression(
-        random_init=True,
+
+    model = TorchMultilayerBinaryLogisticRegression(
         alpha=alpha,
-        MLP=MLP,
-        representation_layer_size=representation_layer_size,
+        representation_layer_sizes=representation_layer_sizes,
         dim = train_dataset.dimension
     )
+
+
+    # model = TorchBinaryLogisticRegression(
+    #     random_init=True,
+    #     alpha=alpha,
+    #     MLP=MLP,
+    #     representation_layer_size=representation_layer_size,
+    #     dim = train_dataset.dimension
+    # )
 
     growing_training_dataset = GrowingNumpyDataSet()
     instantaneous_regrets = []
@@ -334,14 +446,14 @@ def train_mahalanobis_modsel(dataset, baseline_model, num_batches, batch_size,
 
 
 
-    if not MLP:
+    if len(representation_layer_sizes) == 0:
         covariance  = lambda_reg*torch.eye(dataset_dimension).cuda()
     else:
         if torch.cuda.is_available():
 
-            covariance = lambda_reg*torch.eye(representation_layer_size).cuda()
+            covariance = lambda_reg*torch.eye(representation_layer_sizes[-1]).cuda()
         else:
-            covariance = lambda_reg*torch.eye(representation_layer_size)
+            covariance = lambda_reg*torch.eye(representation_layer_sizes[-1])
 
 
     for i in range(num_batches):

@@ -5,7 +5,7 @@ import random
 import IPython
 import torch
 import pickle
-from torchvision import datasets, transforms
+#from torchvision import datasets, transforms
 
 
 # @title Data utilities

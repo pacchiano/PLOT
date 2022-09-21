@@ -18,17 +18,17 @@ def process_results(results_list):
 
 
 
-def run_train_baseline(dataset, num_experiments, batch_size = 32, num_timesteps = 1000, representation_layer_size = 10):
+def run_train_baseline(dataset, num_experiments, batch_size = 32, num_timesteps = 1000, representation_layer_sizes = [10,10]):
 	### BASELINE training
 	if USE_RAY:
 		baseline_results = [train_baseline_remote.remote(dataset, num_timesteps = num_timesteps, 
 	    batch_size = batch_size, 
-	    MLP = True, representation_layer_size = representation_layer_size) for _ in range(num_experiments)]
+	    representation_layer_sizes = representation_layer_sizes) for _ in range(num_experiments)]
 		baseline_results = ray.get(baseline_results)
 	else:
 		baseline_results = [train_baseline(dataset, num_timesteps = num_timesteps, 
 	    batch_size = batch_size, 
-	    MLP = True, representation_layer_size = representation_layer_size) for _ in range(num_experiments)]
+	    representation_layer_sizes = representation_layer_sizes) for _ in range(num_experiments)]
 
 	baseline_model = baseline_results[0][1]	
 
@@ -37,13 +37,13 @@ def run_train_baseline(dataset, num_experiments, batch_size = 32, num_timesteps 
 
 def run_epsilon_greedy_experiments(dataset, epsilons, modselalgo, num_experiments, baseline_model, 
 	num_batches, batch_size, decaying_epsilon, num_opt_steps = 1000, 
-	opt_batch_size = 20, representation_layer_size = 10, restart_model_full_minimization = False):
+	opt_batch_size = 20, representation_layer_sizes = [10, 10], restart_model_full_minimization = False):
 	if USE_RAY:
 		
 		epsilon_greedy_modsel_results = [train_epsilon_greedy_modsel_remote.remote(dataset, baseline_model, 
 	    num_batches = num_batches, batch_size = batch_size, 
-	    num_opt_steps = num_opt_steps, opt_batch_size = opt_batch_size, MLP = True, 
-	    representation_layer_size = representation_layer_size, threshold = .5, verbose = True, decaying_epsilon = decaying_epsilon, 
+	    num_opt_steps = num_opt_steps, opt_batch_size = opt_batch_size, 
+	    representation_layer_sizes = representation_layer_sizes, threshold = .5, verbose = True, decaying_epsilon = decaying_epsilon, 
 	    		epsilons = epsilons, restart_model_full_minimization = restart_model_full_minimization, 
 	    		modselalgo = modselalgo) for _ in range(num_experiments)]
 		epsilon_greedy_modsel_results = ray.get(epsilon_greedy_modsel_results)
@@ -53,8 +53,8 @@ def run_epsilon_greedy_experiments(dataset, epsilons, modselalgo, num_experiment
 
 		epsilon_greedy_modsel_results = [train_epsilon_greedy_modsel(dataset, baseline_model, 
 	    num_batches = num_batches, batch_size = batch_size, 
-	    num_opt_steps = num_opt_steps, opt_batch_size = opt_batch_size, MLP = True, 
-	    representation_layer_size = representation_layer_size, threshold = .5, verbose = True, decaying_epsilon = decaying_epsilon, 
+	    num_opt_steps = num_opt_steps, opt_batch_size = opt_batch_size,
+	    representation_layer_sizes = representation_layer_sizes, threshold = .5, verbose = True, decaying_epsilon = decaying_epsilon, 
 	    	epsilons = epsilons, restart_model_full_minimization = restart_model_full_minimization, 
 	    	modselalgo = modselalgo) for _ in range(num_experiments)]
 		
@@ -70,8 +70,8 @@ def run_epsilon_greedy_experiments(dataset, epsilons, modselalgo, num_experiment
 		if USE_RAY:
 			epsilon_greedy_results =  [train_epsilon_greedy_remote.remote(dataset, baseline_model, 
 			    num_batches = num_batches, batch_size = batch_size, 
-			    num_opt_steps = num_opt_steps, opt_batch_size = opt_batch_size, MLP = True, 
-			    representation_layer_size = representation_layer_size, threshold = .5, verbose = True, 
+			    num_opt_steps = num_opt_steps, opt_batch_size = opt_batch_size,
+			    representation_layer_sizes = representation_layer_sizes, threshold = .5, verbose = True, 
 			    	decaying_epsilon = decaying_epsilon, epsilon = epsilon,
 			    	restart_model_full_minimization = restart_model_full_minimization) for _ in range(num_experiments)]
 			epsilon_greedy_results = ray.get(epsilon_greedy_results)
@@ -81,8 +81,8 @@ def run_epsilon_greedy_experiments(dataset, epsilons, modselalgo, num_experiment
 
 			epsilon_greedy_results = [train_epsilon_greedy(dataset, baseline_model, 
 			    num_batches = num_batches, batch_size = batch_size, 
-			    num_opt_steps = num_opt_steps, opt_batch_size = opt_batch_size, MLP = True, 
-			    representation_layer_size = representation_layer_size, threshold = .5, verbose = True, 
+			    num_opt_steps = num_opt_steps, opt_batch_size = opt_batch_size,
+			    representation_layer_sizes = representation_layer_sizes, threshold = .5, verbose = True, 
 			    decaying_epsilon = decaying_epsilon, epsilon = epsilon,
 			    restart_model_full_minimization = restart_model_full_minimization)]
 
@@ -96,15 +96,15 @@ def run_epsilon_greedy_experiments(dataset, epsilons, modselalgo, num_experiment
 
 def run_mahalanobis_experiments(dataset, alphas, modselalgo, num_experiments, baseline_model, num_batches, 
 	batch_size, decaying_epsilon, num_opt_steps = 1000, 
-	opt_batch_size = 20, representation_layer_size = 10, restart_model_full_minimization = False):
+	opt_batch_size = 20, representation_layer_sizes = [10, 10], restart_model_full_minimization = False):
 
 
 	if USE_RAY:
 		
 		mahalanobis_modsel_results = [train_mahalanobis_modsel_remote.remote(dataset, baseline_model, 
 	    num_batches = num_batches, batch_size = batch_size, 
-	    num_opt_steps = num_opt_steps, opt_batch_size = opt_batch_size, MLP = True, 
-	    representation_layer_size = representation_layer_size, threshold = .5, verbose = True, alphas = alphas,
+	    num_opt_steps = num_opt_steps, opt_batch_size = opt_batch_size, 
+	    representation_layer_sizes = representation_layer_sizes, threshold = .5, verbose = True, alphas = alphas,
 	    restart_model_full_minimization = False, modselalgo = modselalgo) for _ in range(num_experiments)]
 		mahalanobis_modsel_results = ray.get(mahalanobis_modsel_results)
 
@@ -113,8 +113,8 @@ def run_mahalanobis_experiments(dataset, alphas, modselalgo, num_experiments, ba
 
 		mahalanobis_modsel_results = [train_mahalanobis_modsel(dataset, baseline_model, 
 	    num_batches = num_batches, batch_size = batch_size, 
-	    num_opt_steps = num_opt_steps, opt_batch_size = opt_batch_size, MLP = True, 
-	    representation_layer_size = representation_layer_size, threshold = .5, verbose = True, alphas = alphas,
+	    num_opt_steps = num_opt_steps, opt_batch_size = opt_batch_size, 
+	    representation_layer_sizes = representation_layer_sizes, threshold = .5, verbose = True, alphas = alphas,
 	    restart_model_full_minimization = False, modselalgo = modselalgo) for _ in range(num_experiments)]
 		
 
@@ -129,8 +129,8 @@ def run_mahalanobis_experiments(dataset, alphas, modselalgo, num_experiments, ba
 
 			mahalanobis_results = [ train_mahalanobis_remote.remote(dataset, baseline_model, 
 	   				 num_batches = num_batches, batch_size = batch_size, 
-	   				 num_opt_steps = num_opt_steps, opt_batch_size = opt_batch_size, MLP = True, 
-	   				 representation_layer_size = representation_layer_size, threshold = .5, verbose = True,  alpha = alpha, 
+	   				 num_opt_steps = num_opt_steps, opt_batch_size = opt_batch_size, 
+	   				 representation_layer_sizes = representation_layer_sizes, threshold = .5, verbose = True,  alpha = alpha, 
 	   				 lambda_reg = 1, restart_model_full_minimization = False) for _ in range(num_experiments)]
 
 			mahalanobis_results = ray.get(mahalanobis_results)
@@ -140,8 +140,8 @@ def run_mahalanobis_experiments(dataset, alphas, modselalgo, num_experiments, ba
 
 			mahalanobis_results = [train_mahalanobis(dataset, baseline_model, 
 	   				 num_batches = num_batches, batch_size = batch_size, 
-	   				 num_opt_steps = num_opt_steps, opt_batch_size = opt_batch_size, MLP = True, 
-	   				 representation_layer_size = representation_layer_size, threshold = .5, verbose = True,  alpha = alpha, 
+	   				 num_opt_steps = num_opt_steps, opt_batch_size = opt_batch_size, 
+	   				 representation_layer_sizes = representation_layer_sizes, threshold = .5, verbose = True,  alpha = alpha, 
 	   				 lambda_reg = 1, restart_model_full_minimization = False) for _ in range(num_experiments)]
 
 		mahalanobis_results_list.append(("alpha-{}".format(alpha), mahalanobis_results))
@@ -150,8 +150,11 @@ def run_mahalanobis_experiments(dataset, alphas, modselalgo, num_experiments, ba
 	return ("alpha {}".format(modselalgo),mahalanobis_modsel_results ), mahalanobis_results_list
 
 
+
+
+
 def plot_modsel_probabilities(algo_name, dataset, num_batches, batch_size, modselalgo, 
-	results_dictionary, hyperparams, colors, averaging_window = 1):
+	results_dictionary, hyperparams, colors, representation_layer_sizes, averaging_window = 1):
 
 	Ts = np.arange(num_batches)+1
 	color_index = 0
@@ -175,12 +178,13 @@ def plot_modsel_probabilities(algo_name, dataset, num_batches, batch_size, modse
 
 		color_index+=1
 
+	repres_layers_name = get_architecture_name(representation_layer_sizes)
 
-	plt.title("Probabilities evolution {} {} B{}".format(modselalgo, dataset, batch_size))
+	plt.title("Probabilities evolution {} {} B{} N {}".format(modselalgo, dataset, batch_size, repres_layers_name))
 	plt.xlabel("Number of batches")
 	plt.legend(fontsize=8, loc="upper left")
 
-	plt.savefig("./ModselResults/modsel_probabilities-{}_{}_T{}_B{}.png".format(algo_name, dataset,num_batches,batch_size))
+	plt.savefig("./ModselResults/modsel_probabilities-{}_{}_T{}_B{}_N_{}.png".format(algo_name, dataset,num_batches,batch_size, repres_layers_name))
 
 	plt.close("all")
 	
@@ -190,7 +194,7 @@ def plot_modsel_probabilities(algo_name, dataset, num_batches, batch_size, modse
 
 
 def plot_results(algo_name, dataset, results_type, num_batches, batch_size, modselalgo, 
-	results_dictionary, hyperparams, colors, cummulative_plot = False, averaging_window = 1 ):
+	results_dictionary, hyperparams, colors, representation_layer_sizes, cummulative_plot = False, averaging_window = 1 ):
 
 
 	Ts = (np.arange(num_batches/averaging_window)+1)*averaging_window
@@ -304,9 +308,12 @@ def plot_results(algo_name, dataset, results_type, num_batches, batch_size, mods
 		label = "False Positives"
 	else:
 		raise ValueError("Unrecognized option {}".format(results_type))
+	
+
+	repres_layers_name = get_architecture_name(representation_layer_sizes)
 
 
-	plt.title("{} {} {} B{}".format( label, modselalgo, dataset, batch_size))
+	plt.title("{} {} {} B{} N {}".format( label, modselalgo, dataset, batch_size, repres_layers_name))
 	plt.xlabel("Number of batches")
 
 	plt.ylabel(label)
@@ -314,8 +321,8 @@ def plot_results(algo_name, dataset, results_type, num_batches, batch_size, mods
 	plt.legend(fontsize=8, loc="upper left")
 
 
-	plt.savefig("./ModselResults/modsel_{}_cum_{}-{}_{}_{}_T{}_B{}.png".format(results_type, cummulative_plot, 
-		algo_name, modselalgo,dataset, num_batches, batch_size))
+	plt.savefig("./ModselResults/modsel_{}_cum_{}-{}_{}_{}_T{}_B{}_N_{}.png".format(results_type, cummulative_plot, 
+		algo_name, modselalgo,dataset, num_batches, batch_size, repres_layers_name))
 
 	plt.close("all")
 
@@ -325,8 +332,17 @@ def plot_results(algo_name, dataset, results_type, num_batches, batch_size, mods
 
 
 
+def get_architecture_name(representation_layer_sizes):
 
+	### Get repres_layer_name 
+	if len(representation_layer_sizes) == 0:
+		repres_layers_name = "linear"
+	else:
+		repres_layers_name = "{}".format(representation_layer_sizes[0])
+		for layer_size in representation_layer_sizes[1:]:
+			repres_layers_name += "_{}".format(layer_size)
 
+	return repres_layers_name
 
 
 
@@ -334,16 +350,16 @@ def plot_results(algo_name, dataset, results_type, num_batches, batch_size, mods
 
 USE_RAY = True
 
-RUN_EPSILON = True
-PLOT_EPSILON = True
+RUN_EPSILON = False
+PLOT_EPSILON = False
 
-PLOT_MAHALANOBIS = True
 RUN_MAHALANOBIS = True
+PLOT_MAHALANOBIS = True
 
 
 ## What is the fractrion of rejected labels for each algorithm and each dataset. 
-dataset = "Crime"
 num_batches = 2000
+averaging_window = 50
 epsilon = .1
 alpha = 10
 epsilons = [.2, .1, .01, .05]#, .05]
@@ -352,138 +368,149 @@ decaying_epsilon = False
 
 batch_size = 10
 
+representation_layer_sizes = [10,10]
+
+
+
 colors = ["blue", "red", "orange", "black", "violet", "orange", "green", "brown", "gray"]
 
-modselalgo = "Corral"
+modselalgos = ["BalancingSimple","Corral", "CorralAnytime"]
+datasets = ["Adult", "Crime", "German", "Bank"]
 
 num_experiments = 10
+repres_layers_name = get_architecture_name(representation_layer_sizes)
+
 
 results_dictionary = dict([])
 
+for dataset in datasets:
+	for modselalgo in modselalgos:
 
 
 
-if RUN_EPSILON or RUN_MAHALANOBIS:
 
-	baseline_results, baseline_model = run_train_baseline(dataset, num_experiments)
+		if RUN_EPSILON or RUN_MAHALANOBIS:
 
-	results_dictionary["baseline"] = [x[1] for x in baseline_results]
+			baseline_results, baseline_model = run_train_baseline(dataset, num_experiments)
 
+			results_dictionary["baseline"] = [x[1] for x in baseline_results]
 
-# results_dictionary["epsilon {}".format(modselalgo)] = epsilon_greedy_modsel_results
 
+		### Run epsilon-greedy model selection experiments
 
-### Run epsilon-greedy model selection experiments
 
+		if RUN_EPSILON:
 
-if RUN_EPSILON:
+			epsilon_greedy_modsel_results_tuple, epsilon_greedy_results_list  =	run_epsilon_greedy_experiments(dataset, epsilons, modselalgo, num_experiments, baseline_model, num_batches, batch_size, decaying_epsilon, num_opt_steps = 1000, 
+				opt_batch_size = 20, representation_layer_sizes = representation_layer_sizes, restart_model_full_minimization = False)
 
-	epsilon_greedy_modsel_results_tuple, epsilon_greedy_results_list  =	run_epsilon_greedy_experiments(dataset, epsilons, modselalgo, num_experiments, baseline_model, num_batches, batch_size, decaying_epsilon, num_opt_steps = 1000, 
-		opt_batch_size = 20, representation_layer_size = 10, restart_model_full_minimization = False)
+			results_dictionary[epsilon_greedy_modsel_results_tuple[0]] = epsilon_greedy_modsel_results_tuple[1]
 
-	results_dictionary[epsilon_greedy_modsel_results_tuple[0]] = epsilon_greedy_modsel_results_tuple[1]
+			for eps_res_tuple in epsilon_greedy_results_list:
+				results_dictionary[eps_res_tuple[0]] = eps_res_tuple[1]
 
-	for eps_res_tuple in epsilon_greedy_results_list:
-		results_dictionary[eps_res_tuple[0]] = eps_res_tuple[1]
 
+		if RUN_MAHALANOBIS:
+			mahalanobis_modsel_results_tuple, mahalanobis_results_list = run_mahalanobis_experiments(dataset, alphas, modselalgo, num_experiments, baseline_model, num_batches, batch_size, decaying_epsilon, num_opt_steps = 1000, 
+				opt_batch_size = 20, representation_layer_sizes = representation_layer_sizes, restart_model_full_minimization = False)
 
-if RUN_MAHALANOBIS:
-	mahalanobis_modsel_results_tuple, mahalanobis_results_list = run_mahalanobis_experiments(dataset, alphas, modselalgo, num_experiments, baseline_model, num_batches, batch_size, decaying_epsilon, num_opt_steps = 1000, 
-		opt_batch_size = 20, representation_layer_size = 10, restart_model_full_minimization = False)
+			results_dictionary[mahalanobis_modsel_results_tuple[0]] = mahalanobis_modsel_results_tuple[1]
+			for mahalanobis_res_tuple in mahalanobis_results_list:
+				results_dictionary[mahalanobis_res_tuple[0]] = mahalanobis_res_tuple[1]	
 
-	results_dictionary[mahalanobis_modsel_results_tuple[0]] = mahalanobis_modsel_results_tuple[1]
-	for mahalanobis_res_tuple in mahalanobis_results_list:
-		results_dictionary[mahalanobis_res_tuple[0]] = mahalanobis_res_tuple[1]	
 
 
 
 
 
 
-pickle_results_filename = "results_modsel_{}_T{}_B{}.p".format(dataset, num_batches,batch_size )
+		pickle_results_filename = "results_modsel_{}_T{}_B{}_N_{}.p".format(dataset, num_batches,batch_size,repres_layers_name )
 
-if RUN_EPSILON or RUN_MAHALANOBIS:
-	pickle.dump(results_dictionary, 
-	    open("ModselResults/{}".format(pickle_results_filename), "wb"))
+		if RUN_EPSILON or RUN_MAHALANOBIS:
+			pickle.dump(results_dictionary, 
+			    open("ModselResults/{}".format(pickle_results_filename), "wb"))
 
 
-results_dictionary = pickle.load(open("ModselResults/{}".format(pickle_results_filename), "rb")) 
+		results_dictionary = pickle.load(open("ModselResults/{}".format(pickle_results_filename), "rb")) 
 
 
-Ts = np.arange(num_batches)+1
-color_index = 0
+		Ts = np.arange(num_batches)+1
+		color_index = 0
 
+		if PLOT_EPSILON:
 
-# IPython.embed()
-# raise ValueError("asldkfm")
 
-if PLOT_EPSILON:
+			epsilon_modsel_results = results_dictionary["epsilon {}".format(modselalgo)]
 
 
-	epsilon_modsel_results = results_dictionary["epsilon {}".format(modselalgo)]
 
+			plot_modsel_probabilities("epsilon", dataset, num_batches, batch_size, modselalgo, 
+				results_dictionary, epsilons, colors, representation_layer_sizes = representation_layer_sizes)
 
 
-	plot_modsel_probabilities("epsilon", dataset, num_batches, batch_size, modselalgo, 
-		results_dictionary, epsilons, colors)
 
+			plot_results("epsilon", dataset, "instantaneous_regrets", num_batches, batch_size, modselalgo, 
+				results_dictionary, epsilons, colors, representation_layer_sizes = representation_layer_sizes,
+				 cummulative_plot = True , averaging_window = averaging_window)
 
 
-	plot_results("epsilon", dataset, "instantaneous_regrets", num_batches, batch_size, modselalgo, 
-		results_dictionary, epsilons, colors, cummulative_plot = True , averaging_window = 50)
+			plot_results("epsilon", dataset, "instantaneous_accuracies", num_batches, batch_size, modselalgo, 
+				results_dictionary, epsilons, colors, representation_layer_sizes = representation_layer_sizes,
+				cummulative_plot = False, averaging_window = averaging_window )
 
+			plot_results("epsilon", dataset, "num_negatives", num_batches, batch_size, modselalgo, 
+				results_dictionary, epsilons, colors, representation_layer_sizes = representation_layer_sizes,
+				 cummulative_plot = False, averaging_window = averaging_window )
 
-	plot_results("epsilon", dataset, "instantaneous_accuracies", num_batches, batch_size, modselalgo, 
-		results_dictionary, epsilons, colors, cummulative_plot = False, averaging_window = 50 )
+			plot_results("epsilon", dataset, "num_positives", num_batches, batch_size, modselalgo, 
+				results_dictionary, epsilons, colors, representation_layer_sizes = representation_layer_sizes,
+				 cummulative_plot = False, averaging_window = averaging_window )
 
-	plot_results("epsilon", dataset, "num_negatives", num_batches, batch_size, modselalgo, 
-		results_dictionary, epsilons, colors, cummulative_plot = False, averaging_window = 50 )
+			plot_results("epsilon", dataset, "false_neg_rates", num_batches, batch_size, modselalgo, 
+				results_dictionary, epsilons, colors, representation_layer_sizes = representation_layer_sizes,
+				 cummulative_plot = False, averaging_window = averaging_window )
 
-	plot_results("epsilon", dataset, "num_positives", num_batches, batch_size, modselalgo, 
-		results_dictionary, epsilons, colors, cummulative_plot = False, averaging_window = 50 )
+			plot_results("epsilon", dataset, "false_positive_rates", num_batches, batch_size, modselalgo, 
+				results_dictionary, epsilons, colors, representation_layer_sizes = representation_layer_sizes,
+				cummulative_plot = False, averaging_window = averaging_window )
 
-	plot_results("epsilon", dataset, "false_neg_rates", num_batches, batch_size, modselalgo, 
-		results_dictionary, epsilons, colors, cummulative_plot = False, averaging_window = 50 )
 
-	plot_results("epsilon", dataset, "false_positive_rates", num_batches, batch_size, modselalgo, 
-		results_dictionary, epsilons, colors, cummulative_plot = False, averaging_window = 50 )
 
 
 
 
 
+		if PLOT_MAHALANOBIS:
 
 
-if PLOT_MAHALANOBIS:
+			plot_modsel_probabilities("alpha", dataset, num_batches, batch_size, modselalgo, 
+				results_dictionary, alphas, colors, representation_layer_sizes = representation_layer_sizes)
 
 
-	plot_modsel_probabilities("alpha", dataset, num_batches, batch_size, modselalgo, 
-		results_dictionary, alphas, colors)
+			plot_results("alpha", dataset, "instantaneous_regrets", num_batches, batch_size, modselalgo, 
+				results_dictionary, alphas, colors, representation_layer_sizes = representation_layer_sizes,
+				cummulative_plot = True , averaging_window = averaging_window)
 
 
-	# # Plot epsilon-greedy model selection
-	# probs =[x["modselect_info"] for x in mahalanobis_modsel_results]
+			plot_results("alpha", dataset, "instantaneous_accuracies", num_batches, batch_size, modselalgo, 
+				results_dictionary, alphas, colors, representation_layer_sizes = representation_layer_sizes,
+				cummulative_plot = False, averaging_window = averaging_window )
 
+			plot_results("alpha", dataset, "num_negatives", num_batches, batch_size, modselalgo, 
+				results_dictionary, alphas, colors, representation_layer_sizes = representation_layer_sizes,
+				cummulative_plot = False , averaging_window = averaging_window)
 
+			plot_results("alpha", dataset, "num_positives", num_batches, batch_size, modselalgo, 
+				results_dictionary, alphas, colors, representation_layer_sizes = representation_layer_sizes,
+				cummulative_plot = False , averaging_window = averaging_window)
 
-	plot_results("alpha", dataset, "instantaneous_regrets", num_batches, batch_size, modselalgo, 
-		results_dictionary, alphas, colors, cummulative_plot = True , averaging_window = 50)
+			plot_results("alpha", dataset, "false_neg_rates", num_batches, batch_size, modselalgo, 
+				results_dictionary, alphas, colors, representation_layer_sizes = representation_layer_sizes,
+				cummulative_plot = False , averaging_window = averaging_window)
 
-
-	plot_results("alpha", dataset, "instantaneous_accuracies", num_batches, batch_size, modselalgo, 
-		results_dictionary, alphas, colors, cummulative_plot = False, averaging_window = 50 )
-
-	plot_results("alpha", dataset, "num_negatives", num_batches, batch_size, modselalgo, 
-		results_dictionary, alphas, colors, cummulative_plot = False , averaging_window = 50)
-
-	plot_results("alpha", dataset, "num_positives", num_batches, batch_size, modselalgo, 
-		results_dictionary, alphas, colors, cummulative_plot = False , averaging_window = 50)
-
-	plot_results("alpha", dataset, "false_neg_rates", num_batches, batch_size, modselalgo, 
-		results_dictionary, alphas, colors, cummulative_plot = False , averaging_window = 50)
-
-	plot_results("alpha", dataset, "false_positive_rates", num_batches, batch_size, modselalgo, 
-		results_dictionary, alphas, colors, cummulative_plot = False , averaging_window = 50)
+			plot_results("alpha", dataset, "false_positive_rates", num_batches, batch_size, modselalgo, 
+				results_dictionary, alphas, colors, representation_layer_sizes = representation_layer_sizes,
+				cummulative_plot = False , averaging_window = averaging_window)
 
 
 
