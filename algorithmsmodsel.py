@@ -135,89 +135,6 @@ class CorralHyperparam:
 
 
 
-# # class BalancingHyperParam:
-# class SimpleBalancingHyperparam:
-
-#     def __init__(self, m, putative_bounds_multipliers, delta =0.01, importance_weighted = True ):
-#         #self.hyperparam_list = hyperparam_list
-#         self.m = m
-#         self.putative_bounds_multipliers = putative_bounds_multipliers
-#         self.T = 1
-#         self.delta = delta
-#         self.algorithm_mask = [1 for _ in range(self.m)]
-#         self.counter = 0
-#         self.distribution_base_parameters = [1.0/(x**2) for x in self.putative_bounds_multipliers]
-#         self.reward_statistics = [0 for _ in range(m)]
-#         self.normalize_distribution()
-#         self.importance_weighted = importance_weighted
-#         self.pulls_per_arm = [0 for _ in range(m)]
-
-#     def sample_base_index(self):
-#         sample_array = np.random.choice(range(self.m), 1, p=self.base_probas)
-#         return sample_array[0]
-
-
-#     def normalize_distribution(self):
-#         masked_distribution_base_params = [x*y for (x,y) in zip(self.algorithm_mask, self.distribution_base_parameters)]
-#         normalization_factor = np.sum(masked_distribution_base_params)
-#         self.base_probas = [x/normalization_factor for x in masked_distribution_base_params]
-       
-
-    
-
-#     def get_distribution(self):
-#         return self.base_probas
-
-
-#     def update_distribution(self, algo_idx, reward, more_info = dict([])):
-#         proba = self.base_probas[algo_idx]
-#         self.pulls_per_arm[algo_idx] += 1
-#         if proba == 0:
-#             raise ValueError("Probability of taking this action was zero in balancing")
-#         if self.importance_weighted:
-#             self.reward_statistics[algo_idx] += reward/proba
-#         else:
-#             curr_arm_pulls = self.pulls_per_arm[algo_idx]
-#             curr_avg = self.reward_statistics[algo_idx]
-#             self.reward_statistics[algo_idx] = (curr_avg*(curr_arm_pulls-1) + reward)/curr_arm_pulls
-
-
-#         upper_bounds = []
-#         lower_bounds = []
-
-
-#         for i in range(self.m):
-#             putative_multiplier = self.putative_bounds_multipliers[i]
-
-#             if self.importance_weighted:
-#                 upper_bounds.append(self.reward_statistics[i] + (putative_multiplier**2)*np.sqrt(self.T) )
-#                 lower_bounds.append(self.reward_statistics[i] - putative_multiplier*np.sqrt(self.T) )
-#             else:
-#                 upper_bounds.append(self.reward_statistics[i] + (putative_multiplier+1)/np.sqrt(self.pulls_per_arm[i]) )
-#                 lower_bounds.append(self.reward_statistics[i] - 1.0/np.sqrt(self.pulls_per_arm[i]) )
-
-
-#         print("Rewards statistics ", self.reward_statistics)
-#         print("pulls per arm ", self.pulls_per_arm)
-#         print("Balancing Upper Bounds ", upper_bounds)
-#         print("Balancing Lower Bounds ", lower_bounds)
-#         print("Balancing algorithm masks ", self.algorithm_mask)
-
-#         max_lower_bound = np.max(lower_bounds)
-
-
-#         for i, mask in enumerate(self.algorithm_mask):
-#             if mask  == 0: ## If the mask equals zero, get rid of the 
-#                 continue
-
-#             if upper_bounds[i] < max_lower_bound:
-
-#                 print("The balancing algorithm eliminated a base learner.")
-#                 self.algorithm_mask[i] = 0
-
-#         self.T += 1
-
-#         self.normalize_distribution()
 
 
 # class BalancingHyperParam:
@@ -326,7 +243,7 @@ class BalancingHyperparam:
 
             
 
-
+        print(self.balancing_type)
         print("Rewards statistics ", self.reward_statistics)
         print("pulls per arm ", self.pulls_per_arm)
         print("Balancing Upper Bounds ", upper_bounds)
