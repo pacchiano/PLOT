@@ -1,7 +1,3 @@
-from models import (
-    TorchBinaryLogisticRegression,
-    get_accuracies_simple,
-)
 import torch
 
 #@title Useful model training utilities
@@ -42,12 +38,9 @@ def train_model(
 def evaluate_model(test_dataset, model, threshold):
     with torch.no_grad():
         batch_test = test_dataset.get_batch(10000000000) 
-        
-        test_accuracy = get_accuracies_simple(
-            batch_test,
-            model,
-            threshold,
-        )
+        batch_X, batch_y = batch_test
+        test_accuracy = model.get_accuracy(batch_X, batch_y, threshold)
+
     print("Final test model accuracy {}".format(test_accuracy))
     return test_accuracy
 

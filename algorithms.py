@@ -4,10 +4,17 @@ import IPython
 
 from datasets import get_dataset_simple, GrowingNumpyDataSet
 from models import (
-    TorchMultilayerBinaryLogisticRegression,
-    TorchBinaryLogisticRegression,
-    get_accuracies_simple,
+    TorchBinaryLogisticRegression
 )
+
+
+from newmodels import (
+TorchMultilayerRegressionMahalanobis,
+TorchMultilayerRegression
+)
+
+
+
 from model_training_utilities import evaluate_model, train_model
 
 
@@ -24,10 +31,10 @@ def train_baseline(dataset, num_timesteps, batch_size, MLP = True,
         test_batch_size=10000000, 
         fit_intercept = fit_intercept)
 
-    baseline_model = TorchMultilayerBinaryLogisticRegression(
-        alpha=0,
+    baseline_model = TorchMultilayerRegression(
         representation_layer_sizes=representation_layer_sizes,
-        dim = train_dataset.dimension
+        dim = train_dataset.dimension,
+        output_filter = 'logistic'
     )
     baseline_model = train_model(
         baseline_model, num_timesteps, train_dataset, batch_size
@@ -37,50 +44,12 @@ def train_baseline(dataset, num_timesteps, batch_size, MLP = True,
 
     with torch.no_grad():
         baseline_batch_test = test_dataset.get_batch(10000000000) 
-        baseline_test_accuracy = get_accuracies_simple(
-            baseline_batch_test,
-            baseline_model,
-            threshold,
-        )
+        
+        batch_X, batch_y = baseline_batch_test
+        baseline_test_accuracy = baseline_model.get_accuracy(batch_X, batch_y, threshold)
     print("Baseline model accuracy {}".format(baseline_test_accuracy))
     return baseline_test_accuracy.item(), baseline_model
 
-
-
-
-
-# def train_baseline(dataset, num_timesteps, batch_size, MLP = True, 
-#     representation_layer_size = 10, threshold = .5, fit_intercept = True):
-#     (
-#         train_dataset,
-#         test_dataset,
-#     ) = get_dataset_simple(
-#         dataset=dataset,
-#         batch_size=batch_size,
-#         test_batch_size=10000000, 
-#         fit_intercept = fit_intercept)
-#     baseline_model = TorchBinaryLogisticRegression(
-#         random_init=True,
-#         alpha=0,
-#         MLP=MLP,
-#         representation_layer_size=representation_layer_size,
-#         dim = train_dataset.dimension
-#     )
-#     baseline_model = train_model(
-#         baseline_model, num_timesteps, train_dataset, batch_size
-#     )
-
-#     print("Finished training baseline model")
-
-#     with torch.no_grad():
-#         baseline_batch_test = test_dataset.get_batch(10000000000) 
-#         baseline_test_accuracy = get_accuracies_simple(
-#             baseline_batch_test,
-#             baseline_model,
-#             threshold,
-#         )
-#     print("Baseline model accuracy {}".format(baseline_test_accuracy))
-#     return baseline_test_accuracy.item(), baseline_model
 
 
 def train_epsilon_greedy(dataset, baseline_model, num_batches, batch_size, 
@@ -99,11 +68,12 @@ def train_epsilon_greedy(dataset, baseline_model, num_batches, batch_size,
         fit_intercept = True)
 
 
-    model = TorchMultilayerBinaryLogisticRegression(
-        alpha=0,
+    model = TorchMultilayerRegression(
         representation_layer_sizes=representation_layer_sizes,
-        dim = train_dataset.dimension
+        dim = train_dataset.dimension,
+        output_filter = 'logistic'
     )
+
 
 
     growing_training_dataset = GrowingNumpyDataSet()
@@ -199,122 +169,6 @@ def train_epsilon_greedy(dataset, baseline_model, num_batches, batch_size,
 
 
 
-# def train_epsilon_greedy(dataset, baseline_model, num_batches, batch_size, 
-#     num_opt_steps, opt_batch_size, MLP = True, 
-#     representation_layer_size = 10, threshold = .5, epsilon = .1,
-#     verbose = False, fit_intercept = True, decaying_epsilon = False, 
-#     restart_model_full_minimization = False):
-    
-#     (
-#         train_dataset,
-#         test_dataset,
-#     ) = get_dataset_simple(
-#         dataset=dataset,
-#         batch_size=batch_size,
-#         test_batch_size=10000000, 
-#         fit_intercept = True)
-
-#     model = TorchBinaryLogisticRegression(
-#         random_init=True,
-#         alpha=0,
-#         MLP=MLP,
-#         representation_layer_size=representation_layer_size,
-#         dim = train_dataset.dimension
-#     )
-
-#     growing_training_dataset = GrowingNumpyDataSet()
-#     instantaneous_regrets = []
-#     instantaneous_accuracies = []
-#     eps_multiplier = 1.0
-
-#     num_positives = []
-#     num_negatives = []
-#     false_neg_rates = []
-#     false_positive_rates = []
-
-
-#     for i in range(num_batches):
-#         if verbose:
-#             print("Processing epsilon greedy batch ", i)
-#         batch_X, batch_y = train_dataset.get_batch(batch_size)
-
-#         with torch.no_grad():
-            
-#             if decaying_epsilon:
-#                 eps_multiplier = 1.0/(np.sqrt(i+1))
-#             predictions = model.get_thresholded_predictions(batch_X, threshold)
-#             baseline_predictions = baseline_model.get_thresholded_predictions(batch_X, threshold)
-
-#             if torch.cuda.is_available():
-#                 epsilon_greedy_mask = torch.bernoulli(torch.ones(predictions.shape)*epsilon*eps_multiplier).bool().cuda()
-#             else:
-#                 epsilon_greedy_mask = torch.bernoulli(torch.ones(predictions.shape)*epsilon*eps_multiplier).bool()
-
-#             mask = torch.max(epsilon_greedy_mask,predictions)
-
-#             boolean_labels_y = batch_y.bool()
-#             accuracy = (torch.sum(mask*boolean_labels_y) +torch.sum( ~mask*~boolean_labels_y))*1.0/batch_size
-            
-#             #### TOTAL NUM POSITIVES
-#             total_num_positives = torch.sum(mask)
-
-#             #### TOTAL NUM NEGATIVES   
-#             total_num_negatives = torch.sum(~mask)
-
-#             #### FALSE NEGATIVE RATE
-#             false_neg_rate = torch.sum(~mask*boolean_labels_y)*1.0/(torch.sum(~mask)+.00000000001)
-
-
-#             #### FALSE POSITIVE RATE            
-#             false_positive_rate = torch.sum(mask*~boolean_labels_y)*1.0/(torch.sum(mask)+.00000000001)
-
-
-
-#             num_positives.append(total_num_positives.item())
-#             num_negatives.append(total_num_negatives.item())
-#             false_neg_rates.append(false_neg_rate.item())
-#             false_positive_rates.append(false_positive_rate)            
-
-
-
-#             accuracy_baseline = (torch.sum(baseline_predictions*boolean_labels_y) +torch.sum( ~baseline_predictions*~boolean_labels_y))*1.0/batch_size
-#             instantaneous_regret = accuracy_baseline - accuracy
-
-#             instantaneous_regrets.append(instantaneous_regret.item())
-#             instantaneous_accuracies.append(accuracy.item())
-
-#             filtered_batch_X = batch_X[mask, :]
-#             filtered_batch_y = batch_y[mask]
-
-#         growing_training_dataset.add_data(filtered_batch_X, filtered_batch_y)
-
-#         #### Filter the batch using the predictions
-#         #### Add the accepted points and their labels to the growing training dataset
-
-#         model = train_model( model, num_opt_steps, 
-#                 growing_training_dataset, opt_batch_size, 
-#                 restart_model_full_minimization = restart_model_full_minimization)
-
-
-
-                 
-#     print("Finished training epsilon-greedy model {}".format(epsilon))
-#     test_accuracy = evaluate_model(test_dataset, model, threshold).item()
-#     print("Final model test accuracy {}".format(test_accuracy))
-
-#     results = dict([])
-#     results["instantaneous_regrets"] = instantaneous_regrets
-#     results["test_accuracy"] = test_accuracy
-#     results["instantaneous_accuracies"] = instantaneous_accuracies
-#     results["num_negatives"] = num_negatives
-#     results["num_positives"] = num_positives
-#     results["false_neg_rates"] = false_neg_rates
-#     results["false_positive_rates"] = false_positive_rates
-
-#     return results# instantaneous_regrets, instantaneous_accuracies, test_accuracy
-
-
-
 
 
 
@@ -336,12 +190,19 @@ def train_mahalanobis(dataset, baseline_model, num_batches, batch_size,
     dataset_dimension = train_dataset.dimension
 
     
-
-    model = TorchMultilayerBinaryLogisticRegression(
+    model = TorchMultilayerRegressionMahalanobis(
         alpha=alpha,
         representation_layer_sizes=representation_layer_sizes,
-        dim = train_dataset.dimension
-    )
+        dim = train_dataset.dimension  , 
+        output_filter = 'logistic'
+        )
+
+
+    # model = TorchMultilayerBinaryLogisticRegression(
+    #     alpha=alpha,
+    #     representation_layer_sizes=representation_layer_sizes,
+    #     dim = train_dataset.dimension
+    # )
 
 
 

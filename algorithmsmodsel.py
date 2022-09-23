@@ -19,15 +19,9 @@ from model_training_utilities import evaluate_model, train_model
 
 
 from datasets import get_batches, get_dataset_simple, GrowingNumpyDataSet
-from models import (
-    TorchMultilayerBinaryLogisticRegression,
-    TorchBinaryLogisticRegression,
-    get_predictions,
-    get_accuracies,
-    get_accuracies_simple,
-    get_breakdown_no_model,
-    get_error_breakdown,
-    get_special_breakdown
+from newmodels import (
+    TorchMultilayerRegression,
+    TorchMultilayerRegressionMahalanobis
 )
 
 def binary_search(func,xmin,xmax,tol=1e-5):
@@ -78,7 +72,7 @@ class CorralHyperparam:
 
     
     
-    def update_distribution(self, arm_idx, reward):
+    def update_distribution(self, arm_idx, reward, more_info = dict([])):
       loss = 1-reward
 
       l = np.zeros(self.m)
@@ -141,10 +135,95 @@ class CorralHyperparam:
 
 
 
-# class BalancingHyperParam:
-class SimpleBalancingHyperparam:
+# # class BalancingHyperParam:
+# class SimpleBalancingHyperparam:
 
-    def __init__(self, m, putative_bounds_multipliers, delta =0.01, importance_weighted = True ):
+#     def __init__(self, m, putative_bounds_multipliers, delta =0.01, importance_weighted = True ):
+#         #self.hyperparam_list = hyperparam_list
+#         self.m = m
+#         self.putative_bounds_multipliers = putative_bounds_multipliers
+#         self.T = 1
+#         self.delta = delta
+#         self.algorithm_mask = [1 for _ in range(self.m)]
+#         self.counter = 0
+#         self.distribution_base_parameters = [1.0/(x**2) for x in self.putative_bounds_multipliers]
+#         self.reward_statistics = [0 for _ in range(m)]
+#         self.normalize_distribution()
+#         self.importance_weighted = importance_weighted
+#         self.pulls_per_arm = [0 for _ in range(m)]
+
+#     def sample_base_index(self):
+#         sample_array = np.random.choice(range(self.m), 1, p=self.base_probas)
+#         return sample_array[0]
+
+
+#     def normalize_distribution(self):
+#         masked_distribution_base_params = [x*y for (x,y) in zip(self.algorithm_mask, self.distribution_base_parameters)]
+#         normalization_factor = np.sum(masked_distribution_base_params)
+#         self.base_probas = [x/normalization_factor for x in masked_distribution_base_params]
+       
+
+    
+
+#     def get_distribution(self):
+#         return self.base_probas
+
+
+#     def update_distribution(self, algo_idx, reward, more_info = dict([])):
+#         proba = self.base_probas[algo_idx]
+#         self.pulls_per_arm[algo_idx] += 1
+#         if proba == 0:
+#             raise ValueError("Probability of taking this action was zero in balancing")
+#         if self.importance_weighted:
+#             self.reward_statistics[algo_idx] += reward/proba
+#         else:
+#             curr_arm_pulls = self.pulls_per_arm[algo_idx]
+#             curr_avg = self.reward_statistics[algo_idx]
+#             self.reward_statistics[algo_idx] = (curr_avg*(curr_arm_pulls-1) + reward)/curr_arm_pulls
+
+
+#         upper_bounds = []
+#         lower_bounds = []
+
+
+#         for i in range(self.m):
+#             putative_multiplier = self.putative_bounds_multipliers[i]
+
+#             if self.importance_weighted:
+#                 upper_bounds.append(self.reward_statistics[i] + (putative_multiplier**2)*np.sqrt(self.T) )
+#                 lower_bounds.append(self.reward_statistics[i] - putative_multiplier*np.sqrt(self.T) )
+#             else:
+#                 upper_bounds.append(self.reward_statistics[i] + (putative_multiplier+1)/np.sqrt(self.pulls_per_arm[i]) )
+#                 lower_bounds.append(self.reward_statistics[i] - 1.0/np.sqrt(self.pulls_per_arm[i]) )
+
+
+#         print("Rewards statistics ", self.reward_statistics)
+#         print("pulls per arm ", self.pulls_per_arm)
+#         print("Balancing Upper Bounds ", upper_bounds)
+#         print("Balancing Lower Bounds ", lower_bounds)
+#         print("Balancing algorithm masks ", self.algorithm_mask)
+
+#         max_lower_bound = np.max(lower_bounds)
+
+
+#         for i, mask in enumerate(self.algorithm_mask):
+#             if mask  == 0: ## If the mask equals zero, get rid of the 
+#                 continue
+
+#             if upper_bounds[i] < max_lower_bound:
+
+#                 print("The balancing algorithm eliminated a base learner.")
+#                 self.algorithm_mask[i] = 0
+
+#         self.T += 1
+
+#         self.normalize_distribution()
+
+
+# class BalancingHyperParam:
+class BalancingHyperparam:
+    def __init__(self, m, putative_bounds_multipliers, delta =0.01, 
+        importance_weighted = True, balancing_type = "BalancingSimple", burn_in_pulls = 5 ):
         #self.hyperparam_list = hyperparam_list
         self.m = m
         self.putative_bounds_multipliers = putative_bounds_multipliers
@@ -154,9 +233,19 @@ class SimpleBalancingHyperparam:
         self.counter = 0
         self.distribution_base_parameters = [1.0/(x**2) for x in self.putative_bounds_multipliers]
         self.reward_statistics = [0 for _ in range(m)]
+        self.optimism_statistics = [0 for _ in range(m)]
+
+        self.pessimism_statistics = [0 for _ in range(m)]
+
         self.normalize_distribution()
         self.importance_weighted = importance_weighted
         self.pulls_per_arm = [0 for _ in range(m)]
+
+        self.all_rewards = 0
+
+        self.burn_in_pulls = burn_in_pulls
+
+        self.balancing_type = balancing_type
 
     def sample_base_index(self):
         sample_array = np.random.choice(range(self.m), 1, p=self.base_probas)
@@ -169,23 +258,31 @@ class SimpleBalancingHyperparam:
         self.base_probas = [x/normalization_factor for x in masked_distribution_base_params]
        
 
-    
-
     def get_distribution(self):
         return self.base_probas
 
 
-    def update_distribution(self, algo_idx, reward):
+    def update_distribution(self, algo_idx, reward, more_info = dict([])):
         proba = self.base_probas[algo_idx]
         self.pulls_per_arm[algo_idx] += 1
+        self.all_rewards += reward
+
         if proba == 0:
             raise ValueError("Probability of taking this action was zero in balancing")
         if self.importance_weighted:
             self.reward_statistics[algo_idx] += reward/proba
+            self.pessimism_statistics[algo_idx]  += more_info["pessimistic_reward_predictions"]/proba
+            self.optimism_statistics[algo_idx]  += more_info["optimistic_reward_predictions"]/proba
         else:
             curr_arm_pulls = self.pulls_per_arm[algo_idx]
             curr_avg = self.reward_statistics[algo_idx]
             self.reward_statistics[algo_idx] = (curr_avg*(curr_arm_pulls-1) + reward)/curr_arm_pulls
+            curr_pess_avg = self.pessimism_statistics[algo_idx]
+            pess_reward = more_info["pessimistic_reward_predictions"]
+            self.pessimism_statistics[algo_idx]  += (curr_pess_avg*(curr_arm_pulls-1) + pess_reward)/curr_arm_pulls
+            curr_opt_avg = self.optimism_statistics[algo_idx]
+            opt_reward = more_info["optimistic_reward_predictions"]
+            self.optimism_statistics[algo_idx]  += (curr_opt_avg*(curr_arm_pulls-1) + opt_reward)/curr_arm_pulls
 
 
         upper_bounds = []
@@ -193,14 +290,41 @@ class SimpleBalancingHyperparam:
 
 
         for i in range(self.m):
+            
             putative_multiplier = self.putative_bounds_multipliers[i]
+            
+            if self.balancing_type == "BalancingSimple":
 
-            if self.importance_weighted:
-                upper_bounds.append(self.reward_statistics[i] + (putative_multiplier**2)*np.sqrt(self.T) )
-                lower_bounds.append(self.reward_statistics[i] - putative_multiplier*np.sqrt(self.T) )
-            else:
-                upper_bounds.append(self.reward_statistics[i] + (putative_multiplier+1)/np.sqrt(self.pulls_per_arm[i]) )
-                lower_bounds.append(self.reward_statistics[i] - 1.0/np.sqrt(self.pulls_per_arm[i]) )
+
+                if self.importance_weighted:
+                    upper_bounds.append(self.reward_statistics[i] + (putative_multiplier**2)*np.sqrt(self.T) )
+                    lower_bounds.append(self.reward_statistics[i] - putative_multiplier*np.sqrt(self.T) )
+                else:
+                    upper_bounds.append(self.reward_statistics[i] + (putative_multiplier+1)/np.sqrt(self.pulls_per_arm[i]) )
+                    lower_bounds.append(self.reward_statistics[i] - 1.0/np.sqrt(self.pulls_per_arm[i] + .000000001) )
+
+
+            elif self.balancing_type == "BalancingAnalyticHybrid":
+
+                if self.importance_weighted:
+                    upper_bounds.append(self.optimism_statistics[i] + (putative_multiplier**2)*np.sqrt(self.T) )
+                    lower_bounds.append(self.reward_statistics[i] - putative_multiplier*np.sqrt(self.T) )
+                else:
+                    upper_bounds.append(self.optimism_statistics[i] )
+                    lower_bounds.append(self.reward_statistics[i] - 1.0/np.sqrt(self.pulls_per_arm[i]+ .000000001) )
+
+
+            elif self.balancing_type == "BalancingAnalytic":
+
+                if self.importance_weighted:
+                    upper_bounds.append(self.optimism_statistics[i] + (putative_multiplier**2)*np.sqrt(self.T) ) 
+                    lower_bounds.append(self.pessimism_statistics[i] - putative_multiplier*np.sqrt(self.T) )   
+                else:
+                    upper_bounds.append(self.optimism_statistics[i] ) 
+                    lower_bounds.append(self.pessimism_statistics[i] )
+
+
+            
 
 
         print("Rewards statistics ", self.reward_statistics)
@@ -208,12 +332,16 @@ class SimpleBalancingHyperparam:
         print("Balancing Upper Bounds ", upper_bounds)
         print("Balancing Lower Bounds ", lower_bounds)
         print("Balancing algorithm masks ", self.algorithm_mask)
+        print("Balancing probabilities ",self.base_probas)
 
         max_lower_bound = np.max(lower_bounds)
 
 
         for i, mask in enumerate(self.algorithm_mask):
             if mask  == 0: ## If the mask equals zero, get rid of the 
+                continue
+
+            if self.pulls_per_arm[i] < self.burn_in_pulls:
                 continue
 
             if upper_bounds[i] < max_lower_bound:
@@ -224,6 +352,10 @@ class SimpleBalancingHyperparam:
         self.T += 1
 
         self.normalize_distribution()
+
+
+
+
 
 
 def train_epsilon_greedy_modsel(dataset, baseline_model, num_batches, batch_size, 
@@ -255,10 +387,10 @@ def train_epsilon_greedy_modsel(dataset, baseline_model, num_batches, batch_size
         fit_intercept = True)
 
 
-    model = TorchMultilayerBinaryLogisticRegression(
-        alpha=0,
+    model = TorchMultilayerRegression(
         representation_layer_sizes=representation_layer_sizes,
-        dim = train_dataset.dimension
+        dim = train_dataset.dimension,
+        output_filter = 'logistic',
     )
 
 
@@ -294,6 +426,8 @@ def train_epsilon_greedy_modsel(dataset, baseline_model, num_batches, batch_size
             if decaying_epsilon:
                 eps_multiplier = 1.0/(np.sqrt(i+1))
             predictions = model.get_thresholded_predictions(batch_X, threshold)
+
+
             baseline_predictions = baseline_model.get_thresholded_predictions(batch_X, threshold)
 
 
@@ -317,7 +451,6 @@ def train_epsilon_greedy_modsel(dataset, baseline_model, num_batches, batch_size
             boolean_labels_y = batch_y.bool()
             accuracy = (torch.sum(mask*boolean_labels_y) +torch.sum( ~mask*~boolean_labels_y))*1.0/batch_size
            
-           
             #### TOTAL NUM POSITIVES
             total_num_positives = torch.sum(mask)
 
@@ -327,13 +460,9 @@ def train_epsilon_greedy_modsel(dataset, baseline_model, num_batches, batch_size
             #### FALSE NEGATIVE RATE
             false_neg_rate = torch.sum(~mask*boolean_labels_y)*1.0/(torch.sum(~mask)+.00000000001)
 
-
             #### FALSE POSITIVE RATE            
             false_positive_rate = torch.sum(mask*~boolean_labels_y)*1.0/(torch.sum(mask)+.00000000001)
             
-            # IPython.embed()
-            # raise ValueError("sdfsdf")
-
             num_positives.append(total_num_positives.item())
             num_negatives.append(total_num_negatives.item())
             false_neg_rates.append(false_neg_rate.item())
@@ -342,6 +471,8 @@ def train_epsilon_greedy_modsel(dataset, baseline_model, num_batches, batch_size
 
 
             ### Update mod selection manager
+
+
             modesel_reward = (2*torch.sum(mask*boolean_labels_y) - torch.sum(mask))/batch_size
 
             modsel_manager.update_distribution(sample_idx, modesel_reward.item())
@@ -396,13 +527,18 @@ def train_mahalanobis_modsel(dataset, baseline_model, num_batches, batch_size,
     elif modselalgo == "CorralAnytime":
         modsel_manager = CorralHyperparam(len(alphas), T = num_batches, anytime = True) 
     elif modselalgo == "BalancingSimple":
-        modsel_manager = SimpleBalancingHyperparam(len(alphas), 
-           alphas, delta =0.01)
-
+        modsel_manager = BalancingHyperparam(len(alphas), 
+           [ x*representation_layer_sizes[-1] for x in alphas], delta =0.01, balancing_type = "BalancingSimple" )
+    elif modselalgo == "BalancingAnalytic":
+        modsel_manager = BalancingHyperparam(len(alphas), 
+            [ x*representation_layer_sizes[-1] for x in alphas], delta =0.01, balancing_type = "BalancingAnalytic")
+    elif modselalgo == "BalancingAnalyticHybrid":
+        modsel_manager = BalancingHyperparam(len(alphas), 
+            [ x*representation_layer_sizes[-1] for x in alphas], delta =0.01, balancing_type = "BalancingAnalyticHybrid")
     else:
         raise ValueError("Modselalgo type {} not recognized.".format(modselalgo))
     alpha = alphas[0]
-
+    ### THE above is going to fail for linear representations.
 
 
     (
@@ -417,20 +553,12 @@ def train_mahalanobis_modsel(dataset, baseline_model, num_batches, batch_size,
     dataset_dimension = train_dataset.dimension
 
 
-    model = TorchMultilayerBinaryLogisticRegression(
+    model = TorchMultilayerRegressionMahalanobis(
         alpha=alpha,
         representation_layer_sizes=representation_layer_sizes,
-        dim = train_dataset.dimension
+        dim = train_dataset.dimension,
+        output_filter = 'logistic'
     )
-
-
-    # model = TorchBinaryLogisticRegression(
-    #     random_init=True,
-    #     alpha=alpha,
-    #     MLP=MLP,
-    #     representation_layer_size=representation_layer_size,
-    #     dim = train_dataset.dimension
-    # )
 
     growing_training_dataset = GrowingNumpyDataSet()
     instantaneous_regrets = []
@@ -442,7 +570,6 @@ def train_mahalanobis_modsel(dataset, baseline_model, num_batches, batch_size,
     num_negatives = []
     false_neg_rates = []
     false_positive_rates = []
-
 
 
 
@@ -475,31 +602,39 @@ def train_mahalanobis_modsel(dataset, baseline_model, num_batches, batch_size,
 
 
             inverse_covariance = torch.linalg.inv(covariance)
-            optimistic_predictions = model.get_thresholded_predictions(batch_X, threshold, inverse_covariance)
+
+
+
+            ##### Get thresholded predictions and uncertanties
+            optimistic_thresholded_predictions, optimistic_prob_predictions, pessimistic_prob_predictions = model.get_all_predictions_info(batch_X, threshold, inverse_covariance)
+            # IPython.embed()
+
+            # raise ValueError("alsdkfm")
+
+
+
+
 
             baseline_predictions = baseline_model.get_thresholded_predictions(batch_X, threshold)
 
 
             boolean_labels_y = batch_y.bool()
-            accuracy = (torch.sum(optimistic_predictions*boolean_labels_y) +torch.sum( ~optimistic_predictions*~boolean_labels_y))*1.0/batch_size
+            accuracy = (torch.sum(optimistic_thresholded_predictions*boolean_labels_y) +torch.sum( ~optimistic_thresholded_predictions*~boolean_labels_y))*1.0/batch_size
 
 
             #### TOTAL NUM POSITIVES
-            total_num_positives = torch.sum(optimistic_predictions)
+            total_num_positives = torch.sum(optimistic_thresholded_predictions)
 
             #### TOTAL NUM NEGATIVES   
-            total_num_negatives = torch.sum(~optimistic_predictions)
+            total_num_negatives = torch.sum(~optimistic_thresholded_predictions)
 
             #### FALSE NEGATIVE RATE
-            false_neg_rate = torch.sum(~optimistic_predictions*boolean_labels_y)*1.0/(torch.sum(~optimistic_predictions)+.00000000001)
+            false_neg_rate = torch.sum(~optimistic_thresholded_predictions*boolean_labels_y)*1.0/(torch.sum(~optimistic_thresholded_predictions)+.00000000001)
 
 
             #### FALSE POSITIVE RATE            
-            false_positive_rate = torch.sum(optimistic_predictions*~boolean_labels_y)*1.0/(torch.sum(optimistic_predictions)+.00000000001)
+            false_positive_rate = torch.sum(optimistic_thresholded_predictions*~boolean_labels_y)*1.0/(torch.sum(optimistic_thresholded_predictions)+.00000000001)
             
-
-
-
 
 
 
@@ -512,8 +647,17 @@ def train_mahalanobis_modsel(dataset, baseline_model, num_batches, batch_size,
 
 
             ### Update mod selection manager
-            modesel_reward = (2*torch.sum(optimistic_predictions*boolean_labels_y) - torch.sum(optimistic_predictions))/batch_size
-            modsel_manager.update_distribution(sample_idx, modesel_reward.item())
+            modsel_info = dict([])
+            
+
+            modesel_reward = (2*torch.sum(optimistic_thresholded_predictions*boolean_labels_y) - torch.sum(optimistic_thresholded_predictions))/batch_size
+
+
+            modsel_info["optimistic_reward_predictions"] = ((2*torch.sum(optimistic_thresholded_predictions*optimistic_prob_predictions) - torch.sum(optimistic_thresholded_predictions))/batch_size).item()
+            modsel_info["pessimistic_reward_predictions"] = ((2*torch.sum(optimistic_thresholded_predictions*pessimistic_prob_predictions) - torch.sum(optimistic_thresholded_predictions))/batch_size).item()
+
+
+            modsel_manager.update_distribution(sample_idx, modesel_reward.item(), modsel_info )
 
 
             accuracy_baseline = (torch.sum(baseline_predictions*boolean_labels_y) +torch.sum( ~baseline_predictions*~boolean_labels_y))*1.0/batch_size
@@ -523,13 +667,13 @@ def train_mahalanobis_modsel(dataset, baseline_model, num_batches, batch_size,
             instantaneous_accuracies.append(accuracy.item())
 
 
-            filtered_batch_X = batch_X[optimistic_predictions, :]
+            filtered_batch_X = batch_X[optimistic_thresholded_predictions, :]
             
             ### Update the covariance
             filtered_representations_batch = model.get_representation(filtered_batch_X)
             covariance += torch.transpose(filtered_representations_batch, 0,1)@filtered_representations_batch
 
-            filtered_batch_y = batch_y[optimistic_predictions]
+            filtered_batch_y = batch_y[optimistic_thresholded_predictions]
 
 
 

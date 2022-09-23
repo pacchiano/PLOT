@@ -184,7 +184,7 @@ def plot_modsel_probabilities(algo_name, dataset, num_batches, batch_size, modse
 	plt.xlabel("Number of batches")
 	plt.legend(fontsize=8, loc="upper left")
 
-	plt.savefig("./ModselResults/modsel_probabilities-{}_{}_T{}_B{}_N_{}.png".format(algo_name, dataset,num_batches,batch_size, repres_layers_name))
+	plt.savefig("./ModselResults/modsel_probabilities-{}_{}_{}_T{}_B{}_N_{}.png".format(modselalgo,algo_name, dataset,num_batches,batch_size, repres_layers_name))
 
 	plt.close("all")
 	
@@ -358,15 +358,16 @@ PLOT_MAHALANOBIS = True
 
 
 ## What is the fractrion of rejected labels for each algorithm and each dataset. 
-num_batches = 2000
-averaging_window = 50
+num_batches = 100
+averaging_window = 1
 epsilon = .1
 alpha = 10
 epsilons = [.2, .1, .01, .05]#, .05]
-alphas = [10, 1, .1, .01]#, .01, .001]
+alphas = [1/4.0, 1/2.0, 1, 2, 4, 8 ]#, .01, .001]
 decaying_epsilon = False
 
 batch_size = 10
+num_experiments = 10
 
 representation_layer_sizes = [10,10]
 
@@ -374,10 +375,9 @@ representation_layer_sizes = [10,10]
 
 colors = ["blue", "red", "orange", "black", "violet", "orange", "green", "brown", "gray"]
 
-modselalgos = ["BalancingSimple","Corral", "CorralAnytime"]
-datasets = ["Adult", "Crime", "German", "Bank"]
+modselalgos = ["BalancingSimple", "BalancingAnalyticHybrid", "BalancingAnalytic" ]#,"Corral", "CorralAnytime"]
+datasets = ["Adult"]#, "Crime", "German", "Bank"]
 
-num_experiments = 10
 repres_layers_name = get_architecture_name(representation_layer_sizes)
 
 
@@ -385,8 +385,6 @@ results_dictionary = dict([])
 
 for dataset in datasets:
 	for modselalgo in modselalgos:
-
-
 
 
 		if RUN_EPSILON or RUN_MAHALANOBIS:
