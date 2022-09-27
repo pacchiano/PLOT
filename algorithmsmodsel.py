@@ -316,6 +316,7 @@ class EpochBalancingHyperparam:
         self.epoch_index = 0
 
         self.epoch_optimistic_estimators = 0
+        self.epoch_pessimistic_estimators = 0
 
         self.normalize_distribution()
         self.burn_in_pulls = burn_in_pulls
