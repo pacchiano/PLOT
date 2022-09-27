@@ -38,9 +38,9 @@ class DataSet:
         if self.probabilities_y:
             sample_mask = np.random.uniform(0,1, batch_size).reshape((batch_size,1))
             sample_probs = sample_mask > Y
-            Y0 = np.float64(sample_probs)
-            IPython.embed()
-            raise ValueError("asldkfm")
+            Y = np.float64(sample_probs)
+            #IPython.embed()
+            #raise ValueError("asldkfm")
 
 
 
