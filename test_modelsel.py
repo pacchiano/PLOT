@@ -365,7 +365,7 @@ averaging_window = 1
 epsilon = .1
 alpha = 10
 epsilons = [.2, .1, .01, .05]#, .05]
-alphas = [1/4.0, 1/2.0, 1, 2, 4, 8 ]#, .01, .001]
+alphas = [.000001, 1/4.0, 1/2.0, 1, 2, 4, 8 ]#, .01, .001]
 decaying_epsilon = False
 
 batch_size = 10
