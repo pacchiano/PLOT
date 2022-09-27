@@ -360,7 +360,7 @@ PLOT_MAHALANOBIS = True
 
 
 ## What is the fractrion of rejected labels for each algorithm and each dataset. 
-num_batches = 200
+num_batches = 300
 averaging_window = 1
 epsilon = .1
 alpha = 10
