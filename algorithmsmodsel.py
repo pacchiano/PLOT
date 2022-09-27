@@ -590,6 +590,12 @@ def train_mahalanobis_modsel(dataset, baseline_model, num_batches, batch_size,
         test_batch_size=10000000, 
         fit_intercept = True)
 
+
+    IPython.embed()
+    raise ValueError("asdlf;km")
+
+
+
     dataset_dimension = train_dataset.dimension
 
 
