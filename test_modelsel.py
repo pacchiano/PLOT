@@ -9,7 +9,7 @@ from algorithms import train_epsilon_greedy, train_mahalanobis, train_baseline
 from algorithms_remote import train_epsilon_greedy_remote, train_epsilon_greedy_modsel_remote, train_baseline_remote, train_mahalanobis_remote, train_mahalanobis_modsel_remote
 
 
-USE_RAY = False
+USE_RAY = True
 
 
 def process_results(results_list):
