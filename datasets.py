@@ -40,7 +40,7 @@ class DataSet:
         if self.probabilities_y:
             sample_mask = np.random.uniform(0,1, Y.shape[0]).reshape((Y.shape[0],1))
             sample_labels = sample_mask > Y
-            Y = np.float64(sample_probs)
+            Y = np.float64(sample_labels)
             
 
 
