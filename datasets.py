@@ -37,7 +37,7 @@ class DataSet:
         self.random_state += 1
         
         if self.probabilities_y:
-            a = 1
+            np.random.uniform(0,1, batch_size)
             #sample_mask = np.random.uniform(0,1, batch_size).reshape((batch_size,1))
             #sample_mask = np.array([random.random() for _ in range(batch_size)])#.reshape((batch_size, 1))
             #sample_labels = sample_mask > Y
