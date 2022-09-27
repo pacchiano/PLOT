@@ -363,8 +363,11 @@ class EpochBalancingHyperparam:
 
         self.T += 1
 
+
+
+
         ### TEST:
-        if self.epoch_optimistic_estimators  < self.epoch_reward - 2*np.sqrt(self.epoch_steps) or self.epoch_reward + 2*np.sqrt(self.epoch_steps) < self.epoch_pessimistic_estimators and self.epoch_steps > self.burn_in_pulls:
+        if self.epoch_optimistic_estimators  < self.epoch_reward - np.sqrt(self.epoch_steps) or self.epoch_reward + np.sqrt(self.epoch_steps) < self.epoch_pessimistic_estimators and self.epoch_steps > self.burn_in_pulls:
             ### RESET EPOCH
             self.epoch_reward = 0
             self.epoch_steps = 0
