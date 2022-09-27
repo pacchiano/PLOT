@@ -356,6 +356,8 @@ class EpochBalancingHyperparam:
         print("Epoch Steps ", self.epoch_steps)
         print("Epoch index ", self.epoch_index)
         print("Epoch optimistic estimators ", self.epoch_optimistic_estimators)
+        print("Epoch pessimistic estimators ", self.epoch_pessimistic_estimators)
+
         print("Balancing algorithm masks ", self.algorithm_mask)
         print("Balancing probabilities ",self.base_probas)
 
