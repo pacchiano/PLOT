@@ -38,7 +38,7 @@ class DataSet:
         
         if self.probabilities_y:
             #sample_mask = np.random.uniform(0,1, batch_size).reshape((batch_size,1))
-            sample_mask = np.array([random.random() for _ in batch_size]).reshape((batch_size, 1))
+            sample_mask = np.array([random.random() for _ in range(batch_size)]).reshape((batch_size, 1))
             #sample_labels = sample_mask > Y
             #Y = np.float64(sample_probs)
             #IPython.embed()
