@@ -96,8 +96,8 @@ class FeedforwardMultiLayerOneDimMahalanobis(FeedforwardMultiLayerOneDim):
         uncertainty = 0
 
         if len(inverse_data_covariance) != 0:
-            if torch.cuda.is_available():
-                inverse_data_covariance = inverse_data_covariance.float().to('cuda')
+            # if torch.cuda.is_available():
+            #     inverse_data_covariance = inverse_data_covariance.float().to('cuda')
 
 
             uncertainty = alpha * self.hidden_sizes[-1] * torch.sqrt(
@@ -165,8 +165,8 @@ class TorchMultilayerRegression:
         return representations
 
     def get_loss(self, batch_X, batch_y):
-        if torch.cuda.is_available():
-            self.network.to('cuda')
+        # if torch.cuda.is_available():
+        #     self.network.to('cuda')
         prob_predictions, _ = self.network(batch_X.float())  # .squeeze()
         if self.output_filter == "sigmoid":
             return self.criterion_logistic(
@@ -255,8 +255,8 @@ class TorchMultilayerRegressionMahalanobis(TorchMultilayerRegression):
         return representations
 
     def get_loss(self, batch_X, batch_y):
-        if torch.cuda.is_available():
-            self.network.to('cuda')
+        #if torch.cuda.is_available():
+        #    self.network.to('cuda')
         prob_predictions, _, _ = self.network(batch_X.float())  # .squeeze()
         #IPython.embed()
 
