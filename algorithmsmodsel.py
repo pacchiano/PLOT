@@ -346,7 +346,8 @@ class EpochBalancingHyperparam:
         self.epoch_optimistic_estimators += more_info["optimistic_reward_predictions"]
 
 
-
+        print("Curr reward ", reward)
+        print("Opt reward pred ", more_info["optimistic_reward_predictions"])
         print("All rewards ", self.all_rewards)
         print("Epoch reward ", self.epoch_reward)
         print("Epoch Steps ", self.epoch_steps)
@@ -358,7 +359,7 @@ class EpochBalancingHyperparam:
         self.T += 1
 
         ### TEST:
-        if self.epoch_optimistic_estimators  < epoch_reward - 2*np.sqrt(epoch_steps) and self.epoch_steps > self.burn_in_pulls:
+        if self.epoch_optimistic_estimators  < self.epoch_reward - 2*np.sqrt(self.epoch_steps) and self.epoch_steps > self.burn_in_pulls:
             ### RESET EPOCH
             self.epoch_reward = 0
             self.epoch_steps = 0

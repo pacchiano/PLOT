@@ -9,7 +9,7 @@ from algorithms import train_epsilon_greedy, train_mahalanobis, train_baseline
 from algorithms_remote import train_epsilon_greedy_remote, train_epsilon_greedy_modsel_remote, train_baseline_remote, train_mahalanobis_remote, train_mahalanobis_modsel_remote
 
 
-USE_RAY = False
+USE_RAY = True
 
 
 def process_results(results_list):
@@ -369,7 +369,7 @@ alphas = [1/4.0, 1/2.0, 1, 2, 4, 8 ]#, .01, .001]
 decaying_epsilon = False
 
 batch_size = 10
-num_experiments = 2
+num_experiments = 10
 
 representation_layer_sizes = [10,10]
 
