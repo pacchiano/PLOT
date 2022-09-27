@@ -375,7 +375,7 @@ representation_layer_sizes = [10,10]
 
 colors = ["blue", "red", "orange", "black", "violet", "orange", "green", "brown", "gray"]
 
-modselalgos = ["BalancingAnalytic", "BalancingSimple", "BalancingAnalyticHybrid" ,"Corral", "CorralAnytime"]
+modselalgos = ["EpochBalancing"]#"BalancingAnalytic", "BalancingSimple", "BalancingAnalyticHybrid" ,"Corral", "CorralAnytime"]
 datasets = ["Adult"]#, "Crime", "German", "Bank"]
 
 repres_layers_name = get_architecture_name(representation_layer_sizes)

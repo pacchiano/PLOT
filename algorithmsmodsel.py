@@ -184,6 +184,10 @@ class BalancingHyperparam:
         self.pulls_per_arm[algo_idx] += 1
         self.all_rewards += reward
 
+
+
+
+
         if proba == 0:
             raise ValueError("Probability of taking this action was zero in balancing")
         if self.importance_weighted:
@@ -204,6 +208,10 @@ class BalancingHyperparam:
 
         upper_bounds = []
         lower_bounds = []
+
+
+
+        #if self.balancing_type in ["BalancingSimple", "BalancingAnalyticHybrid", "BalancingAnalytic"]
 
 
         for i in range(self.m):
@@ -254,6 +262,11 @@ class BalancingHyperparam:
         max_lower_bound = np.max(lower_bounds)
 
 
+
+
+
+
+
         for i, mask in enumerate(self.algorithm_mask):
             if mask  == 0: ## If the mask equals zero, get rid of the 
                 continue
@@ -269,6 +282,98 @@ class BalancingHyperparam:
         self.T += 1
 
         self.normalize_distribution()
+
+
+
+# class BalancingHyperParam:
+class EpochBalancingHyperparam:
+    def __init__(self, m, putative_bounds_multipliers, delta =0.01, burn_in_pulls = 5 ):
+        self.m = m
+        self.putative_bounds_multipliers = putative_bounds_multipliers
+        ### check these putative bounds are going up
+        curr_val = -float("inf")
+        for x in self.putative_bounds_multipliers:
+            if x < curr_val:
+                raise ValueError("The putative bound multipliers for EpochBalancing are not in increasing order.")
+
+            curr_val = x
+
+
+
+        self.T = 1
+        self.delta = delta
+        
+        self.min_suriving_algo_index = 0
+        self.algorithm_mask = [1 for _ in range(self.m)]
+
+
+        self.counter = 0
+        self.distribution_base_parameters = [1.0/(x**2) for x in self.putative_bounds_multipliers]
+        
+        self.all_rewards = 0
+        self.epoch_reward = 0
+        self.epoch_steps = 0
+        self.epoch_index = 0
+
+        self.epoch_optimistic_estimators = 0
+
+        self.normalize_distribution()
+        self.burn_in_pulls = burn_in_pulls
+
+
+    def sample_base_index(self):
+        sample_array = np.random.choice(range(self.m), 1, p=self.base_probas)
+        return sample_array[0]
+
+
+    def normalize_distribution(self):
+        masked_distribution_base_params = [x*y for (x,y) in zip(self.algorithm_mask, self.distribution_base_parameters)]
+        normalization_factor = np.sum(masked_distribution_base_params)
+        self.base_probas = [x/normalization_factor for x in masked_distribution_base_params]
+       
+
+    def get_distribution(self):
+        return self.base_probas
+
+
+    def update_distribution(self, algo_idx, reward, more_info = dict([])):
+        #proba = self.base_probas[algo_idx]
+        #self.pulls_per_arm[algo_idx] += 1
+        self.all_rewards += reward
+
+        self.epoch_reward += reward
+        self.epoch_steps += 1
+        self.epoch_optimistic_estimators += more_info["optimistic_reward_predictions"]
+
+
+
+        print("All rewards ", self.all_rewards)
+        print("Epoch reward ", self.epoch_reward)
+        print("Epoch Steps ", self.epoch_steps)
+        print("Epoch index ", self.epoch_index)
+        print("Epoch optimistic estimators ", self.epoch_optimistic_estimators)
+        print("Balancing algorithm masks ", self.algorithm_mask)
+        print("Balancing probabilities ",self.base_probas)
+
+        self.T += 1
+
+        ### TEST:
+        if self.epoch_optimistic_estimators  < epoch_reward - 2*np.sqrt(epoch_steps) and self.epoch_steps > self.burn_in_pulls:
+            ### RESET EPOCH
+            self.epoch_reward = 0
+            self.epoch_steps = 0
+            self.epoch_optimistic_estimators = 0
+            self.epoch_index += 1
+
+            
+
+            self.min_suriving_algo_index += 1
+            for i in range(self.min_suriving_algo_index):
+                self.algorithm_mask[i] = 0
+
+
+        self.normalize_distribution()
+
 
 
 
@@ -452,6 +557,8 @@ def train_mahalanobis_modsel(dataset, baseline_model, num_batches, batch_size,
     elif modselalgo == "BalancingAnalyticHybrid":
         modsel_manager = BalancingHyperparam(len(alphas), 
             [ x*representation_layer_sizes[-1] for x in alphas], delta =0.01, balancing_type = "BalancingAnalyticHybrid")
+    elif modselalgo == "EpochBalancing":
+        modsel_manager = EpochBalancingHyperparam(len(alphas),   [ x*representation_layer_sizes[-1] for x in alphas])
     else:
         raise ValueError("Modselalgo type {} not recognized.".format(modselalgo))
     alpha = alphas[0]
