@@ -363,6 +363,8 @@ class EpochBalancingHyperparam:
 
         self.T += 1
 
+        print("Test low ", self.epoch_reward - np.sqrt(self.epoch_steps))
+        print("Test high ", self.epoch_reward + np.sqrt(self.epoch_steps))
 
 
 
