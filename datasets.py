@@ -38,18 +38,10 @@ class DataSet:
         
         sample_mask = np.zeros(batch_size)
         if self.probabilities_y:
-            for i in range(batch_size):
-                sample_mask = random.random() > Y[i]                
-
-
-            np.random.uniform(0,1, batch_size)
-            #sample_mask = np.random.uniform(0,1, batch_size).reshape((batch_size,1))
-            #sample_mask = np.array([random.random() for _ in range(batch_size)])#.reshape((batch_size, 1))
-            #sample_labels = sample_mask > Y
-            #Y = np.float64(sample_probs)
-            #IPython.embed()
-            #raise ValueError("asldkfm")
-
+            sample_mask = np.random.uniform(0,1, Y.shape[0]).reshape((Y.shape[0],1))
+            sample_labels = sample_mask > Y
+            Y = np.float64(sample_probs)
+            
 
 
         if torch.cuda.is_available():
