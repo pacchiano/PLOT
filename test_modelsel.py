@@ -360,7 +360,7 @@ PLOT_MAHALANOBIS = True
 
 
 ## What is the fractrion of rejected labels for each algorithm and each dataset. 
-num_batches = 300
+num_batches = 2000
 averaging_window = 1
 epsilon = .1
 alpha = 10
@@ -378,7 +378,7 @@ representation_layer_sizes = [10,10]
 colors = ["blue", "red", "orange", "black", "violet", "orange", "green", "brown", "gray"]
 
 modselalgos = ["EpochBalancing"]#"BalancingAnalytic", "BalancingSimple", "BalancingAnalyticHybrid" ,"Corral", "CorralAnytime"]
-datasets = [ "Crime-10_10"]#, "German", "Bank", "Adult"]
+datasets = [ "Adult-10-10", "Crime-10_10"]#, "German", "Bank", "Adult"]
 
 repres_layers_name = get_architecture_name(representation_layer_sizes)
 
