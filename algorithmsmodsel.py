@@ -376,6 +376,8 @@ class EpochBalancingHyperparam:
             self.epoch_reward = 0
             self.epoch_steps = 0
             self.epoch_optimistic_estimators = 0
+            self.epoch_pessimistic_estimators = 0
+
             self.epoch_index += 1
 
             
@@ -594,7 +596,7 @@ def train_mahalanobis_modsel(dataset, baseline_model, num_batches, batch_size,
     # IPython.embed()
     # raise ValueError("asdlf;km")
 
-    
+
 
     dataset_dimension = train_dataset.dimension
 
