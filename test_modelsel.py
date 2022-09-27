@@ -9,6 +9,9 @@ from algorithms import train_epsilon_greedy, train_mahalanobis, train_baseline
 from algorithms_remote import train_epsilon_greedy_remote, train_epsilon_greedy_modsel_remote, train_baseline_remote, train_mahalanobis_remote, train_mahalanobis_modsel_remote
 
 
+USE_RAY = False
+
+
 def process_results(results_list):
     mean = np.mean(results_list, 0)
     standard_dev = np.std(results_list, 0)
@@ -348,7 +351,6 @@ def get_architecture_name(representation_layer_sizes):
 
 
 
-USE_RAY = True
 
 RUN_EPSILON = False
 PLOT_EPSILON = False
