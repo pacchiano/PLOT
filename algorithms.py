@@ -21,7 +21,7 @@ from model_training_utilities import evaluate_model, train_model
 
 
 def train_baseline(dataset, num_timesteps, batch_size, MLP = True, 
-    representation_layer_sizes = [10, 10], threshold = .5, fit_intercept = True):
+    representation_layer_sizes = [10, 10], threshold = .5):
     (
         train_dataset,
         test_dataset,
@@ -29,7 +29,7 @@ def train_baseline(dataset, num_timesteps, batch_size, MLP = True,
         dataset=dataset,
         batch_size=batch_size,
         test_batch_size=10000000, 
-        fit_intercept = fit_intercept)
+        fit_intercept = False)
 
     baseline_model = TorchMultilayerRegression(
         representation_layer_sizes=representation_layer_sizes,
@@ -55,7 +55,7 @@ def train_baseline(dataset, num_timesteps, batch_size, MLP = True,
 def train_epsilon_greedy(dataset, baseline_model, num_batches, batch_size, 
     num_opt_steps, opt_batch_size, 
     representation_layer_sizes = [10, 10], threshold = .5, epsilon = .1,
-    verbose = False, fit_intercept = True, decaying_epsilon = False, 
+    verbose = False, decaying_epsilon = False, 
     restart_model_full_minimization = False):
     
     (
@@ -65,7 +65,7 @@ def train_epsilon_greedy(dataset, baseline_model, num_batches, batch_size,
         dataset=dataset,
         batch_size=batch_size,
         test_batch_size=10000000, 
-        fit_intercept = True)
+        fit_intercept = False)
 
 
     model = TorchMultilayerRegression(
@@ -175,7 +175,7 @@ def train_epsilon_greedy(dataset, baseline_model, num_batches, batch_size,
 def train_mahalanobis(dataset, baseline_model, num_batches, batch_size, 
     num_opt_steps, opt_batch_size, 
     representation_layer_sizes = [10, 10], threshold = .5, alpha = 1, lambda_reg = 1,
-    verbose = False, fit_intercept = True, 
+    verbose = False, 
     restart_model_full_minimization = False):
     
     (
@@ -185,7 +185,7 @@ def train_mahalanobis(dataset, baseline_model, num_batches, batch_size,
         dataset=dataset,
         batch_size=batch_size,
         test_batch_size=10000000, 
-        fit_intercept = True)
+        fit_intercept = False)
 
     dataset_dimension = train_dataset.dimension
 
@@ -324,7 +324,7 @@ def train_mahalanobis(dataset, baseline_model, num_batches, batch_size,
 def train_PLOT(dataset, baseline_model, num_batches, batch_size, 
     num_opt_steps, opt_batch_size, MLP = True, 
     representation_layer_size = 10, threshold = .5, epsilon = .1,
-    verbose = False, fit_intercept = True, decaying_epsilon = False, 
+    verbose = False, decaying_epsilon = False, 
     restart_model_full_minimization = False, pessimistic = False, 
     weight = None, radius = float("inf")):
     (
@@ -334,7 +334,7 @@ def train_PLOT(dataset, baseline_model, num_batches, batch_size,
         dataset=dataset,
         batch_size=batch_size,
         test_batch_size=10000000, 
-        fit_intercept = True)
+        fit_intercept = False)
 
     model = TorchBinaryLogisticRegression(
         random_init=True,

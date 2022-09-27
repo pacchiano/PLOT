@@ -68,7 +68,7 @@ def train_epsilon_greedy_modsel_remote(dataset, baseline_model,
 def train_mahalanobis_remote(dataset, baseline_model, num_batches, batch_size, 
     num_opt_steps, opt_batch_size,
     representation_layer_sizes = [10,10], threshold = .5, alpha = 1, lambda_reg = 1,
-    verbose = False, fit_intercept = True, 
+    verbose = False, 
     restart_model_full_minimization = False):
 
 
@@ -76,7 +76,7 @@ def train_mahalanobis_remote(dataset, baseline_model, num_batches, batch_size,
     num_opt_steps=num_opt_steps, opt_batch_size=opt_batch_size, 
     representation_layer_sizes = representation_layer_sizes, threshold = threshold, 
     alpha = alpha, lambda_reg = lambda_reg,
-    verbose = verbose, fit_intercept = fit_intercept, 
+    verbose = verbose, 
     restart_model_full_minimization = restart_model_full_minimization)
 
 
@@ -86,7 +86,7 @@ def train_mahalanobis_remote(dataset, baseline_model, num_batches, batch_size,
 def train_mahalanobis_modsel_remote(dataset, baseline_model, num_batches, batch_size, 
     num_opt_steps, opt_batch_size, 
     representation_layer_sizes = [10, 10], threshold = .5, alphas = [1, .1, .01], lambda_reg = 1,
-    verbose = False, fit_intercept = True, 
+    verbose = False, 
     restart_model_full_minimization = False, modselalgo = "Corral"):
 
 
@@ -94,7 +94,7 @@ def train_mahalanobis_modsel_remote(dataset, baseline_model, num_batches, batch_
 	return train_mahalanobis_modsel(dataset=dataset, baseline_model=baseline_model, num_batches=num_batches, batch_size=batch_size, 
     num_opt_steps=num_opt_steps, opt_batch_size=opt_batch_size, 
     representation_layer_sizes = representation_layer_sizes, threshold = threshold, alphas = alphas, lambda_reg = lambda_reg,
-    verbose = verbose, fit_intercept = fit_intercept, 
+    verbose = verbose, 
     restart_model_full_minimization = restart_model_full_minimization, modselalgo = modselalgo)
 
 

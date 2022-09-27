@@ -5,7 +5,11 @@ import random
 import IPython
 import torch
 import pickle
+import os
 #from torchvision import datasets, transforms
+
+from newmodels import TorchMultilayerRegression
+from model_training_utilities import train_model
 
 
 # @title Data utilities
@@ -488,14 +492,77 @@ def get_dataset(dataset, batch_size, test_batch_size, fit_intercept):
     )
 
 
-def get_dataset_simple(dataset, batch_size, test_batch_size, fit_intercept ):
+def get_representation_layer_sizes(repres_layers_name):
+    layer_sizes = repres_layers_name.split("_")
+    return [int(x) for x in layer_sizes]
+
+
+
+def get_dataset_simple(dataset, batch_size, test_batch_size, fit_intercept, regression_fit_batch_size = 10, regression_fit_steps = 5000 ):
+
+
+    split_dataset_string = dataset.split("-") 
+    simple_dataset_name = split_dataset_string[0]
+
+
 
     (
         protected_datasets_train,
         protected_datasets_test,
         train_dataset,
         test_dataset,
-    ) = get_dataset(dataset, batch_size, test_batch_size, fit_intercept)
+    ) = get_dataset(simple_dataset_name, batch_size, test_batch_size, fit_intercept = False)
+
+
+
+    if len(split_dataset_string) > 1:
+        ### Check if the dataset is already logged.
+
+        if not os.path.exists("./datasets/datasets_processed/{}_train.p".format(dataset)):
+
+
+            ### GET neural network size
+            repres_layers_name = split_dataset_string[1]
+            representation_layer_sizes = get_representation_layer_sizes(repres_layers_name)
+
+            model = TorchMultilayerRegression(
+                representation_layer_sizes=representation_layer_sizes,
+                dim = train_dataset.dimension,
+                output_filter = 'logistic'
+                )
+
+            ### Train this model
+
+            model = train_model(
+                model, regression_fit_steps, train_dataset, regression_fit_batch_size, verbose=True
+            )
+
+
+            #### Substitute labels by model predictions.
+
+            train_dataset_as_tensor = torch.tensor(train_dataset.dataset.values)
+            predictions_train = model.predict(train_dataset_as_tensor).detach().numpy()
+
+            test_dataset_as_tensor = torch.tensor(test_dataset.dataset.values)
+            predictions_test = model.predict(test_dataset_as_tensor).detach().numpy()
+
+
+
+            pickle.dump((pd.DataFrame(train_dataset_as_tensor.numpy()),pd.DataFrame(predictions_train) ), open("./datasets/datasets_processed/{}_train.p".format(dataset), "wb") )
+
+            pickle.dump((pd.DataFrame(test_dataset_as_tensor.numpy()),pd.DataFrame(predictions_test )), open("./datasets/datasets_processed/{}_test.p".format(dataset), "wb") )
+
+
+
+        
+
+        train_dataset = pickle.load(  open("./datasets/datasets_processed/{}_train.p".format(dataset), "rb"))
+        test_dataset = pickle.load( open("./datasets/datasets_processed/{}_test.p".format(dataset), "rb"))
+
+        train_dataset = DataSet(train_dataset[0], train_dataset[1], fit_intercept = False)
+        test_dataset = DataSet(test_dataset[0], test_dataset[1], fit_intercept = False)
+
+
 
 
     return train_dataset, test_dataset
