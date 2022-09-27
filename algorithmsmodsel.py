@@ -363,13 +363,13 @@ class EpochBalancingHyperparam:
 
         self.T += 1
 
-        print("Test low ", self.epoch_reward - np.sqrt(self.epoch_steps))
-        print("Test high ", self.epoch_reward + np.sqrt(self.epoch_steps))
+        print("Test low ", self.epoch_reward - np.sqrt(self.epoch_steps), " vs ", self.epoch_optimistic_estimators)
+        print("Test high ", self.epoch_reward + np.sqrt(self.epoch_steps), " vs ", self.epoch_pessimistic_estimators)
 
 
 
         ### TEST:
-        if self.epoch_optimistic_estimators  < self.epoch_reward - np.sqrt(self.epoch_steps) or self.epoch_reward + np.sqrt(self.epoch_steps) < self.epoch_pessimistic_estimators and self.epoch_steps > self.burn_in_pulls:
+        if (self.epoch_optimistic_estimators  < self.epoch_reward - np.sqrt(self.epoch_steps) or self.epoch_reward + np.sqrt(self.epoch_steps) < self.epoch_pessimistic_estimators) and self.epoch_steps > self.burn_in_pulls:
             ### RESET EPOCH
             self.epoch_reward = 0
             self.epoch_steps = 0
