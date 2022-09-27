@@ -28,8 +28,7 @@ def train_baseline(dataset, num_timesteps, batch_size, MLP = True,
     ) = get_dataset_simple(
         dataset=dataset,
         batch_size=batch_size,
-        test_batch_size=10000000, 
-        fit_intercept = False)
+        test_batch_size=10000000)
 
     baseline_model = TorchMultilayerRegression(
         representation_layer_sizes=representation_layer_sizes,
@@ -64,8 +63,7 @@ def train_epsilon_greedy(dataset, baseline_model, num_batches, batch_size,
     ) = get_dataset_simple(
         dataset=dataset,
         batch_size=batch_size,
-        test_batch_size=10000000, 
-        fit_intercept = False)
+        test_batch_size=10000000)
 
 
     model = TorchMultilayerRegression(
@@ -184,8 +182,7 @@ def train_mahalanobis(dataset, baseline_model, num_batches, batch_size,
     ) = get_dataset_simple(
         dataset=dataset,
         batch_size=batch_size,
-        test_batch_size=10000000, 
-        fit_intercept = False)
+        test_batch_size=10000000)
 
     dataset_dimension = train_dataset.dimension
 
@@ -333,8 +330,7 @@ def train_PLOT(dataset, baseline_model, num_batches, batch_size,
     ) = get_dataset_simple(
         dataset=dataset,
         batch_size=batch_size,
-        test_batch_size=10000000, 
-        fit_intercept = False)
+        test_batch_size=10000000)
 
     model = TorchBinaryLogisticRegression(
         random_init=True,

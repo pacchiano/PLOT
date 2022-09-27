@@ -401,7 +401,7 @@ class EpochBalancingHyperparam:
 def train_epsilon_greedy_modsel(dataset, baseline_model, num_batches, batch_size, 
     num_opt_steps, opt_batch_size, 
     representation_layer_sizes = [10, 10], threshold = .5, epsilons = [.1, .05, .01],
-    verbose = False, fit_intercept = True, decaying_epsilon = False, 
+    verbose = False, decaying_epsilon = False, 
     restart_model_full_minimization = False, modselalgo = "Corral"):
     
     # IPython.embed()
@@ -424,7 +424,7 @@ def train_epsilon_greedy_modsel(dataset, baseline_model, num_batches, batch_size
         dataset=dataset,
         batch_size=batch_size,
         test_batch_size=10000000, 
-        fit_intercept = True)
+        )
 
 
     model = TorchMultilayerRegression(
@@ -559,7 +559,7 @@ def train_epsilon_greedy_modsel(dataset, baseline_model, num_batches, batch_size
 def train_mahalanobis_modsel(dataset, baseline_model, num_batches, batch_size, 
     num_opt_steps, opt_batch_size,
     representation_layer_sizes = [10, 10], threshold = .5, alphas = [1, .1, .01], lambda_reg = 1,
-    verbose = False, fit_intercept = False, 
+    verbose = False,
     restart_model_full_minimization = False, modselalgo = "Corral"):
     
     if modselalgo == "Corral":
@@ -589,8 +589,7 @@ def train_mahalanobis_modsel(dataset, baseline_model, num_batches, batch_size,
     ) = get_dataset_simple(
         dataset=dataset,
         batch_size=batch_size,
-        test_batch_size=10000000, 
-        fit_intercept = fit_intercept)
+        test_batch_size=10000000)
 
 
     # IPython.embed()

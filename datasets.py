@@ -14,15 +14,14 @@ from model_training_utilities import train_model
 
 # @title Data utilities
 class DataSet:
-    def __init__(self, dataset, labels, num_classes=2, fit_intercept = False):
+    def __init__(self, dataset, labels, num_classes=2, probabilities_y = False):
         self.num_datapoints = dataset.shape[0]
         self.random_state = 0
         self.dataset = dataset
         self.labels = labels
         self.num_classes = num_classes
-        self.fit_intercept = fit_intercept
-        self.dimension = dataset.shape[1] +fit_intercept 
-
+        self.dimension = dataset.shape[1]# +fit_intercept 
+        self.probabilities_y = probabilities_y
 
     def get_batch(self, batch_size):
         if batch_size > self.num_datapoints:
@@ -36,10 +35,12 @@ class DataSet:
         #   Y_one_hot[:, i] = (Y == i)*1.0
         self.random_state += 1
         
-        if self.fit_intercept:
-            intercept = np.ones(X.shape[0])
-            #IPython.embed()
-            X = np.concatenate((X, intercept.reshape(len(intercept), 1)), axis = 1)
+        if self.probabilities_y:
+            sample_mask = np.random.uniform(0,1, batch_size)
+            sample_probs = sample_mask > Y
+            Y = np.float64(sample_probs)
+
+
 
 
         if torch.cuda.is_available():
@@ -364,7 +365,7 @@ def get_batches(protected_datasets, global_dataset, batch_size):
     return global_batch, protected_batches
 
 
-def get_dataset(dataset, batch_size, test_batch_size, fit_intercept):
+def get_dataset(dataset, batch_size, test_batch_size):
 
     if dataset == "Mixture":
         PROTECTED_GROUPS = ["A", "B", "C", "D"]
@@ -407,11 +408,11 @@ def get_dataset(dataset, batch_size, test_batch_size, fit_intercept):
         test_dataset = pickle.load( open("./datasets/datasets_processed/{}_test.p".format(dataset), "rb"))
 
 
-        train_dataset = DataSet(train_dataset[0], train_dataset[1], fit_intercept = fit_intercept)
-        test_dataset = DataSet(test_dataset[0], test_dataset[1], fit_intercept = fit_intercept)
+        train_dataset = DataSet(train_dataset[0], train_dataset[1])
+        test_dataset = DataSet(test_dataset[0], test_dataset[1])
         
-        protected_datasets_train = [DataSet(d[0], d[1], fit_intercept = fit_intercept) for d in protected_datasets_train]
-        protected_datasets_test = [DataSet(d[0], d[1], fit_intercept = fit_intercept) for d in protected_datasets_test]
+        protected_datasets_train = [DataSet(d[0], d[1]) for d in protected_datasets_train]
+        protected_datasets_test = [DataSet(d[0], d[1]) for d in protected_datasets_test]
 
 
     elif dataset == "MNIST":
@@ -498,7 +499,7 @@ def get_representation_layer_sizes(repres_layers_name):
 
 
 
-def get_dataset_simple(dataset, batch_size, test_batch_size, fit_intercept, regression_fit_batch_size = 10, regression_fit_steps = 5000 ):
+def get_dataset_simple(dataset, batch_size, test_batch_size, regression_fit_batch_size = 10, regression_fit_steps = 5000 ):
 
 
     split_dataset_string = dataset.split("-") 
@@ -511,7 +512,7 @@ def get_dataset_simple(dataset, batch_size, test_batch_size, fit_intercept, regr
         protected_datasets_test,
         train_dataset,
         test_dataset,
-    ) = get_dataset(simple_dataset_name, batch_size, test_batch_size, fit_intercept = False)
+    ) = get_dataset(simple_dataset_name, batch_size, test_batch_size)
 
 
 
@@ -559,8 +560,8 @@ def get_dataset_simple(dataset, batch_size, test_batch_size, fit_intercept, regr
         train_dataset = pickle.load(  open("./datasets/datasets_processed/{}_train.p".format(dataset), "rb"))
         test_dataset = pickle.load( open("./datasets/datasets_processed/{}_test.p".format(dataset), "rb"))
 
-        train_dataset = DataSet(train_dataset[0], train_dataset[1], fit_intercept = False)
-        test_dataset = DataSet(test_dataset[0], test_dataset[1], fit_intercept = False)
+        train_dataset = DataSet(train_dataset[0], train_dataset[1], probabilities_y = True)
+        test_dataset = DataSet(test_dataset[0], test_dataset[1], probabilities_y = True)
 
 
 
