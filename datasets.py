@@ -39,7 +39,8 @@ class DataSet:
             sample_mask = np.random.uniform(0,1, batch_size)
             sample_probs = sample_mask > Y
             Y = np.float64(sample_probs)
-
+            IPython.embed()
+            raise ValueError("asldkfm")
 
 
 
