@@ -20,7 +20,10 @@ from model_training_utilities import evaluate_model, train_model
 
 
 
-def train_baseline(dataset, num_timesteps, batch_size, MLP = True, 
+
+
+
+def train_baseline(dataset, num_timesteps, batch_size, 
     representation_layer_sizes = [10, 10], threshold = .5):
     (
         train_dataset,
@@ -29,6 +32,10 @@ def train_baseline(dataset, num_timesteps, batch_size, MLP = True,
         dataset=dataset,
         batch_size=batch_size,
         test_batch_size=10000000)
+
+    # IPython.embed()
+    # raise ValueError("Asdflkm")
+
 
     baseline_model = TorchMultilayerRegression(
         representation_layer_sizes=representation_layer_sizes,
@@ -41,13 +48,32 @@ def train_baseline(dataset, num_timesteps, batch_size, MLP = True,
 
     print("Finished training baseline model")
 
+    
+    #### Computing test accuracy baseline
     with torch.no_grad():
         baseline_batch_test = test_dataset.get_batch(10000000000) 
         
         batch_X, batch_y = baseline_batch_test
         baseline_test_accuracy = baseline_model.get_accuracy(batch_X, batch_y, threshold)
-    print("Baseline model accuracy {}".format(baseline_test_accuracy))
-    return baseline_test_accuracy.item(), baseline_model
+        baseline_test_loss = baseline_model.get_loss(batch_X, batch_y)
+    print("Baseline model test accuracy {}".format(baseline_test_accuracy))
+    print("Baseline test loss {}".format(baseline_test_loss))
+    with torch.no_grad():
+        baseline_batch_train = train_dataset.get_batch(10000000000) 
+        
+        batch_X, batch_y = baseline_batch_train
+        baseline_train_accuracy = baseline_model.get_accuracy(batch_X, batch_y, threshold)
+        baseline_train_loss = baseline_model.get_loss(batch_X, batch_y)
+
+    print("Baseline model train accuracy {}".format(baseline_train_accuracy))
+    print("Baseline train loss {}".format(baseline_train_loss))
+    return (baseline_test_accuracy.item(), baseline_train_accuracy.item(),baseline_test_loss.item(), baseline_train_loss.item() ), baseline_model
+
+
+
+
+
+
 
 
 

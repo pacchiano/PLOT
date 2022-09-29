@@ -532,12 +532,23 @@ def get_dataset_simple(dataset, batch_size, test_batch_size, regression_fit_batc
                 dim = train_dataset.dimension,
                 output_filter = 'logistic'
                 )
+            #IPython.embed()
 
             ### Train this model
 
             model = train_model(
                 model, regression_fit_steps, train_dataset, regression_fit_batch_size, verbose=True
             )
+
+            # with torch.no_grad():
+            #     baseline_batch_train = train_dataset.get_batch(10000000000) 
+                
+            #     batch_X, batch_y = baseline_batch_train
+            #     baseline_train_accuracy = model.get_accuracy(batch_X, batch_y, 0.5)
+
+            # IPython.embed()
+            # raise ValueError("Asdflkm")
+
 
 
             #### Substitute labels by model predictions.
@@ -547,6 +558,14 @@ def get_dataset_simple(dataset, batch_size, test_batch_size, regression_fit_batc
 
             test_dataset_as_tensor = torch.tensor(test_dataset.dataset.values)
             predictions_test = model.predict(test_dataset_as_tensor).detach().numpy()
+
+
+            # IPython.embed()
+            # raise ValueError("alskdfm")
+
+            ### Threshold these predictions
+            predictions_train = (predictions_train >= .5)*1.0
+            predictions_test = (predictions_test >= .5)*1.0
 
 
 
@@ -561,9 +580,18 @@ def get_dataset_simple(dataset, batch_size, test_batch_size, regression_fit_batc
         train_dataset = pickle.load(  open("./datasets/datasets_processed/{}_train.p".format(dataset), "rb"))
         test_dataset = pickle.load( open("./datasets/datasets_processed/{}_test.p".format(dataset), "rb"))
 
-        train_dataset = DataSet(train_dataset[0], train_dataset[1], probabilities_y = True)
-        test_dataset = DataSet(test_dataset[0], test_dataset[1], probabilities_y = True)
+        train_dataset = DataSet(train_dataset[0], train_dataset[1], probabilities_y = False)
+        test_dataset = DataSet(test_dataset[0], test_dataset[1], probabilities_y = False)
 
+
+        # with torch.no_grad():
+        #     baseline_batch_train = train_dataset.get_batch(10000000000) 
+            
+        #     batch_X, batch_y = baseline_batch_train
+        #     baseline_train_accuracy = model.get_accuracy(batch_X, batch_y, 0.5)
+
+        # IPython.embed()
+        # raise ValueError("Asdflkm")
 
 
 

@@ -204,7 +204,10 @@ class TorchMultilayerRegression:
         thresholded_predictions = self.get_thresholded_predictions(
             batch_X, threshold)
 
-        boolean_predictions = thresholded_predictions == batch_y
+        boolean_predictions = thresholded_predictions == batch_y.squeeze()
+
+        #IPython.embed()
+
         return (boolean_predictions * 1.0).mean()
 
 

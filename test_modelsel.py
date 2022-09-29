@@ -97,8 +97,8 @@ def run_epsilon_greedy_experiments(dataset, epsilons, modselalgo, num_experiment
 
 
 
-def run_mahalanobis_experiments(dataset, alphas, modselalgo, num_experiments, baseline_model, num_batches, 
-	batch_size, decaying_epsilon, num_opt_steps = 1000, 
+def run_modsel_mahalanobis_experiments(dataset, alphas, modselalgo, num_experiments, baseline_model, num_batches, 
+	batch_size, num_opt_steps = 1000, 
 	opt_batch_size = 20, representation_layer_sizes = [10, 10], restart_model_full_minimization = False):
 
 
@@ -121,7 +121,42 @@ def run_mahalanobis_experiments(dataset, alphas, modselalgo, num_experiments, ba
 	    restart_model_full_minimization = False, modselalgo = modselalgo) for _ in range(num_experiments)]
 		
 
-	results_dictionary["alpha {}".format(modselalgo)] = mahalanobis_modsel_results
+	#results_dictionary["alpha {}".format(modselalgo)] = mahalanobis_modsel_results
+
+	# mahalanobis_results_list = []
+
+	# for alpha in alphas:
+
+	# 	if USE_RAY:
+
+
+	# 		mahalanobis_results = [ train_mahalanobis_remote.remote(dataset, baseline_model, 
+	#    				 num_batches = num_batches, batch_size = batch_size, 
+	#    				 num_opt_steps = num_opt_steps, opt_batch_size = opt_batch_size, 
+	#    				 representation_layer_sizes = representation_layer_sizes, threshold = .5, verbose = True,  alpha = alpha, 
+	#    				 lambda_reg = 1, restart_model_full_minimization = False) for _ in range(num_experiments)]
+
+	# 		mahalanobis_results = ray.get(mahalanobis_results)
+
+	# 	else:
+
+
+	# 		mahalanobis_results = [train_mahalanobis(dataset, baseline_model, 
+	#    				 num_batches = num_batches, batch_size = batch_size, 
+	#    				 num_opt_steps = num_opt_steps, opt_batch_size = opt_batch_size, 
+	#    				 representation_layer_sizes = representation_layer_sizes, threshold = .5, verbose = True,  alpha = alpha, 
+	#    				 lambda_reg = 1, restart_model_full_minimization = False) for _ in range(num_experiments)]
+
+	# 	mahalanobis_results_list.append(("alpha-{}".format(alpha), mahalanobis_results))
+	# 	#results_dictionary["alpha-{}".format(alpha)] = mahalanobis_results
+	
+	return ("alpha {}".format(modselalgo),mahalanobis_modsel_results )#, mahalanobis_results_list
+
+
+
+def run_base_mahalanobis_experiments(dataset, alphas, num_experiments, baseline_model, num_batches, 
+	batch_size, num_opt_steps = 1000, 
+	opt_batch_size = 20, representation_layer_sizes = [10, 10], restart_model_full_minimization = False):
 
 	mahalanobis_results_list = []
 
@@ -150,7 +185,8 @@ def run_mahalanobis_experiments(dataset, alphas, modselalgo, num_experiments, ba
 		mahalanobis_results_list.append(("alpha-{}".format(alpha), mahalanobis_results))
 		#results_dictionary["alpha-{}".format(alpha)] = mahalanobis_results
 	
-	return ("alpha {}".format(modselalgo),mahalanobis_modsel_results ), mahalanobis_results_list
+	return mahalanobis_results_list
+
 
 
 
@@ -369,7 +405,7 @@ alphas = [.000001, 1/4.0, 1/2.0, 1, 2, 4, 8 ]#, .01, .001]
 decaying_epsilon = False
 
 batch_size = 10
-num_experiments = 10
+num_experiments = 2
 
 representation_layer_sizes = [10,10]
 
@@ -377,8 +413,8 @@ representation_layer_sizes = [10,10]
 
 colors = ["blue", "red", "orange", "black", "violet", "orange", "green", "brown", "gray"]
 
-modselalgos = ["EpochBalancing"]#"BalancingAnalytic", "BalancingSimple", "BalancingAnalyticHybrid" ,"Corral", "CorralAnytime"]
-datasets = [ "Adult-10-10", "Crime-10_10"]#, "German", "Bank", "Adult"]
+modselalgos = ["EpochBalancing"]#, "CorralAnytime"]#"BalancingAnalytic", "BalancingSimple", "BalancingAnalyticHybrid" ,"Corral", "CorralAnytime"]
+datasets = [ "Adult-10-10"]#, "Crime-10_10", "Bank-10_10"]#, "German", "Bank", "Adult"]
 
 repres_layers_name = get_architecture_name(representation_layer_sizes)
 
@@ -386,14 +422,31 @@ repres_layers_name = get_architecture_name(representation_layer_sizes)
 results_dictionary = dict([])
 
 for dataset in datasets:
+	
+	if RUN_EPSILON or RUN_MAHALANOBIS:
+
+		baseline_results, baseline_model = run_train_baseline(dataset, num_experiments)
+
+		results_dictionary["baseline"] = [x[1] for x in baseline_results]
+
+	if RUN_MAHALANOBIS:
+
+
+		mahalanobis_results_list = run_base_mahalanobis_experiments(dataset, alphas, num_experiments, baseline_model, num_batches, 
+			batch_size, num_opt_steps = 1000, 
+			opt_batch_size = 20, representation_layer_sizes = representation_layer_sizes, restart_model_full_minimization = False)
+
+		for mahalanobis_res_tuple in mahalanobis_results_list:
+			results_dictionary[mahalanobis_res_tuple[0]] = mahalanobis_res_tuple[1]	
+
+
+
+
+
+
 	for modselalgo in modselalgos:
 
 
-		if RUN_EPSILON or RUN_MAHALANOBIS:
-
-			baseline_results, baseline_model = run_train_baseline(dataset, num_experiments)
-
-			results_dictionary["baseline"] = [x[1] for x in baseline_results]
 
 
 		### Run epsilon-greedy model selection experiments
@@ -411,12 +464,17 @@ for dataset in datasets:
 
 
 		if RUN_MAHALANOBIS:
-			mahalanobis_modsel_results_tuple, mahalanobis_results_list = run_mahalanobis_experiments(dataset, alphas, modselalgo, num_experiments, baseline_model, num_batches, batch_size, decaying_epsilon, num_opt_steps = 1000, 
-				opt_batch_size = 20, representation_layer_sizes = representation_layer_sizes, restart_model_full_minimization = False)
+
+			mahalanobis_modsel_results_tuple = run_modsel_mahalanobis_experiments(dataset, alphas, modselalgo, num_experiments, baseline_model, num_batches, 
+									batch_size, num_opt_steps = 1000, 
+									opt_batch_size = 20, representation_layer_sizes = [10, 10], restart_model_full_minimization = False)
+
+			# mahalanobis_modsel_results_tuple, mahalanobis_results_list = run_mahalanobis_experiments(dataset, alphas, modselalgo, num_experiments, baseline_model, num_batches, batch_size, decaying_epsilon, num_opt_steps = 1000, 
+			# 	opt_batch_size = 20, representation_layer_sizes = representation_layer_sizes, restart_model_full_minimization = False)
 
 			results_dictionary[mahalanobis_modsel_results_tuple[0]] = mahalanobis_modsel_results_tuple[1]
-			for mahalanobis_res_tuple in mahalanobis_results_list:
-				results_dictionary[mahalanobis_res_tuple[0]] = mahalanobis_res_tuple[1]	
+			# for mahalanobis_res_tuple in mahalanobis_results_list:
+			# 	results_dictionary[mahalanobis_res_tuple[0]] = mahalanobis_res_tuple[1]	
 
 
 
