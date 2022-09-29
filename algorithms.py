@@ -263,7 +263,7 @@ def train_mahalanobis(dataset, baseline_model, num_batches, batch_size,
 
     for i in range(num_batches):
         if verbose:
-            print("Processing mahalanobis batch ", i)
+            print("Processing mahalanobis batch ", i, " alpha ", alpha)
         batch_X, batch_y = train_dataset.get_batch(batch_size)
 
 
