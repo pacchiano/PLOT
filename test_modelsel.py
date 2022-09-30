@@ -405,7 +405,7 @@ alphas = [.000001, 1/4.0, 1/2.0, 1, 2, 4, 8 ]#, .01, .001]
 decaying_epsilon = False
 
 batch_size = 10
-num_experiments = 2
+num_experiments = 10
 
 representation_layer_sizes = [10,10]
 
