@@ -124,7 +124,7 @@ def train_epsilon_greedy(dataset, baseline_model, num_batches, batch_size,
             baseline_predictions = baseline_model.get_thresholded_predictions(batch_X, threshold)
 
             if torch.cuda.is_available():
-                epsilon_greedy_mask = torch.bernoulli(torch.ones(predictions.shape)*epsilon*eps_multiplier).bool().cuda()
+                epsilon_greedy_mask = torch.bernoulli(torch.ones(predictions.shape)*epsilon*eps_multiplier).bool()#.cuda()
             else:
                 epsilon_greedy_mask = torch.bernoulli(torch.ones(predictions.shape)*epsilon*eps_multiplier).bool()
 
@@ -251,13 +251,13 @@ def train_mahalanobis(dataset, baseline_model, num_batches, batch_size,
 
     if len(representation_layer_sizes) == 0:
         if torch.cuda.is_available():
-            covariance  = lambda_reg*torch.eye(dataset_dimension).cuda()
+            covariance  = lambda_reg*torch.eye(dataset_dimension)#.cuda()
         else:
             covariance  = lambda_reg*torch.eye(dataset_dimension)
 
     else:
         if torch.cuda.is_available():
-            covariance = lambda_reg*torch.eye(representation_layer_sizes[-1]).cuda()
+            covariance = lambda_reg*torch.eye(representation_layer_sizes[-1])#.cuda()
         else:
             covariance = lambda_reg*torch.eye(representation_layer_sizes[-1])
 
@@ -388,7 +388,7 @@ def train_PLOT(dataset, baseline_model, num_batches, batch_size,
                 eps_multiplier = 1.0/(np.sqrt(i+1))
 
             mle_predictions = model.get_thresholded_predictions(batch_X, threshold)
-            epsilon_greedy_mask = torch.bernoulli(torch.ones(mle_predictions.shape)*epsilon*eps_multiplier).bool().cuda()
+            epsilon_greedy_mask = torch.bernoulli(torch.ones(mle_predictions.shape)*epsilon*eps_multiplier).bool()#.cuda()
             pseudo_label_filtered_mask = epsilon_greedy_mask*~mle_predictions
             pseudo_indices = torch.nonzero(pseudo_label_filtered_mask).squeeze(dim=1)
 
@@ -399,10 +399,10 @@ def train_PLOT(dataset, baseline_model, num_batches, batch_size,
               weight = 4*np.sqrt(i * np.ln((6*(i**2) * np.ln(i)) / delta))
               pseudo_label_filtered_batch_X = pseudo_label_filtered_batch_X.repeat(weight, 1)
             if pessimistic:
-              pseudo_labels = torch.zeros(pseudo_label_filtered_batch_X.shape[0]).type(batch_y.dtype).cuda()
+              pseudo_labels = torch.zeros(pseudo_label_filtered_batch_X.shape[0]).type(batch_y.dtype)#.cuda()
             
             else:
-              pseudo_labels = torch.ones(pseudo_label_filtered_batch_X.shape[0]).type(batch_y.dtype).cuda()
+              pseudo_labels = torch.ones(pseudo_label_filtered_batch_X.shape[0]).type(batch_y.dtype)#.cuda()
 
         ### If the pseudo label filtered batch is nonempty train pseudo-label model
 
