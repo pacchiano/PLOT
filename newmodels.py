@@ -283,12 +283,12 @@ class TorchMultilayerRegressionMahalanobis(TorchMultilayerRegression):
         return torch.squeeze(prob_predictions)
   
     def predict_prob_with_uncertainties(self, batch_X, inverse_data_covariance=[]):
-        prob_predictions, _, uncertainties = self.network(
+        prob_predictions, _, pess_predictions = self.network(
             batch_X.float(),
             inverse_data_covariance=inverse_data_covariance,
             alpha=self.alpha,
         )  
-        return torch.squeeze(prob_predictions), torch.squeeze(uncertainties)
+        return torch.squeeze(prob_predictions), torch.squeeze(pess_predictions)
 
 
 

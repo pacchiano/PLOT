@@ -21,7 +21,7 @@ def process_results(results_list):
 
 
 
-def run_train_baseline(dataset, num_experiments, batch_size = 32, num_timesteps = 1000, representation_layer_sizes = [10,10]):
+def run_train_baseline(dataset, num_experiments, batch_size = 32, num_timesteps = 10000, representation_layer_sizes = [10,10]):
 	### BASELINE training
 	if USE_RAY:
 		baseline_results = [train_baseline_remote.remote(dataset, num_timesteps = num_timesteps, 

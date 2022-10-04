@@ -5,9 +5,9 @@ import IPython
 from algorithms import train_baseline
 
 
-dataset = "Adult-10_10"
-num_timesteps = 1000
-batch_size = 20
+dataset = "Bank-10_10"
+num_timesteps = 10000
+batch_size = 32
 representation_layer_sizes = [10,10]
 
 
