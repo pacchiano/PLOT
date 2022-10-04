@@ -396,7 +396,7 @@ epsilons = [.2, .1, .01, .05]#, .05]
 alphas = [.000001, 1/4.0, 1/2.0, 1, 2, 4, 8 ]#, .01, .001]
 decaying_epsilon = False
 
-split = True
+split = False
 restart_model_full_minimization = False
 
 batch_size = 10
