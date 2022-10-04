@@ -87,7 +87,7 @@ def train_mahalanobis_modsel_remote(dataset, baseline_model, num_batches, batch_
     num_opt_steps, opt_batch_size, 
     representation_layer_sizes = [10, 10], threshold = .5, alphas = [1, .1, .01], lambda_reg = 1,
     verbose = False, 
-    restart_model_full_minimization = False, modselalgo = "Corral"):
+    restart_model_full_minimization = False, modselalgo = "Corral", split = False):
 
 
 
@@ -95,7 +95,7 @@ def train_mahalanobis_modsel_remote(dataset, baseline_model, num_batches, batch_
     num_opt_steps=num_opt_steps, opt_batch_size=opt_batch_size, 
     representation_layer_sizes = representation_layer_sizes, threshold = threshold, alphas = alphas, lambda_reg = lambda_reg,
     verbose = verbose, 
-    restart_model_full_minimization = restart_model_full_minimization, modselalgo = modselalgo)
+    restart_model_full_minimization = restart_model_full_minimization, modselalgo = modselalgo, split = split)
 
 
 

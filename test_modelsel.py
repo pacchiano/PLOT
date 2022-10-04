@@ -20,6 +20,19 @@ def process_results(results_list):
     return mean, standard_dev
 
 
+def get_pickle_filename(dataset, num_batches,batch_size,repres_layers_name, split):
+	if not split:
+		filename = "results_modsel_{}_T{}_B{}_N_{}.p".format(dataset, num_batches,batch_size,repres_layers_name )
+
+	else:
+		filename = "results_modsel-split_{}_T{}_B{}_N_{}.p".format(dataset, num_batches,batch_size,repres_layers_name )
+
+	return filename
+
+
+
+
+
 
 def run_train_baseline(dataset, num_experiments, batch_size = 32, num_timesteps = 10000, representation_layer_sizes = [10,10]):
 	### BASELINE training
@@ -99,57 +112,25 @@ def run_epsilon_greedy_experiments(dataset, epsilons, modselalgo, num_experiment
 
 def run_modsel_mahalanobis_experiments(dataset, alphas, modselalgo, num_experiments, baseline_model, num_batches, 
 	batch_size, num_opt_steps = 1000, 
-	opt_batch_size = 20, representation_layer_sizes = [10, 10], restart_model_full_minimization = False):
-
+	opt_batch_size = 20, representation_layer_sizes = [10, 10], restart_model_full_minimization = False, split = False):
 
 	if USE_RAY:
-		
 		mahalanobis_modsel_results = [train_mahalanobis_modsel_remote.remote(dataset, baseline_model, 
 	    num_batches = num_batches, batch_size = batch_size, 
 	    num_opt_steps = num_opt_steps, opt_batch_size = opt_batch_size, 
 	    representation_layer_sizes = representation_layer_sizes, threshold = .5, verbose = True, alphas = alphas,
-	    restart_model_full_minimization = False, modselalgo = modselalgo) for _ in range(num_experiments)]
+	    restart_model_full_minimization = restart_model_full_minimization, modselalgo = modselalgo,
+	    split = split) for _ in range(num_experiments)]
 		mahalanobis_modsel_results = ray.get(mahalanobis_modsel_results)
 
 	else:
-
-
 		mahalanobis_modsel_results = [train_mahalanobis_modsel(dataset, baseline_model, 
 	    num_batches = num_batches, batch_size = batch_size, 
 	    num_opt_steps = num_opt_steps, opt_batch_size = opt_batch_size, 
 	    representation_layer_sizes = representation_layer_sizes, threshold = .5, verbose = True, alphas = alphas,
-	    restart_model_full_minimization = False, modselalgo = modselalgo) for _ in range(num_experiments)]
+	    restart_model_full_minimization = restart_model_full_minimization, modselalgo = modselalgo,
+	    split = split) for _ in range(num_experiments)]
 		
-
-	#results_dictionary["alpha {}".format(modselalgo)] = mahalanobis_modsel_results
-
-	# mahalanobis_results_list = []
-
-	# for alpha in alphas:
-
-	# 	if USE_RAY:
-
-
-	# 		mahalanobis_results = [ train_mahalanobis_remote.remote(dataset, baseline_model, 
-	#    				 num_batches = num_batches, batch_size = batch_size, 
-	#    				 num_opt_steps = num_opt_steps, opt_batch_size = opt_batch_size, 
-	#    				 representation_layer_sizes = representation_layer_sizes, threshold = .5, verbose = True,  alpha = alpha, 
-	#    				 lambda_reg = 1, restart_model_full_minimization = False) for _ in range(num_experiments)]
-
-	# 		mahalanobis_results = ray.get(mahalanobis_results)
-
-	# 	else:
-
-
-	# 		mahalanobis_results = [train_mahalanobis(dataset, baseline_model, 
-	#    				 num_batches = num_batches, batch_size = batch_size, 
-	#    				 num_opt_steps = num_opt_steps, opt_batch_size = opt_batch_size, 
-	#    				 representation_layer_sizes = representation_layer_sizes, threshold = .5, verbose = True,  alpha = alpha, 
-	#    				 lambda_reg = 1, restart_model_full_minimization = False) for _ in range(num_experiments)]
-
-	# 	mahalanobis_results_list.append(("alpha-{}".format(alpha), mahalanobis_results))
-	# 	#results_dictionary["alpha-{}".format(alpha)] = mahalanobis_results
-	
 	return ("alpha {}".format(modselalgo),mahalanobis_modsel_results )#, mahalanobis_results_list
 
 
@@ -183,7 +164,6 @@ def run_base_mahalanobis_experiments(dataset, alphas, num_experiments, baseline_
 	   				 lambda_reg = 1, restart_model_full_minimization = False) for _ in range(num_experiments)]
 
 		mahalanobis_results_list.append(("alpha-{}".format(alpha), mahalanobis_results))
-		#results_dictionary["alpha-{}".format(alpha)] = mahalanobis_results
 	
 	return mahalanobis_results_list
 
@@ -193,7 +173,8 @@ def run_base_mahalanobis_experiments(dataset, alphas, num_experiments, baseline_
 
 
 def plot_modsel_probabilities(algo_name, dataset, num_batches, batch_size, modselalgo, 
-	results_dictionary, hyperparams, colors, representation_layer_sizes, averaging_window = 1):
+	results_dictionary, hyperparams, colors, representation_layer_sizes, averaging_window = 1,
+	split = False):
 
 	Ts = np.arange(num_batches)+1
 	color_index = 0
@@ -223,8 +204,12 @@ def plot_modsel_probabilities(algo_name, dataset, num_batches, batch_size, modse
 	plt.xlabel("Number of batches")
 	plt.legend(fontsize=8, loc="upper left")
 
-	plt.savefig("./ModselResults/modsel_probabilities-{}_{}_{}_T{}_B{}_N_{}.png".format(modselalgo,algo_name, dataset,num_batches,batch_size, repres_layers_name))
+	if not split:
+		filename = "./ModselResults/modsel_probabilities-{}_{}_{}_T{}_B{}_N_{}.png".format(modselalgo,algo_name, dataset,num_batches,batch_size, repres_layers_name)
+	else:
+		filename = "./ModselResults/modsel_probabilities-split-{}_{}_{}_T{}_B{}_N_{}.png".format(modselalgo,algo_name, dataset,num_batches,batch_size, repres_layers_name)
 
+	plt.savefig(filename)
 	plt.close("all")
 	
 
@@ -233,7 +218,8 @@ def plot_modsel_probabilities(algo_name, dataset, num_batches, batch_size, modse
 
 
 def plot_results(algo_name, dataset, results_type, num_batches, batch_size, modselalgo, 
-	results_dictionary, hyperparams, colors, representation_layer_sizes, cummulative_plot = False, averaging_window = 1 ):
+	results_dictionary, hyperparams, colors, representation_layer_sizes, cummulative_plot = False, 
+	averaging_window = 1 , split=False):
 
 
 	Ts = (np.arange(num_batches/averaging_window)+1)*averaging_window
@@ -359,10 +345,16 @@ def plot_results(algo_name, dataset, results_type, num_batches, batch_size, mods
 	# plt.legend(bbox_to_anchor=(1.05, 1), fontsize=8, loc="upper left")
 	plt.legend(fontsize=8, loc="upper left")
 
+	if not split:
+		filename = "./ModselResults/modsel_{}_cum_{}-{}_{}_{}_T{}_B{}_N_{}.png".format(results_type, cummulative_plot, 
+			algo_name, modselalgo,dataset, num_batches, batch_size, repres_layers_name)
 
-	plt.savefig("./ModselResults/modsel_{}_cum_{}-{}_{}_{}_T{}_B{}_N_{}.png".format(results_type, cummulative_plot, 
-		algo_name, modselalgo,dataset, num_batches, batch_size, repres_layers_name))
+	else:
 
+		filename = "./ModselResults/modsel-split_{}_cum_{}-{}_{}_{}_T{}_B{}_N_{}.png".format(results_type, cummulative_plot, 
+			algo_name, modselalgo,dataset, num_batches, batch_size, repres_layers_name)
+
+	plt.savefig(filename)
 	plt.close("all")
 
 
@@ -404,6 +396,9 @@ epsilons = [.2, .1, .01, .05]#, .05]
 alphas = [.000001, 1/4.0, 1/2.0, 1, 2, 4, 8 ]#, .01, .001]
 decaying_epsilon = False
 
+split = True
+restart_model_full_minimization = False
+
 batch_size = 10
 num_experiments = 15
 
@@ -434,7 +429,8 @@ for dataset in datasets:
 
 		mahalanobis_results_list = run_base_mahalanobis_experiments(dataset, alphas, num_experiments, baseline_model, num_batches, 
 			batch_size, num_opt_steps = 1000, 
-			opt_batch_size = 20, representation_layer_sizes = representation_layer_sizes, restart_model_full_minimization = False)
+			opt_batch_size = 20, representation_layer_sizes = representation_layer_sizes, 
+			restart_model_full_minimization = restart_model_full_minimization)
 
 		for mahalanobis_res_tuple in mahalanobis_results_list:
 			results_dictionary[mahalanobis_res_tuple[0]] = mahalanobis_res_tuple[1]	
@@ -455,7 +451,8 @@ for dataset in datasets:
 		if RUN_EPSILON:
 
 			epsilon_greedy_modsel_results_tuple, epsilon_greedy_results_list  =	run_epsilon_greedy_experiments(dataset, epsilons, modselalgo, num_experiments, baseline_model, num_batches, batch_size, decaying_epsilon, num_opt_steps = 1000, 
-				opt_batch_size = 20, representation_layer_sizes = representation_layer_sizes, restart_model_full_minimization = False)
+				opt_batch_size = 20, representation_layer_sizes = representation_layer_sizes, 
+				restart_model_full_minimization = restart_model_full_minimization, split = split)
 
 			results_dictionary[epsilon_greedy_modsel_results_tuple[0]] = epsilon_greedy_modsel_results_tuple[1]
 
@@ -467,7 +464,8 @@ for dataset in datasets:
 
 			mahalanobis_modsel_results_tuple = run_modsel_mahalanobis_experiments(dataset, alphas, modselalgo, num_experiments, baseline_model, num_batches, 
 									batch_size, num_opt_steps = 1000, 
-									opt_batch_size = 20, representation_layer_sizes = [10, 10], restart_model_full_minimization = False)
+									opt_batch_size = 20, representation_layer_sizes = [10, 10], 
+									restart_model_full_minimization = restart_model_full_minimization, split = split)
 
 			# mahalanobis_modsel_results_tuple, mahalanobis_results_list = run_mahalanobis_experiments(dataset, alphas, modselalgo, num_experiments, baseline_model, num_batches, batch_size, decaying_epsilon, num_opt_steps = 1000, 
 			# 	opt_batch_size = 20, representation_layer_sizes = representation_layer_sizes, restart_model_full_minimization = False)
@@ -482,7 +480,11 @@ for dataset in datasets:
 
 
 
-		pickle_results_filename = "results_modsel_{}_T{}_B{}_N_{}.p".format(dataset, num_batches,batch_size,repres_layers_name )
+		pickle_results_filename = get_pickle_filename(dataset, num_batches,batch_size,repres_layers_name, split)
+		#pickle_results_filename = "results_modsel_{}_T{}_B{}_N_{}.p".format(dataset, num_batches,batch_size,repres_layers_name )
+
+
+
 
 		if RUN_EPSILON or RUN_MAHALANOBIS:
 			pickle.dump(results_dictionary, 

@@ -17,7 +17,7 @@ TorchMultilayerRegression
 
 from model_training_utilities import evaluate_model, train_model
 
-
+from algorithmsmodsel import train_mahalanobis_modsel
 
 
 
@@ -202,146 +202,16 @@ def train_mahalanobis(dataset, baseline_model, num_batches, batch_size,
     verbose = False, 
     restart_model_full_minimization = False):
     
-    (
-        train_dataset,
-        test_dataset,
-    ) = get_dataset_simple(
-        dataset=dataset,
-        batch_size=batch_size,
-        test_batch_size=10000000)
-
-    dataset_dimension = train_dataset.dimension
-
-    
-    model = TorchMultilayerRegressionMahalanobis(
-        alpha=alpha,
-        representation_layer_sizes=representation_layer_sizes,
-        dim = train_dataset.dimension  , 
-        output_filter = 'logistic'
-        )
-
-
-    # model = TorchMultilayerBinaryLogisticRegression(
-    #     alpha=alpha,
-    #     representation_layer_sizes=representation_layer_sizes,
-    #     dim = train_dataset.dimension
-    # )
-
-
-
-    # model = TorchBinaryLogisticRegression(
-    #     random_init=True,
-    #     alpha=alpha,
-    #     MLP=MLP,
-    #     representation_layer_size=representation_layer_size,
-    #     dim = train_dataset.dimension
-    # )
-
-    growing_training_dataset = GrowingNumpyDataSet()
-    instantaneous_regrets = []
-    instantaneous_accuracies = []
-
-
-    num_positives = []
-    num_negatives = []
-    false_neg_rates = []
-    false_positive_rates = []
-
-
-
-    if len(representation_layer_sizes) == 0:
-        if torch.cuda.is_available():
-            covariance  = lambda_reg*torch.eye(dataset_dimension)#.cuda()
-        else:
-            covariance  = lambda_reg*torch.eye(dataset_dimension)
-
-    else:
-        if torch.cuda.is_available():
-            covariance = lambda_reg*torch.eye(representation_layer_sizes[-1])#.cuda()
-        else:
-            covariance = lambda_reg*torch.eye(representation_layer_sizes[-1])
-
-    for i in range(num_batches):
-        if verbose:
-            print("Processing mahalanobis batch ", i, " alpha ", alpha)
-        batch_X, batch_y = train_dataset.get_batch(batch_size)
-
-
-        with torch.no_grad():
-            
-            inverse_covariance = torch.linalg.inv(covariance)
-            optimistic_predictions = model.get_thresholded_predictions(batch_X, threshold, inverse_covariance)
-
-            baseline_predictions = baseline_model.get_thresholded_predictions(batch_X, threshold)
-
-
-            boolean_labels_y = batch_y.bool()
-            accuracy = (torch.sum(optimistic_predictions*boolean_labels_y) +torch.sum( ~optimistic_predictions*~boolean_labels_y))*1.0/batch_size
-           
-
-            #### TOTAL NUM POSITIVES
-            total_num_positives = torch.sum(optimistic_predictions)
-
-            #### TOTAL NUM NEGATIVES   
-            total_num_negatives = torch.sum(~optimistic_predictions)
-
-            #### FALSE NEGATIVE RATE
-            false_neg_rate = torch.sum(~optimistic_predictions*boolean_labels_y)*1.0/(torch.sum(~optimistic_predictions)+.00000000001)
-
-
-            #### FALSE POSITIVE RATE            
-            false_positive_rate = torch.sum(optimistic_predictions*~boolean_labels_y)*1.0/(torch.sum(optimistic_predictions)+.00000000001)
-            
-            num_positives.append(total_num_positives.item())
-            num_negatives.append(total_num_negatives.item())
-            false_neg_rates.append(false_neg_rate.item())
-            false_positive_rates.append(false_positive_rate)            
+    return train_mahalanobis_modsel(dataset, baseline_model, num_batches, batch_size, 
+    num_opt_steps, opt_batch_size,
+    representation_layer_sizes = representation_layer_sizes, threshold = threshold, alphas = [alpha], 
+    lambda_reg = lambda_reg,
+    verbose = verbose,
+    restart_model_full_minimization = restart_model_full_minimization, modselalgo = "Corral")
 
 
 
 
-
-            accuracy_baseline = (torch.sum(baseline_predictions*boolean_labels_y) +torch.sum( ~baseline_predictions*~boolean_labels_y))*1.0/batch_size
-            instantaneous_regret = accuracy_baseline - accuracy
-
-            instantaneous_regrets.append(instantaneous_regret.item())
-            instantaneous_accuracies.append(accuracy.item())
-
-
-            filtered_batch_X = batch_X[optimistic_predictions, :]
-            
-            ### Update the covariance
-            filtered_representations_batch = model.get_representation(filtered_batch_X)
-            covariance += torch.transpose(filtered_representations_batch, 0,1)@filtered_representations_batch
-
-            filtered_batch_y = batch_y[optimistic_predictions]
-
-
-
-        growing_training_dataset.add_data(filtered_batch_X, filtered_batch_y)
-
-        #### Filter the batch using the predictions
-        #### Add the accepted points and their labels to the growing training dataset
-        model = train_model( model, num_opt_steps, 
-                growing_training_dataset, opt_batch_size, 
-                restart_model_full_minimization = restart_model_full_minimization)
-
-    print("Finished training mahalanobis model alpha - {}".format(alpha))
-    test_accuracy = evaluate_model(test_dataset, model, threshold).item()
-
-
-    results = dict([])
-    results["instantaneous_regrets"] = instantaneous_regrets
-    results["test_accuracy"] = test_accuracy
-    results["instantaneous_accuracies"] = instantaneous_accuracies
-    results["num_negatives"] = num_negatives
-    results["num_positives"] = num_positives
-    results["false_neg_rates"] = false_neg_rates
-    results["false_positive_rates"] = false_positive_rates
-
-
-                
-    return results#instantaneous_regrets, instantaneous_accuracies, test_accuracy
 
 
 def train_PLOT(dataset, baseline_model, num_batches, batch_size, 
@@ -454,3 +324,142 @@ def train_PLOT(dataset, baseline_model, num_batches, batch_size,
     print("Finished training PLOT model - pessimistic {}".format(pessimistic))
     test_accuracy = evaluate_model(test_dataset, model, threshold).item()
     return instantaneous_regrets, instantaneous_accuracies, test_accuracy
+
+
+
+
+
+
+
+# def train_mahalanobis(dataset, baseline_model, num_batches, batch_size, 
+#     num_opt_steps, opt_batch_size, 
+#     representation_layer_sizes = [10, 10], threshold = .5, alpha = 1, lambda_reg = 1,
+#     verbose = False, 
+#     restart_model_full_minimization = False):
+    
+#     (
+#         train_dataset,
+#         test_dataset,
+#     ) = get_dataset_simple(
+#         dataset=dataset,
+#         batch_size=batch_size,
+#         test_batch_size=10000000)
+
+#     dataset_dimension = train_dataset.dimension
+
+    
+#     model = TorchMultilayerRegressionMahalanobis(
+#         alpha=alpha,
+#         representation_layer_sizes=representation_layer_sizes,
+#         dim = train_dataset.dimension  , 
+#         output_filter = 'logistic'
+#         )
+
+
+#     growing_training_dataset = GrowingNumpyDataSet()
+#     instantaneous_regrets = []
+#     instantaneous_accuracies = []
+
+
+#     num_positives = []
+#     num_negatives = []
+#     false_neg_rates = []
+#     false_positive_rates = []
+
+
+
+#     if len(representation_layer_sizes) == 0:
+#         if torch.cuda.is_available():
+#             covariance  = lambda_reg*torch.eye(dataset_dimension)#.cuda()
+#         else:
+#             covariance  = lambda_reg*torch.eye(dataset_dimension)
+
+#     else:
+#         if torch.cuda.is_available():
+#             covariance = lambda_reg*torch.eye(representation_layer_sizes[-1])#.cuda()
+#         else:
+#             covariance = lambda_reg*torch.eye(representation_layer_sizes[-1])
+
+#     for i in range(num_batches):
+#         if verbose:
+#             print("Processing mahalanobis batch ", i, " alpha ", alpha)
+#         batch_X, batch_y = train_dataset.get_batch(batch_size)
+
+
+#         with torch.no_grad():
+            
+#             inverse_covariance = torch.linalg.inv(covariance)
+#             optimistic_predictions = model.get_thresholded_predictions(batch_X, threshold, inverse_covariance)
+
+#             baseline_predictions = baseline_model.get_thresholded_predictions(batch_X, threshold)
+
+
+#             boolean_labels_y = batch_y.bool()
+#             accuracy = (torch.sum(optimistic_predictions*boolean_labels_y) +torch.sum( ~optimistic_predictions*~boolean_labels_y))*1.0/batch_size
+           
+
+#             #### TOTAL NUM POSITIVES
+#             total_num_positives = torch.sum(optimistic_predictions)
+
+#             #### TOTAL NUM NEGATIVES   
+#             total_num_negatives = torch.sum(~optimistic_predictions)
+
+#             #### FALSE NEGATIVE RATE
+#             false_neg_rate = torch.sum(~optimistic_predictions*boolean_labels_y)*1.0/(torch.sum(~optimistic_predictions)+.00000000001)
+
+
+#             #### FALSE POSITIVE RATE            
+#             false_positive_rate = torch.sum(optimistic_predictions*~boolean_labels_y)*1.0/(torch.sum(optimistic_predictions)+.00000000001)
+            
+#             num_positives.append(total_num_positives.item())
+#             num_negatives.append(total_num_negatives.item())
+#             false_neg_rates.append(false_neg_rate.item())
+#             false_positive_rates.append(false_positive_rate)            
+
+
+
+
+
+#             accuracy_baseline = (torch.sum(baseline_predictions*boolean_labels_y) +torch.sum( ~baseline_predictions*~boolean_labels_y))*1.0/batch_size
+#             instantaneous_regret = accuracy_baseline - accuracy
+
+#             instantaneous_regrets.append(instantaneous_regret.item())
+#             instantaneous_accuracies.append(accuracy.item())
+
+
+#             filtered_batch_X = batch_X[optimistic_predictions, :]
+            
+#             ### Update the covariance
+#             filtered_representations_batch = model.get_representation(filtered_batch_X)
+#             covariance += torch.transpose(filtered_representations_batch, 0,1)@filtered_representations_batch
+
+#             filtered_batch_y = batch_y[optimistic_predictions]
+
+
+
+#         growing_training_dataset.add_data(filtered_batch_X, filtered_batch_y)
+
+#         #### Filter the batch using the predictions
+#         #### Add the accepted points and their labels to the growing training dataset
+#         model = train_model( model, num_opt_steps, 
+#                 growing_training_dataset, opt_batch_size, 
+#                 restart_model_full_minimization = restart_model_full_minimization)
+
+#     print("Finished training mahalanobis model alpha - {}".format(alpha))
+#     test_accuracy = evaluate_model(test_dataset, model, threshold).item()
+
+
+#     results = dict([])
+#     results["instantaneous_regrets"] = instantaneous_regrets
+#     results["test_accuracy"] = test_accuracy
+#     results["instantaneous_accuracies"] = instantaneous_accuracies
+#     results["num_negatives"] = num_negatives
+#     results["num_positives"] = num_positives
+#     results["false_neg_rates"] = false_neg_rates
+#     results["false_positive_rates"] = false_positive_rates
+
+
+                
+#     return results#instantaneous_regrets, instantaneous_accuracies, test_accuracy
+
+

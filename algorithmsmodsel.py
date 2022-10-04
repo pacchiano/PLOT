@@ -287,7 +287,7 @@ class BalancingHyperparam:
 
 # class BalancingHyperParam:
 class EpochBalancingHyperparam:
-    def __init__(self, m, putative_bounds_multipliers, delta =0.01, burn_in_pulls = 10 ):
+    def __init__(self, m, putative_bounds_multipliers, delta =0.01, burn_in_pulls = 100 ):
         self.m = m
         self.putative_bounds_multipliers = putative_bounds_multipliers
         ### check these putative bounds are going up
@@ -559,8 +559,11 @@ def train_mahalanobis_modsel(dataset, baseline_model, num_batches, batch_size,
     num_opt_steps, opt_batch_size,
     representation_layer_sizes = [10, 10], threshold = .5, alphas = [1, .1, .01], lambda_reg = 1,
     verbose = False,
-    restart_model_full_minimization = False, modselalgo = "Corral"):
+    restart_model_full_minimization = False, modselalgo = "Corral", split = False):
     
+
+    num_alphas = len(alphas)
+
     if modselalgo == "Corral":
         modsel_manager = CorralHyperparam(len(alphas), T = num_batches) ### hack
     elif modselalgo == "CorralAnytime":
@@ -599,14 +602,33 @@ def train_mahalanobis_modsel(dataset, baseline_model, num_batches, batch_size,
     dataset_dimension = train_dataset.dimension
 
 
-    model = TorchMultilayerRegressionMahalanobis(
-        alpha=alpha,
-        representation_layer_sizes=representation_layer_sizes,
-        dim = train_dataset.dimension,
-        output_filter = 'logistic'
-    )
+    if not split:
 
-    growing_training_dataset = GrowingNumpyDataSet()
+
+        model = TorchMultilayerRegressionMahalanobis(
+            alpha=alpha,
+            representation_layer_sizes=representation_layer_sizes,
+            dim = train_dataset.dimension,
+            output_filter = 'logistic'
+        )
+
+        growing_training_dataset = GrowingNumpyDataSet()
+
+    if split:
+
+        models = [ TorchMultilayerRegressionMahalanobis(
+            alpha=alpha,
+            representation_layer_sizes=representation_layer_sizes,
+            dim = train_dataset.dimension,
+            output_filter = 'logistic'
+        ) for alpha in alphas]
+
+        growing_training_datasets = [GrowingNumpyDataSet() for _ in range(num_alphas)]
+
+
+
+
+
     instantaneous_regrets = []
     instantaneous_accuracies = []
     modselect_info = []
@@ -635,17 +657,22 @@ def train_mahalanobis_modsel(dataset, baseline_model, num_batches, batch_size,
         batch_X, batch_y = train_dataset.get_batch(batch_size)
 
 
-        with torch.no_grad():
             
-            ### Sample epsilon using model selection
-            sample_idx = modsel_manager.sample_base_index()
-            alpha = alphas[sample_idx]
-            print(i, " sample alpha ", alpha)
-            print("Alphas distribution ", modsel_manager.get_distribution())
-            model.alpha = alpha
+        ### Sample epsilon using model selection
+        sample_idx = modsel_manager.sample_base_index()
+        alpha = alphas[sample_idx]
+        print(i, " batch number ", " sample alpha ", alpha)
+        print("Alphas distribution ", modsel_manager.get_distribution())
+        if not split:
+           model.alpha = alpha
 
-            modselect_info.append(modsel_manager.get_distribution())
+        else:
+            model = models[sample_idx]
+            growing_training_dataset = growing_training_datasets[sample_idx]
 
+        modselect_info.append(modsel_manager.get_distribution())
+
+        with torch.no_grad():
 
             inverse_covariance = torch.linalg.inv(covariance)
 
@@ -746,6 +773,9 @@ def train_mahalanobis_modsel(dataset, baseline_model, num_batches, batch_size,
     results["modselect_info"] = modselect_info
 
     return results# instantaneous_regrets, instantaneous_accuracies, test_accuracy, modselect_info
+
+
+
 
 
 
