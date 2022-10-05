@@ -396,11 +396,11 @@ epsilons = [.2, .1, .01, .05]#, .05]
 alphas = [.000001, 1/4.0, 1/2.0, 1, 2, 4, 8 ]#, .01, .001]
 decaying_epsilon = False
 
-split = False
+split = True
 restart_model_full_minimization = False
 
 batch_size = 10
-num_experiments = 15
+num_experiments = 2#15
 
 representation_layer_sizes = [10,10]
 
@@ -505,34 +505,34 @@ for dataset in datasets:
 
 
 			plot_modsel_probabilities("epsilon", dataset, num_batches, batch_size, modselalgo, 
-				results_dictionary, epsilons, colors, representation_layer_sizes = representation_layer_sizes)
+				results_dictionary, epsilons, colors, representation_layer_sizes = representation_layer_sizes, split = split)
 
 
 
 			plot_results("epsilon", dataset, "instantaneous_regrets", num_batches, batch_size, modselalgo, 
 				results_dictionary, epsilons, colors, representation_layer_sizes = representation_layer_sizes,
-				 cummulative_plot = True , averaging_window = averaging_window)
+				 cummulative_plot = True , averaging_window = averaging_window, split = split)
 
 
 			plot_results("epsilon", dataset, "instantaneous_accuracies", num_batches, batch_size, modselalgo, 
 				results_dictionary, epsilons, colors, representation_layer_sizes = representation_layer_sizes,
-				cummulative_plot = False, averaging_window = averaging_window )
+				cummulative_plot = False, averaging_window = averaging_window, split = split)
 
 			plot_results("epsilon", dataset, "num_negatives", num_batches, batch_size, modselalgo, 
 				results_dictionary, epsilons, colors, representation_layer_sizes = representation_layer_sizes,
-				 cummulative_plot = False, averaging_window = averaging_window )
+				 cummulative_plot = False, averaging_window = averaging_window, split = split)
 
 			plot_results("epsilon", dataset, "num_positives", num_batches, batch_size, modselalgo, 
 				results_dictionary, epsilons, colors, representation_layer_sizes = representation_layer_sizes,
-				 cummulative_plot = False, averaging_window = averaging_window )
+				 cummulative_plot = False, averaging_window = averaging_window, split = split)
 
 			plot_results("epsilon", dataset, "false_neg_rates", num_batches, batch_size, modselalgo, 
 				results_dictionary, epsilons, colors, representation_layer_sizes = representation_layer_sizes,
-				 cummulative_plot = False, averaging_window = averaging_window )
+				 cummulative_plot = False, averaging_window = averaging_window, split = split)
 
 			plot_results("epsilon", dataset, "false_positive_rates", num_batches, batch_size, modselalgo, 
 				results_dictionary, epsilons, colors, representation_layer_sizes = representation_layer_sizes,
-				cummulative_plot = False, averaging_window = averaging_window )
+				cummulative_plot = False, averaging_window = averaging_window, split = split)
 
 
 
@@ -544,33 +544,33 @@ for dataset in datasets:
 
 
 			plot_modsel_probabilities("alpha", dataset, num_batches, batch_size, modselalgo, 
-				results_dictionary, alphas, colors, representation_layer_sizes = representation_layer_sizes)
+				results_dictionary, alphas, colors, representation_layer_sizes = representation_layer_sizes, split = split)
 
 
 			plot_results("alpha", dataset, "instantaneous_regrets", num_batches, batch_size, modselalgo, 
 				results_dictionary, alphas, colors, representation_layer_sizes = representation_layer_sizes,
-				cummulative_plot = True , averaging_window = averaging_window)
+				cummulative_plot = True , averaging_window = averaging_window, split = split)
 
 
 			plot_results("alpha", dataset, "instantaneous_accuracies", num_batches, batch_size, modselalgo, 
 				results_dictionary, alphas, colors, representation_layer_sizes = representation_layer_sizes,
-				cummulative_plot = False, averaging_window = averaging_window )
+				cummulative_plot = False, averaging_window = averaging_window, split = split)
 
 			plot_results("alpha", dataset, "num_negatives", num_batches, batch_size, modselalgo, 
 				results_dictionary, alphas, colors, representation_layer_sizes = representation_layer_sizes,
-				cummulative_plot = False , averaging_window = averaging_window)
+				cummulative_plot = False , averaging_window = averaging_window, split = split)
 
 			plot_results("alpha", dataset, "num_positives", num_batches, batch_size, modselalgo, 
 				results_dictionary, alphas, colors, representation_layer_sizes = representation_layer_sizes,
-				cummulative_plot = False , averaging_window = averaging_window)
+				cummulative_plot = False , averaging_window = averaging_window, split = split)
 
 			plot_results("alpha", dataset, "false_neg_rates", num_batches, batch_size, modselalgo, 
 				results_dictionary, alphas, colors, representation_layer_sizes = representation_layer_sizes,
-				cummulative_plot = False , averaging_window = averaging_window)
+				cummulative_plot = False , averaging_window = averaging_window, split = split)
 
 			plot_results("alpha", dataset, "false_positive_rates", num_batches, batch_size, modselalgo, 
 				results_dictionary, alphas, colors, representation_layer_sizes = representation_layer_sizes,
-				cummulative_plot = False , averaging_window = averaging_window)
+				cummulative_plot = False , averaging_window = averaging_window, split = split)
 
 
 

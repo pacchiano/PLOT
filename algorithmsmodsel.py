@@ -21,7 +21,8 @@ from model_training_utilities import evaluate_model, train_model
 from datasets import get_batches, get_dataset_simple, GrowingNumpyDataSet
 from newmodels import (
     TorchMultilayerRegression,
-    TorchMultilayerRegressionMahalanobis
+    TorchMultilayerRegressionMahalanobis,
+    TorchMultilayerRegressionOptReg
 )
 
 def binary_search(func,xmin,xmax,tol=1e-5):
@@ -773,6 +774,227 @@ def train_mahalanobis_modsel(dataset, baseline_model, num_batches, batch_size,
     results["modselect_info"] = modselect_info
 
     return results# instantaneous_regrets, instantaneous_accuracies, test_accuracy, modselect_info
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+def train_opt_reg_modsel(dataset, baseline_model, num_batches, batch_size, 
+    num_opt_steps, opt_batch_size,
+    representation_layer_sizes = [10, 10], threshold = .5, regs = [1, .1, .01],
+    verbose = False,
+    restart_model_full_minimization = False, modselalgo = "Corral", split = False):
+    
+
+    num_regs = len(regs)
+
+    if modselalgo == "Corral":
+        modsel_manager = CorralHyperparam(len(regs), T = num_batches) ### hack
+    elif modselalgo == "CorralAnytime":
+        modsel_manager = CorralHyperparam(len(regs), T = num_batches, anytime = True) 
+    elif modselalgo == "BalancingSimple":
+        modsel_manager = BalancingHyperparam(len(regs), 
+           [ x*representation_layer_sizes[-1] for x in regs], delta =0.01, balancing_type = "BalancingSimple" )
+    elif modselalgo == "BalancingAnalytic":
+        modsel_manager = BalancingHyperparam(len(regs), 
+            [ x*representation_layer_sizes[-1] for x in regs], delta =0.01, balancing_type = "BalancingAnalytic")
+    elif modselalgo == "BalancingAnalyticHybrid":
+        modsel_manager = BalancingHyperparam(len(regs), 
+            [ x*representation_layer_sizes[-1] for x in regs], delta =0.01, balancing_type = "BalancingAnalyticHybrid")
+    elif modselalgo == "EpochBalancing":
+        modsel_manager = EpochBalancingHyperparam(len(regs),   [ x*representation_layer_sizes[-1] for x in regs])
+    else:
+        raise ValueError("Modselalgo type {} not recognized.".format(modselalgo))
+    reg = regs[0]
+    ### THE above is going to fail for linear representations.
+
+
+    (
+        train_dataset,
+        test_dataset,
+    ) = get_dataset_simple(
+        dataset=dataset,
+        batch_size=batch_size,
+        test_batch_size=10000000)
+
+
+    # IPython.embed()
+    # raise ValueError("asdlf;km")
+
+
+
+    dataset_dimension = train_dataset.dimension
+
+
+    if not split:
+
+
+        model = TorchMultilayerRegressionOptReg(
+            opt_reg=reg,
+            representation_layer_sizes=representation_layer_sizes,
+            dim = train_dataset.dimension,
+            output_filter = 'logistic'
+        )
+
+        growing_training_dataset = GrowingNumpyDataSet()
+
+    if split:
+
+        models = [ TorchMultilayerRegressionOptReg(
+            opt_reg=reg,
+            representation_layer_sizes=representation_layer_sizes,
+            dim = train_dataset.dimension,
+            output_filter = 'logistic'
+        ) for reg in regs]
+
+        growing_training_datasets = [GrowingNumpyDataSet() for _ in range(num_regs)]
+
+
+
+
+
+    instantaneous_regrets = []
+    instantaneous_accuracies = []
+    modselect_info = []
+
+
+    num_positives = []
+    num_negatives = []
+    false_neg_rates = []
+    false_positive_rates = []
+
+
+
+    for i in range(num_batches):
+        if verbose:
+            print("Processing mahalanobis batch ", i)
+        batch_X, batch_y = train_dataset.get_batch(batch_size)
+
+
+            
+        ### Sample epsilon using model selection
+        sample_idx = modsel_manager.sample_base_index()
+        reg = regs[sample_idx]
+        print(i, " batch number ", " sample opt_reg ", reg)
+        print("OptReg distribution ", modsel_manager.get_distribution())
+        if not split:
+           model.opt_reg = reg
+
+        else:
+            model = models[sample_idx]
+            growing_training_dataset = growing_training_datasets[sample_idx]
+
+        modselect_info.append(modsel_manager.get_distribution())
+
+        with torch.no_grad():
+
+
+
+
+            ##### Get thresholded predictions and uncertanties
+            optimistic_thresholded_predictions, optimistic_prob_predictions, pessimistic_prob_predictions = model.get_all_predictions_info(batch_X, threshold)
+        
+
+            baseline_predictions = baseline_model.get_thresholded_predictions(batch_X, threshold)
+
+
+            boolean_labels_y = batch_y.bool()
+            accuracy = (torch.sum(optimistic_thresholded_predictions*boolean_labels_y) +torch.sum( ~optimistic_thresholded_predictions*~boolean_labels_y))*1.0/batch_size
+
+
+            #### TOTAL NUM POSITIVES
+            total_num_positives = torch.sum(optimistic_thresholded_predictions)
+
+            #### TOTAL NUM NEGATIVES   
+            total_num_negatives = torch.sum(~optimistic_thresholded_predictions)
+
+            #### FALSE NEGATIVE RATE
+            false_neg_rate = torch.sum(~optimistic_thresholded_predictions*boolean_labels_y)*1.0/(torch.sum(~optimistic_thresholded_predictions)+.00000000001)
+
+
+            #### FALSE POSITIVE RATE            
+            false_positive_rate = torch.sum(optimistic_thresholded_predictions*~boolean_labels_y)*1.0/(torch.sum(optimistic_thresholded_predictions)+.00000000001)
+            
+
+
+
+            num_positives.append(total_num_positives.item())
+            num_negatives.append(total_num_negatives.item())
+            false_neg_rates.append(false_neg_rate.item())
+            false_positive_rates.append(false_positive_rate)            
+
+
+
+
+            ### Update mod selection manager
+            modsel_info = dict([])
+            
+
+            modesel_reward = (2*torch.sum(optimistic_thresholded_predictions*boolean_labels_y) - torch.sum(optimistic_thresholded_predictions))/batch_size
+
+
+            modsel_info["optimistic_reward_predictions"] = ((2*torch.sum(optimistic_thresholded_predictions*optimistic_prob_predictions) - torch.sum(optimistic_thresholded_predictions))/batch_size).item()
+            modsel_info["pessimistic_reward_predictions"] = ((2*torch.sum(optimistic_thresholded_predictions*pessimistic_prob_predictions) - torch.sum(optimistic_thresholded_predictions))/batch_size).item()
+
+
+            modsel_manager.update_distribution(sample_idx, modesel_reward.item(), modsel_info )
+
+
+            accuracy_baseline = (torch.sum(baseline_predictions*boolean_labels_y) +torch.sum( ~baseline_predictions*~boolean_labels_y))*1.0/batch_size
+            instantaneous_regret = accuracy_baseline - accuracy
+
+            instantaneous_regrets.append(instantaneous_regret.item())
+            instantaneous_accuracies.append(accuracy.item())
+
+
+            filtered_batch_X = batch_X[optimistic_thresholded_predictions, :]
+            
+            # ### Update the covariance
+            # filtered_representations_batch = model.get_representation(filtered_batch_X)
+            # covariance += torch.transpose(filtered_representations_batch, 0,1)@filtered_representations_batch
+
+            filtered_batch_y = batch_y[optimistic_thresholded_predictions]
+
+
+
+        growing_training_dataset.add_data(filtered_batch_X, filtered_batch_y)
+
+        #### Filter the batch using the predictions
+        #### Add the accepted points and their labels to the growing training dataset
+        model = train_model( model, num_opt_steps, 
+                growing_training_dataset, opt_batch_size, 
+                restart_model_full_minimization = restart_model_full_minimization)
+
+                
+    print("Finished training OptReg model reg - {}".format(reg))
+    test_accuracy = evaluate_model(test_dataset, model, threshold).item()
+
+    results = dict([])
+    results["instantaneous_regrets"] = instantaneous_regrets
+    results["test_accuracy"] = test_accuracy
+    results["instantaneous_accuracies"] = instantaneous_accuracies
+    results["num_negatives"] = num_negatives
+    results["num_positives"] = num_positives
+    results["false_neg_rates"] = false_neg_rates
+    results["false_positive_rates"] = false_positive_rates
+    results["modselect_info"] = modselect_info
+
+    return results
+
+
+
+
+
+
 
 
 
