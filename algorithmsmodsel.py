@@ -21,9 +21,10 @@ from model_training_utilities import evaluate_model, train_model
 from datasets import get_batches, get_dataset_simple, GrowingNumpyDataSet
 from newmodels import (
     TorchMultilayerRegression,
-    TorchMultilayerRegressionMahalanobis,
-    TorchMultilayerRegressionOptReg
-)
+    TorchMultilayerRegressionMahalanobis    )
+
+from model_training_utilities import train_model_opt_reg
+
 
 def binary_search(func,xmin,xmax,tol=1e-5):
     ''' func: function
@@ -838,8 +839,7 @@ def train_opt_reg_modsel(dataset, baseline_model, num_batches, batch_size,
     if not split:
 
 
-        model = TorchMultilayerRegressionOptReg(
-            opt_reg=reg,
+        model = TorchMultilayerRegression(
             representation_layer_sizes=representation_layer_sizes,
             dim = train_dataset.dimension,
             output_filter = 'logistic'
@@ -849,8 +849,7 @@ def train_opt_reg_modsel(dataset, baseline_model, num_batches, batch_size,
 
     if split:
 
-        models = [ TorchMultilayerRegressionOptReg(
-            opt_reg=reg,
+        models = [ TorchMultilayerRegression(
             representation_layer_sizes=representation_layer_sizes,
             dim = train_dataset.dimension,
             output_filter = 'logistic'
@@ -876,7 +875,7 @@ def train_opt_reg_modsel(dataset, baseline_model, num_batches, batch_size,
 
     for i in range(num_batches):
         if verbose:
-            print("Processing mahalanobis batch ", i)
+            print("Processing OptReg batch ", i)
         batch_X, batch_y = train_dataset.get_batch(batch_size)
 
 
@@ -895,13 +894,38 @@ def train_opt_reg_modsel(dataset, baseline_model, num_batches, batch_size,
 
         modselect_info.append(modsel_manager.get_distribution())
 
+
+
+
+
+        ##### Get thresholded predictions and uncertanties
+        
+
+        ### Train optimistic model. 
+        #kIPython.embed()
+
+        model = train_model_opt_reg(model, num_opt_steps, growing_training_dataset, 
+            batch_X, opt_batch_size, opt_reg = reg, restart_model_full_minimization = True)#restart_model_full_minimization )
+        optimistic_prob_predictions = model.predict(batch_X)
+        optimistic_thresholded_predictions = model.get_thresholded_predictions(batch_X, threshold)
+        print("Finished training optimistic OptReg model reg - {}".format(reg))
+        print("optimistic predictions ", optimistic_prob_predictions)
+
+
+        ### Train pessimistic model.
+        model = train_model_opt_reg(model, num_opt_steps, growing_training_dataset, 
+            batch_X, opt_batch_size, opt_reg = -reg, restart_model_full_minimization = True)#restart_model_full_minimization )
+        pessimistic_prob_predictions = model.predict(batch_X)
+        print("Finished training pessimistic OptReg model reg - {}".format(reg))
+        print("pessimistic predictions ", pessimistic_prob_predictions)
+
+
+
+        print("prediction differential ", optimistic_prob_predictions - pessimistic_prob_predictions)
+
         with torch.no_grad():
 
-
-
-
-            ##### Get thresholded predictions and uncertanties
-            optimistic_thresholded_predictions, optimistic_prob_predictions, pessimistic_prob_predictions = model.get_all_predictions_info(batch_X, threshold)
+            #optimistic_thresholded_predictions, optimistic_prob_predictions, pessimistic_prob_predictions = model.get_all_predictions_info(batch_X, threshold)
         
 
             baseline_predictions = baseline_model.get_thresholded_predictions(batch_X, threshold)
@@ -970,14 +994,14 @@ def train_opt_reg_modsel(dataset, baseline_model, num_batches, batch_size,
 
         #### Filter the batch using the predictions
         #### Add the accepted points and their labels to the growing training dataset
-        model = train_model( model, num_opt_steps, 
-                growing_training_dataset, opt_batch_size, 
-                restart_model_full_minimization = restart_model_full_minimization)
+        # model = train_model( model, num_opt_steps, 
+        #         growing_training_dataset, opt_batch_size, 
+        #         restart_model_full_minimization = restart_model_full_minimization)
 
                 
-    print("Finished training OptReg model reg - {}".format(reg))
+    print("Testing accuracy for pessimistic model reg - {}".format(reg))
     test_accuracy = evaluate_model(test_dataset, model, threshold).item()
-
+    print("Accuracy {}".format(test_accuracy))
     results = dict([])
     results["instantaneous_regrets"] = instantaneous_regrets
     results["test_accuracy"] = test_accuracy

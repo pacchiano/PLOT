@@ -1,7 +1,7 @@
 import ray
 
-from algorithmsmodsel import train_epsilon_greedy_modsel, train_mahalanobis_modsel
-from algorithms import train_epsilon_greedy, train_mahalanobis, train_baseline
+from algorithmsmodsel import train_epsilon_greedy_modsel, train_mahalanobis_modsel, train_opt_reg_modsel
+from algorithms import train_epsilon_greedy, train_mahalanobis, train_baseline, train_opt_reg
 
 
 @ray.remote
@@ -97,5 +97,35 @@ def train_mahalanobis_modsel_remote(dataset, baseline_model, num_batches, batch_
     verbose = verbose, 
     restart_model_full_minimization = restart_model_full_minimization, modselalgo = modselalgo, split = split)
 
+
+@ray.remote
+def train_opt_reg_remote(dataset, baseline_model, num_batches, batch_size, 
+    num_opt_steps, opt_batch_size,
+    representation_layer_sizes = [10, 10], threshold = .5, reg = 1,
+    verbose = False,
+    restart_model_full_minimization = False):
+
+    return train_opt_reg(dataset, baseline_model, num_batches, batch_size, 
+    num_opt_steps, opt_batch_size,
+    representation_layer_sizes = representation_layer_sizes, threshold = threshold, reg = reg,
+    verbose = verbose,
+    restart_model_full_minimization = restart_model_full_minimization)
+
+
+
+
+
+@ray.remote
+def train_opt_reg_modsel_remote(dataset, baseline_model, num_batches, batch_size, 
+    num_opt_steps, opt_batch_size,
+    representation_layer_sizes = [10, 10], threshold = .5, regs = [1, .1, .01],
+    verbose = False,
+    restart_model_full_minimization = False, modselalgo = "Corral", split = False):
+
+    return train_opt_reg_modsel(dataset, baseline_model, num_batches, batch_size, 
+    num_opt_steps, opt_batch_size,
+    representation_layer_sizes = representation_layer_sizes, threshold = threshold, regs = regs,
+    verbose = verbose,
+    restart_model_full_minimization = restart_model_full_minimization, modselalgo = modselalgo, split = split)
 
 

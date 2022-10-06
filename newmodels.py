@@ -4,6 +4,7 @@ import torch
 
 from dataclasses import dataclass
 
+
 import IPython
 
 
@@ -179,17 +180,24 @@ class TorchMultilayerRegression:
 
 
     def reset_weights(self):
-        self.network.reset_weights()
+        for c in self.network.modules():
+            if hasattr(c, 'reset_parameters'):
+                c.reset_parameters()
+                print("Reset parameters")
 
     def get_representation(self, batch_X):
-        _, representations = self.network(batch_X.float())
+        pred_tuple = self.network(batch_X.float())
+        representations = pred_tuple[1]
+
         return representations
 
     def get_loss(self, batch_X, batch_y):
         # if torch.cuda.is_available():
         #     self.network.to('cuda')
-        prob_predictions, _ = self.network(batch_X.float())  # .squeeze()
-        if self.output_filter == "sigmoid":
+        pred_tuple = self.network(batch_X.float())  # .squeeze()
+        prob_predictions = pred_tuple[0]
+
+        if self.output_filter == "logistic":
             return self.criterion_logistic(
                 torch.squeeze(prob_predictions), torch.squeeze(batch_y.float())
             )
@@ -200,10 +208,15 @@ class TorchMultilayerRegression:
             )
 
 
+
+
+
     def predict(self, batch_X):
-        prob_predictions, _ = self.network(
+        pred_tuple = self.network(
             batch_X.float()
             )  
+
+        prob_predictions = pred_tuple[0]
         return torch.squeeze(prob_predictions)
 
 
@@ -265,34 +278,11 @@ class TorchMultilayerRegressionMahalanobis(TorchMultilayerRegression):
 
 
 
-    def reset_weights(self):
-        self.network.reset_weights()
-
 
     def __inverse_covariance_norm(self, batch_X, inverse_covariance):
         square_norm = np.dot(np.dot(batch_X, inverse_covariance), np.transpose(batch_X))
         return np.diag(np.sqrt(square_norm))
 
-
-    def get_representation(self, batch_X):
-        _, representations, _ = self.network(batch_X.float())
-        return representations
-
-    def get_loss(self, batch_X, batch_y):
-        #if torch.cuda.is_available():
-        #    self.network.to('cuda')
-        prob_predictions, _, _ = self.network(batch_X.float())  # .squeeze()
-        #IPython.embed()
-
-        if self.output_filter == "sigmoid":
-            return self.criterion_logistic(
-                torch.squeeze(prob_predictions), torch.squeeze(batch_y.float())
-            )
-        else:
-
-            return self.criterion_l2(
-                torch.squeeze(prob_predictions), torch.squeeze(batch_y.float())
-            )
 
 
     def predict_prob(self, batch_X, inverse_data_covariance=[]):
@@ -332,106 +322,6 @@ class TorchMultilayerRegressionMahalanobis(TorchMultilayerRegression):
         boolean_predictions = thresholded_predictions == batch_y
         return (boolean_predictions * 1.0).mean()
 
-
-
-
-class TorchMultilayerRegressionOptReg(TorchMultilayerRegression):
-    def __init__(
-        self,
-        dim=None,
-        opt_reg=1,
-        representation_layer_sizes=[20,10],
-        activation_type = 'sigmoid',
-        output_filter = 'none',
-        device = torch.device("cpu")):
-
-
-        super(TorchMultilayerRegressionMahalanobis, self).__init__(
-            dim = dim, 
-            representation_layer_sizes = representation_layer_sizes,
-            activation_type = activation_type,
-            output_filter = output_filter,
-            device = device)
-
-
-        if output_filter not in ['none', 'logistic']:
-            raise ValueError("The output filter option is not recognized")
-
-        self.output_filter = output_filter
-
-        self.opt_reg = opt_reg
-
-        self.network = FeedforwardMultiLayerOneDim(self.dim, self.representation_layer_sizes, 
-            output_filter = output_filter, activation_type = activation_type, device = device)
-
-        self.network.to(self.device)
-
-
-
-    def reset_weights(self):
-        self.network.reset_weights()
-
-
-
-    def get_loss(self, batch_X, batch_y):
-        prob_predictions, _, _ = self.network(batch_X.float())  
-
-        if self.output_filter == "sigmoid":
-            return self.criterion_logistic(
-                torch.squeeze(prob_predictions), torch.squeeze(batch_y.float())
-            )
-        else:
-
-            return self.criterion_l2(
-                torch.squeeze(prob_predictions), torch.squeeze(batch_y.float())
-            )
-
-
-
-    # def get_optimism_loss(self, query_batch_X):
-        
-
-
-
-    def predict_prob(self, batch_X):
-        prob_predictions, _, _ = self.network(
-            batch_X.float(),
-            alpha=self.opt_reg
-        )  
-        return torch.squeeze(prob_predictions)
-  
-    def predict_prob_with_uncertainties(self, batch_X, inverse_data_covariance=[]):
-        
-        #### Train with 
-
-
-        prob_predictions, _, pess_predictions = self.network(
-            batch_X.float(),
-            inverse_data_covariance=inverse_data_covariance,
-            alpha=self.alpha,
-        )  
-        return torch.squeeze(prob_predictions), torch.squeeze(pess_predictions)
-
-
-
-    def get_thresholded_predictions(self, batch_X, threshold):
-        prob_predictions = self.predict_prob(batch_X, inverse_data_covariance)
-        thresholded_predictions = prob_predictions > threshold
-        return thresholded_predictions
-
-
-    def get_all_predictions_info(self, batch_X, threshold, inverse_data_covariance=[]):
-        opt_prob_predictions, pess_prob_predictions = self.predict_prob_with_uncertainties(batch_X, inverse_data_covariance)
-        thresholded_predictions = opt_prob_predictions > threshold
-        return thresholded_predictions, opt_prob_predictions, pess_prob_predictions
-
-
-    def get_accuracy(self, batch_X, batch_y, threshold, inverse_data_covariance=[]):
-        thresholded_predictions = self.get_thresholded_predictions(
-            batch_X, threshold, inverse_data_covariance
-        )
-        boolean_predictions = thresholded_predictions == batch_y
-        return (boolean_predictions * 1.0).mean()
 
 
 
