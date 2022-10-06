@@ -75,9 +75,6 @@ def run_epsilon_greedy_experiments(dataset, epsilons, modselalgo, num_experiment
 	    	modselalgo = modselalgo) for _ in range(num_experiments)]
 		
 
-	#results_dictionary["epsilon {}".format(modselalgo)] = epsilon_greedy_modsel_results
-
-
 	epsilon_greedy_results_list = []
 
 	### Run epsilon-greedy experiments
@@ -463,7 +460,7 @@ split = True
 restart_model_full_minimization = False
 
 batch_size = 10
-num_experiments = 2
+num_experiments = 15
 
 representation_layer_sizes = [10,10]
 

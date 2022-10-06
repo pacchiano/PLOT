@@ -891,7 +891,7 @@ def train_opt_reg_modsel(dataset, baseline_model, num_batches, batch_size,
 
 
         ##### Train optimistic model.
-        model = train_model_opt_reg(model, 3*num_opt_steps, growing_training_dataset, 
+        model = train_model_opt_reg(model, num_opt_steps, growing_training_dataset, 
             batch_X, opt_batch_size, opt_reg = reg, restart_model_full_minimization = True)#restart_model_full_minimization )
         optimistic_prob_predictions = model.predict(batch_X)
         optimistic_thresholded_predictions = model.get_thresholded_predictions(batch_X, threshold)
@@ -900,7 +900,7 @@ def train_opt_reg_modsel(dataset, baseline_model, num_batches, batch_size,
 
 
         ### Train pessimistic model.
-        model = train_model_opt_reg(model, 3*num_opt_steps, growing_training_dataset, 
+        model = train_model_opt_reg(model, num_opt_steps, growing_training_dataset, 
             batch_X, opt_batch_size, opt_reg = -reg, restart_model_full_minimization = True)#restart_model_full_minimization )
         pessimistic_prob_predictions = model.predict(batch_X)
         print("Finished training pessimistic OptReg model reg - {}".format(reg))
