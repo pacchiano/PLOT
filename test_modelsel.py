@@ -205,6 +205,10 @@ def run_base_opt_reg_experiments(dataset, regs, num_experiments, baseline_model,
 def run_modsel_opt_reg_experiments(dataset, regs, modselalgo, num_experiments, baseline_model, num_batches, 
 	batch_size, num_opt_steps = 1000, 
 	opt_batch_size = 20, representation_layer_sizes = [10, 10], restart_model_full_minimization = False, split = False):
+	
+
+	#IPython.embed()
+	#raise ValueError("asdflkm")
 
 	if USE_RAY:
 		opt_reg_modsel_results = [train_opt_reg_modsel_remote.remote(dataset, baseline_model, num_batches, batch_size, 
@@ -549,7 +553,6 @@ for dataset in datasets:
 
 
 		if RUN_OPT_REG:
-
 
 			opt_reg_modsel_results_tuple = run_modsel_opt_reg_experiments(dataset, opt_regs, modselalgo, num_experiments, baseline_model, num_batches, 
 									batch_size, num_opt_steps = 1000, 

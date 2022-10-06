@@ -905,8 +905,10 @@ def train_opt_reg_modsel(dataset, baseline_model, num_batches, batch_size,
         pessimistic_prob_predictions = model.predict(batch_X)
         print("Finished training pessimistic OptReg model reg - {}".format(reg))
         print("pessimistic predictions ", pessimistic_prob_predictions)
-
-        print("is split {}".format(split))
+        #IPython.embed()
+        #raise ValueError("asdf")
+        if len(regs) > 1:
+            print("is split {}".format(split))
         print("        ########################################")
         print("prediction differential ", optimistic_prob_predictions - pessimistic_prob_predictions)
         print("        ########################################")
