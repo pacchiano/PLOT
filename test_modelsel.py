@@ -456,7 +456,7 @@ alphas = [.000001, 1/4.0, 1/2.0, 1, 2, 4, 8 ]
 opt_regs = [0,.1, 1, 10]
 decaying_epsilon = False
 
-split = False
+split = True
 restart_model_full_minimization = False
 
 batch_size = 10
