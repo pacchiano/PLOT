@@ -33,8 +33,8 @@ def get_pickle_filename(dataset, num_batches,batch_size,repres_layers_name, spli
 
 
 
-def run_train_baseline(dataset, num_experiments, batch_size = 32, num_timesteps = 1000, representation_layer_sizes = [10,10]):
-#def run_train_baseline(dataset, num_experiments, batch_size = 32, num_timesteps = 10000, representation_layer_sizes = [10,10]):
+#def run_train_baseline(dataset, num_experiments, batch_size = 32, num_timesteps = 1000, representation_layer_sizes = [10,10]):
+def run_train_baseline(dataset, num_experiments, batch_size = 32, num_timesteps = 10000, representation_layer_sizes = [10,10]):
 	### BASELINE training
 	if USE_RAY:
 		baseline_results = [train_baseline_remote.remote(dataset, num_timesteps = num_timesteps, 
@@ -450,13 +450,12 @@ RUN_MAHALANOBIS = False#True
 PLOT_MAHALANOBIS = False#True
 
 
-## What is the fractrion of rejected labels for each algorithm and each dataset. 
 num_batches = 2000
 averaging_window = 1
 epsilon = .1
 alpha = 10
-epsilons = [.2, .1, .01, .05]#, .05]
-alphas = [.000001, 1/4.0, 1/2.0, 1, 2, 4, 8 ]#, .01, .001]
+epsilons = [.2, .1, .01, .05]
+alphas = [.000001, 1/4.0, 1/2.0, 1, 2, 4, 8 ]
 opt_regs = [0,.1, 1, 10]
 decaying_epsilon = False
 
@@ -464,7 +463,7 @@ split = False
 restart_model_full_minimization = False
 
 batch_size = 10
-num_experiments = 15
+num_experiments = 2
 
 representation_layer_sizes = [10,10]
 
@@ -473,7 +472,7 @@ representation_layer_sizes = [10,10]
 colors = ["blue", "red", "orange", "black", "violet", "orange", "green", "brown", "gray"]
 
 modselalgos = ["CorralAnytime","EpochBalancing"]#, "CorralAnytime"]#"BalancingAnalytic", "BalancingSimple", "BalancingAnalyticHybrid" ,"Corral", "CorralAnytime"]
-datasets = [  "Adult-10_10", "German-10_10","Crime-10_10","Bank-10_10", "Adult", "German", "Bank", "Crime"]#, "German", "Bank", "Adult"]"Adult-10-10"]#,
+datasets = [ "Adult-10_10", "German-10_10","Crime-10_10","Bank-10_10", "Adult", "German", "Bank", "Crime"]#, "German", "Bank", "Adult"]"Adult-10-10"]#,
 
 repres_layers_name = get_architecture_name(representation_layer_sizes)
 

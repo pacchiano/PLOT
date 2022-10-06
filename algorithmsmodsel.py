@@ -828,11 +828,6 @@ def train_opt_reg_modsel(dataset, baseline_model, num_batches, batch_size,
         test_batch_size=10000000)
 
 
-    # IPython.embed()
-    # raise ValueError("asdlf;km")
-
-
-
     dataset_dimension = train_dataset.dimension
 
 
@@ -895,16 +890,8 @@ def train_opt_reg_modsel(dataset, baseline_model, num_batches, batch_size,
         modselect_info.append(modsel_manager.get_distribution())
 
 
-
-
-
-        ##### Get thresholded predictions and uncertanties
-        
-
-        ### Train optimistic model. 
-        #kIPython.embed()
-
-        model = train_model_opt_reg(model, num_opt_steps, growing_training_dataset, 
+        ##### Train optimistic model.
+        model = train_model_opt_reg(model, 3*num_opt_steps, growing_training_dataset, 
             batch_X, opt_batch_size, opt_reg = reg, restart_model_full_minimization = True)#restart_model_full_minimization )
         optimistic_prob_predictions = model.predict(batch_X)
         optimistic_thresholded_predictions = model.get_thresholded_predictions(batch_X, threshold)
@@ -913,23 +900,20 @@ def train_opt_reg_modsel(dataset, baseline_model, num_batches, batch_size,
 
 
         ### Train pessimistic model.
-        model = train_model_opt_reg(model, num_opt_steps, growing_training_dataset, 
+        model = train_model_opt_reg(model, 3*num_opt_steps, growing_training_dataset, 
             batch_X, opt_batch_size, opt_reg = -reg, restart_model_full_minimization = True)#restart_model_full_minimization )
         pessimistic_prob_predictions = model.predict(batch_X)
         print("Finished training pessimistic OptReg model reg - {}".format(reg))
         print("pessimistic predictions ", pessimistic_prob_predictions)
 
-
-
+        print("is split {}".format(split))
+        print("        ########################################")
         print("prediction differential ", optimistic_prob_predictions - pessimistic_prob_predictions)
+        print("        ########################################")
 
-        with torch.no_grad():
-
-            #optimistic_thresholded_predictions, optimistic_prob_predictions, pessimistic_prob_predictions = model.get_all_predictions_info(batch_X, threshold)
-        
+        with torch.no_grad():        
 
             baseline_predictions = baseline_model.get_thresholded_predictions(batch_X, threshold)
-
 
             boolean_labels_y = batch_y.bool()
             accuracy = (torch.sum(optimistic_thresholded_predictions*boolean_labels_y) +torch.sum( ~optimistic_thresholded_predictions*~boolean_labels_y))*1.0/batch_size
@@ -982,21 +966,11 @@ def train_opt_reg_modsel(dataset, baseline_model, num_batches, batch_size,
 
             filtered_batch_X = batch_X[optimistic_thresholded_predictions, :]
             
-            # ### Update the covariance
-            # filtered_representations_batch = model.get_representation(filtered_batch_X)
-            # covariance += torch.transpose(filtered_representations_batch, 0,1)@filtered_representations_batch
-
             filtered_batch_y = batch_y[optimistic_thresholded_predictions]
 
 
 
         growing_training_dataset.add_data(filtered_batch_X, filtered_batch_y)
-
-        #### Filter the batch using the predictions
-        #### Add the accepted points and their labels to the growing training dataset
-        # model = train_model( model, num_opt_steps, 
-        #         growing_training_dataset, opt_batch_size, 
-        #         restart_model_full_minimization = restart_model_full_minimization)
 
                 
     print("Testing accuracy for pessimistic model reg - {}".format(reg))
