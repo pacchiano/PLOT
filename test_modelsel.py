@@ -451,7 +451,7 @@ RUN_MAHALANOBIS = False#True
 PLOT_MAHALANOBIS = False#True
 
 
-num_batches = 200
+num_batches = 20
 averaging_window = 1
 epsilon = .1
 alpha = 10
