@@ -9,7 +9,8 @@ from algorithms import train_epsilon_greedy, train_mahalanobis, train_baseline, 
 from algorithms_remote import train_epsilon_greedy_remote, train_epsilon_greedy_modsel_remote, train_baseline_remote, train_mahalanobis_remote, train_mahalanobis_modsel_remote, train_opt_reg_modsel_remote, train_opt_reg_remote
 
 
-USE_RAY = True
+#USE_RAY = True
+USE_RAY = False
 
 
 def process_results(results_list):
@@ -461,7 +462,7 @@ decaying_epsilon = False
 num_opt_steps = 1000
 opt_batch_size = 20
 
-split = False
+split = True
 restart_model_full_minimization = False
 
 batch_size = 10
@@ -473,7 +474,7 @@ representation_layer_sizes = [10,10]
 
 colors = ["blue", "red", "orange", "black", "violet", "orange", "green", "brown", "gray"]
 
-modselalgos = ["EpochBalancing"]#, "CorralAnytime"]#"BalancingAnalytic", "BalancingSimple", "BalancingAnalyticHybrid" ,"Corral", "CorralAnytime"]
+modselalgos = ["CorralAnytime"]# "EpochBalancing", "BalancingAnalytic", "BalancingSimple", "BalancingAnalyticHybrid" ,"Corral", "CorralAnytime"]
 datasets = [ "Adult-10_10", "German-10_10","Crime-10_10","Bank-10_10", "Adult", "German", "Bank", "Crime"]#, "German", "Bank", "Adult"]"Adult-10-10"]#,
 
 repres_layers_name = get_architecture_name(representation_layer_sizes)
