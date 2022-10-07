@@ -31,9 +31,9 @@ class Feedforward(torch.nn.Module):
             self.hidden_size = hidden_size
             # TODO?
             if torch.cuda.is_available():
-                self.fc1 = torch.nn.Linear(self.input_size, self.hidden_size).to('cuda')
-                self.relu = torch.nn.ReLU().to('cuda')
-                self.fc2 = torch.nn.Linear(self.hidden_size, 1).to('cuda')
+                self.fc1 = torch.nn.Linear(self.input_size, self.hidden_size)#.to('cuda')
+                self.relu = torch.nn.ReLU()#.to('cuda')
+                self.fc2 = torch.nn.Linear(self.hidden_size, 1)#.to('cuda')
             else:
                 self.fc1 = torch.nn.Linear(self.input_size, self.hidden_size)
                 self.relu = torch.nn.ReLU()
@@ -41,14 +41,14 @@ class Feedforward(torch.nn.Module):
 
         else:
             if torch.cuda.is_available():
-                self.fc1 = torch.nn.Linear(self.input_size, 1, bias=False).to('cuda')
+                self.fc1 = torch.nn.Linear(self.input_size, 1, bias=False)#.to('cuda')
             else:
                 self.fc1 = torch.nn.Linear(self.input_size, 1, bias=False)
 
     def forward(self, x, inverse_data_covariance=[], alpha=0):
         # TODO
         if torch.cuda.is_available():
-            x = x.to('cuda')
+            x = x#.to('cuda')
     
         if self.MLP:
             hidden = self.fc1(x)
@@ -64,7 +64,7 @@ class Feedforward(torch.nn.Module):
             # IPython.embed()
             # raise ValueError("asdlfkm")
             if torch.cuda.is_available():
-                inverse_data_covariance = inverse_data_covariance.float().to('cuda')
+                inverse_data_covariance = inverse_data_covariance.float()#.to('cuda')
 
 
 
@@ -134,7 +134,7 @@ class TorchBinaryLogisticRegression:
 
     def get_loss(self, batch_X, batch_y):
         if torch.cuda.is_available():
-            self.network.to('cuda')
+            self.network#.to('cuda')
         prob_predictions, _ = self.network(batch_X.float())  # .squeeze()
 
         return self.criterion(
