@@ -47,7 +47,7 @@ def train_model_opt_reg(
     verbose = False,    
     restart_model_full_minimization=False,
     weight_decay=0.0,
-    log_optimism_loss = False
+    log_optimism_loss = True
     ):
     
 
