@@ -483,7 +483,7 @@ def train_epsilon_greedy_modsel(dataset, baseline_model, num_batches, batch_size
 
 
             if torch.cuda.is_available():
-                epsilon_greedy_mask = torch.bernoulli(torch.ones(predictions.shape)*epsilon*eps_multiplier).bool().cuda()
+                epsilon_greedy_mask = torch.bernoulli(torch.ones(predictions.shape)*epsilon*eps_multiplier).bool()#.cuda()
             else:
                 epsilon_greedy_mask = torch.bernoulli(torch.ones(predictions.shape)*epsilon*eps_multiplier).bool()
   
@@ -644,11 +644,11 @@ def train_mahalanobis_modsel(dataset, baseline_model, num_batches, batch_size,
 
 
     if len(representation_layer_sizes) == 0:
-        covariance  = lambda_reg*torch.eye(dataset_dimension).cuda()
+        covariance  = lambda_reg*torch.eye(dataset_dimension)#.cuda()
     else:
         if torch.cuda.is_available():
 
-            covariance = lambda_reg*torch.eye(representation_layer_sizes[-1]).cuda()
+            covariance = lambda_reg*torch.eye(representation_layer_sizes[-1])#.cuda()
         else:
             covariance = lambda_reg*torch.eye(representation_layer_sizes[-1])
 
