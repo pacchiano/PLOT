@@ -289,7 +289,7 @@ class BalancingHyperparam:
 
 # class BalancingHyperParam:
 class EpochBalancingHyperparam:
-    def __init__(self, m, putative_bounds_multipliers, delta =0.01, burn_in_pulls = 100 ):
+    def __init__(self, m, putative_bounds_multipliers, delta =0.01, burn_in_pulls = 20 ):
         self.m = m
         self.putative_bounds_multipliers = putative_bounds_multipliers
         ### check these putative bounds are going up
@@ -836,7 +836,6 @@ def train_opt_reg_modsel(dataset, baseline_model, num_batches, batch_size,
 
     if not split:
 
-
         model = TorchMultilayerRegression(
             representation_layer_sizes=representation_layer_sizes,
             dim = train_dataset.dimension,
@@ -876,7 +875,6 @@ def train_opt_reg_modsel(dataset, baseline_model, num_batches, batch_size,
             print("Processing OptReg batch ", i)
         batch_X, batch_y = train_dataset.get_batch(batch_size)
 
-        #IPython.embed()
             
         ### Sample epsilon using model selection
         sample_idx = modsel_manager.sample_base_index()
@@ -889,6 +887,10 @@ def train_opt_reg_modsel(dataset, baseline_model, num_batches, batch_size,
 
         
         modselect_info.append(modsel_manager.get_distribution())
+
+
+
+
 
 
         ##### Train optimistic model.
@@ -913,6 +915,10 @@ def train_opt_reg_modsel(dataset, baseline_model, num_batches, batch_size,
         print("        ########################################")
         print("prediction differential ", optimistic_prob_predictions - pessimistic_prob_predictions)
         print("        ########################################")
+
+
+
+
 
         with torch.no_grad():        
 
@@ -988,6 +994,9 @@ def train_opt_reg_modsel(dataset, baseline_model, num_batches, batch_size,
     results["false_neg_rates"] = false_neg_rates
     results["false_positive_rates"] = false_positive_rates
     results["modselect_info"] = modselect_info
+
+    
+
 
     return results
 
