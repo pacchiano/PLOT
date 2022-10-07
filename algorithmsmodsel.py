@@ -872,7 +872,7 @@ def train_opt_reg_modsel(dataset, baseline_model, num_batches, batch_size,
 
     for i in range(num_batches):
         if verbose:
-            print("Processing OptReg batch ", i)
+            print("Processing OptReg batch ", i, " ", dataset)
         batch_X, batch_y = train_dataset.get_batch(batch_size)
 
             
