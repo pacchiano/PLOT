@@ -207,8 +207,8 @@ def run_modsel_opt_reg_experiments(dataset, regs, modselalgo, num_experiments, b
 	opt_batch_size = 20, representation_layer_sizes = [10, 10], restart_model_full_minimization = False, split = False):
 	
 
-	#IPython.embed()
-	#raise ValueError("asdflkm")
+	# IPython.embed()
+	# raise ValueError("asdflkm")
 
 	if USE_RAY:
 		opt_reg_modsel_results = [train_opt_reg_modsel_remote.remote(dataset, baseline_model, num_batches, batch_size, 
@@ -441,8 +441,6 @@ RUN_OPT_REG = True
 PLOT_OPT_REG = True
 
 
-
-
 RUN_EPSILON = False
 PLOT_EPSILON = False
 
@@ -451,7 +449,7 @@ RUN_MAHALANOBIS = False#True
 PLOT_MAHALANOBIS = False#True
 
 
-num_batches = 20
+num_batches = 200
 averaging_window = 1
 epsilon = .1
 alpha = 10

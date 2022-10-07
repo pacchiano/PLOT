@@ -796,6 +796,9 @@ def train_opt_reg_modsel(dataset, baseline_model, num_batches, batch_size,
     restart_model_full_minimization = False, modselalgo = "Corral", split = False):
     
 
+    # IPython.embed()
+    # raise ValueError("train opt reg modsel")
+
     num_regs = len(regs)
 
     if modselalgo == "Corral":
@@ -812,7 +815,7 @@ def train_opt_reg_modsel(dataset, baseline_model, num_batches, batch_size,
         modsel_manager = BalancingHyperparam(len(regs), 
             [ x*representation_layer_sizes[-1] for x in regs], delta =0.01, balancing_type = "BalancingAnalyticHybrid")
     elif modselalgo == "EpochBalancing":
-        modsel_manager = EpochBalancingHyperparam(len(regs),   [ x*representation_layer_sizes[-1] for x in regs])
+        modsel_manager = EpochBalancingHyperparam(len(regs), [max(x, .0000000001) for x in regs])
     else:
         raise ValueError("Modselalgo type {} not recognized.".format(modselalgo))
     reg = regs[0]
@@ -873,20 +876,18 @@ def train_opt_reg_modsel(dataset, baseline_model, num_batches, batch_size,
             print("Processing OptReg batch ", i)
         batch_X, batch_y = train_dataset.get_batch(batch_size)
 
-
+        #IPython.embed()
             
         ### Sample epsilon using model selection
         sample_idx = modsel_manager.sample_base_index()
         reg = regs[sample_idx]
         print(i, " batch number ", " sample opt_reg ", reg)
         print("OptReg distribution ", modsel_manager.get_distribution())
-        if not split:
-           model.opt_reg = reg
-
-        else:
+        if split:
             model = models[sample_idx]
             growing_training_dataset = growing_training_datasets[sample_idx]
 
+        
         modselect_info.append(modsel_manager.get_distribution())
 
 
