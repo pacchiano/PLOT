@@ -44,11 +44,11 @@ class DataSet:
             
 
 
-        if torch.cuda.is_available():
-            return (torch.from_numpy(X).to('cuda'), torch.from_numpy(Y).to('cuda'))
+        #if torch.cuda.is_available():
+        #    return (torch.from_numpy(X).to('cuda'), torch.from_numpy(Y).to('cuda'))
 
-        else:
-            return (torch.from_numpy(X).float(), torch.from_numpy(Y))
+        #else:
+        return (torch.from_numpy(X).float(), torch.from_numpy(Y))
 
 
 class GrowingNumpyDataSet:
@@ -140,10 +140,10 @@ class MNISTDataset:
         [X, Y] = next(iter(self.data_loader))
         Y = (Y == self.symbol) * 1.0
         X = X.view(self.batch_size, -1)
-        if torch.cuda.is_available():
-            # print("Getting gpu")
-            X = X.to('cuda')
-            Y = Y.to('cuda')
+        #if torch.cuda.is_available():
+        #    # print("Getting gpu")
+        #    X = X.to('cuda')
+        #    Y = Y.to('cuda')
         return (X, Y)
         # return (X.numpy(), Y.numpy())
 
@@ -249,9 +249,9 @@ class SVMDataset:
 
         X = torch.from_numpy(X).float()
         Y = torch.from_numpy(Y)
-        if torch.cuda.is_available():
-            X = X.to('cuda')
-            Y = Y.to('cuda')
+        # if torch.cuda.is_available():
+        #     X = X.to('cuda')
+        #     Y = Y.to('cuda')
         if verbose:
             return (X, Y, indices)
         else:
