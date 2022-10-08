@@ -10,7 +10,7 @@ from algorithms_remote import train_epsilon_greedy_remote, train_epsilon_greedy_
 
 
 #USE_RAY = True
-USE_RAY = False
+USE_RAY = True
 
 
 def process_results(results_list):
