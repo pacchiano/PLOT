@@ -462,7 +462,7 @@ decaying_epsilon = False
 num_opt_steps = 1000
 opt_batch_size = 20
 
-split = True
+split = False
 restart_model_full_minimization = False
 
 batch_size = 10
