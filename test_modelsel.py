@@ -547,11 +547,11 @@ if __name__ == "__main__":
 	opt_regs = [0, .1, 1, 10]
 	decaying_epsilon = False
 
-	num_opt_steps = 1000
+	num_opt_steps = 2000
 	opt_batch_size = 20
 
 	#split = False
-	restart_model_full_minimization = False
+	restart_model_full_minimization = True
 
 	batch_size = 10
 	num_experiments = 15
