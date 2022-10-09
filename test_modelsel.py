@@ -302,7 +302,7 @@ def plot_optimism_pessimism(algo_name,dataset, num_batches, batch_size, results_
 		hyperparam_opt_rewards_mean = np.mean(hyperparam_opt_rewards, 0)
 		hyperparam_pess_rewards_mean = np.mean(hyperparam_pess_rewards, 0)
 
-		IPython.embed()
+		#IPython.embed()
 
 
 
@@ -544,7 +544,7 @@ if __name__ == "__main__":
 	alpha = 10
 	epsilons = [.2, .1, .01, .05]
 	alphas = [.000001, 1/4.0, 1/2.0, 1, 2, 4, 8 ]
-	opt_regs = [0,.1, 1, 10]
+	opt_regs = [0, .1, 1, 10]
 	decaying_epsilon = False
 
 	num_opt_steps = 1000
