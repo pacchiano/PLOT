@@ -870,6 +870,7 @@ def train_opt_reg_modsel(dataset, baseline_model, num_batches, batch_size,
 
     instantaneous_regrets = []
     instantaneous_accuracies = []
+    instantaneous_baseline_accuracies = []
     modselect_info = []
 
 
@@ -883,6 +884,7 @@ def train_opt_reg_modsel(dataset, baseline_model, num_batches, batch_size,
     pessimistic_reward_predictions_list = []
 
     rewards = []
+    baseline_rewards = []
 
 
     for i in range(num_batches):
@@ -974,7 +976,9 @@ def train_opt_reg_modsel(dataset, baseline_model, num_batches, batch_size,
 
             rewards.append(modesel_reward)
 
+            baseline_reward = (2*torch.sum(baseline_predictions*boolean_labels_y) - torch.sum(baseline_predictions))/batch_size
 
+            baseline_rewards.append(baseline_reward)
 
             optimistic_reward_predictions_list.append(((2*torch.sum(optimistic_thresholded_predictions*optimistic_prob_predictions) - torch.sum(optimistic_thresholded_predictions))/batch_size).item())
 
@@ -988,7 +992,9 @@ def train_opt_reg_modsel(dataset, baseline_model, num_batches, batch_size,
 
 
             accuracy_baseline = (torch.sum(baseline_predictions*boolean_labels_y) +torch.sum( ~baseline_predictions*~boolean_labels_y))*1.0/batch_size
-            instantaneous_regret = accuracy_baseline - accuracy
+            instantaneous_baseline_accuracies.append(accuracy_baseline)
+
+            instantaneous_regret = baseline_reward - modesel_reward
 
             instantaneous_regrets.append(instantaneous_regret.item())
             instantaneous_accuracies.append(accuracy.item())
@@ -1010,11 +1016,13 @@ def train_opt_reg_modsel(dataset, baseline_model, num_batches, batch_size,
     results["instantaneous_regrets"] = instantaneous_regrets
     results["test_accuracy"] = test_accuracy
     results["instantaneous_accuracies"] = instantaneous_accuracies
+    results["instantaneous_baseline_accuracies"] = instantaneous_baseline_accuracies
     results["num_negatives"] = num_negatives
     results["num_positives"] = num_positives
     results["false_neg_rates"] = false_neg_rates
     results["false_positive_rates"] = false_positive_rates
     results["modselect_info"] = modselect_info
+
 
     results["rewards"] = rewards
     results["optimistic_reward_predictions"] = optimistic_reward_predictions_list
