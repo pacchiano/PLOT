@@ -282,12 +282,12 @@ def plot_optimism_pessimism(algo_name,dataset, num_batches, batch_size, results_
 	Ts = (np.arange(num_batches/averaging_window)+1)*averaging_window
 	color_index = 0
 
-	results_type = "instantaneous_accuracies"
+	#results_type = "rewards"
 
 	for hyperparam in hyperparams:
 
 		hyperparam_results = results_dictionary["{}-{}".format(algo_name, hyperparam)] 
-		hyperparam_rewards = np.array([np.cumsum(x["instantaneous_accuracies"]) for x in hyperparam_results])
+		hyperparam_rewards = np.array([np.cumsum(x["rewards"]) for x in hyperparam_results])
 		
 		hyperparam_opt_rewards = np.array([np.cumsum(x["optimistic_reward_predictions"]) for x in hyperparam_results])
 
@@ -521,6 +521,8 @@ if __name__ == "__main__":
 	num_batches = int(sys.argv[1])
 
 	split = sys.argv[2] == "True" #False
+	if sys.argv[2] not in ["True", "False"]:
+		raise ValueError("Split key not in [True, False]")
 	# IPython.embed()
 	# raise ValueError("asdlfkm")
 

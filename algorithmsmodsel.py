@@ -645,7 +645,7 @@ def train_mahalanobis_modsel(dataset, baseline_model, num_batches, batch_size,
 
     pessimistic_reward_predictions_list = []
 
-
+    rewards = []
 
     if len(representation_layer_sizes) == 0:
         covariance  = lambda_reg*torch.eye(dataset_dimension)#.cuda()
@@ -730,6 +730,7 @@ def train_mahalanobis_modsel(dataset, baseline_model, num_batches, batch_size,
             
 
             modesel_reward = (2*torch.sum(optimistic_thresholded_predictions*boolean_labels_y) - torch.sum(optimistic_thresholded_predictions))/batch_size
+            rewards.append(modesel_reward)
 
             optimistic_reward_predictions_list.append(((2*torch.sum(optimistic_thresholded_predictions*optimistic_prob_predictions) - torch.sum(optimistic_thresholded_predictions))/batch_size).item())
             modsel_info["optimistic_reward_predictions"] = optimistic_reward_predictions_list[-1]
@@ -779,7 +780,7 @@ def train_mahalanobis_modsel(dataset, baseline_model, num_batches, batch_size,
     results["false_positive_rates"] = false_positive_rates
     results["modselect_info"] = modselect_info
 
-
+    results["rewards"] = rewards
     results["optimistic_reward_predictions"] = optimistic_reward_predictions_list
     results["pessimistic_reward_predictions"] = pessimistic_reward_predictions_list
 
@@ -881,6 +882,8 @@ def train_opt_reg_modsel(dataset, baseline_model, num_batches, batch_size,
 
     pessimistic_reward_predictions_list = []
 
+    rewards = []
+
 
     for i in range(num_batches):
         if verbose:
@@ -963,12 +966,14 @@ def train_opt_reg_modsel(dataset, baseline_model, num_batches, batch_size,
 
 
 
-
             ### Update mod selection manager
             modsel_info = dict([])
             
 
             modesel_reward = (2*torch.sum(optimistic_thresholded_predictions*boolean_labels_y) - torch.sum(optimistic_thresholded_predictions))/batch_size
+
+            rewards.append(modesel_reward)
+
 
 
             optimistic_reward_predictions_list.append(((2*torch.sum(optimistic_thresholded_predictions*optimistic_prob_predictions) - torch.sum(optimistic_thresholded_predictions))/batch_size).item())
@@ -1011,6 +1016,7 @@ def train_opt_reg_modsel(dataset, baseline_model, num_batches, batch_size,
     results["false_positive_rates"] = false_positive_rates
     results["modselect_info"] = modselect_info
 
+    results["rewards"] = rewards
     results["optimistic_reward_predictions"] = optimistic_reward_predictions_list
     results["pessimistic_reward_predictions"] = pessimistic_reward_predictions_list
     
