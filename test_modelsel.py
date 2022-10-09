@@ -302,7 +302,7 @@ def plot_optimism_pessimism(algo_name,dataset, num_batches, batch_size, results_
 		hyperparam_opt_rewards_mean = np.mean(hyperparam_opt_rewards, 0)
 		hyperparam_pess_rewards_mean = np.mean(hyperparam_pess_rewards, 0)
 
-
+		IPython.embed()
 
 
 
