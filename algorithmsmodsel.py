@@ -641,6 +641,10 @@ def train_mahalanobis_modsel(dataset, baseline_model, num_batches, batch_size,
     false_neg_rates = []
     false_positive_rates = []
 
+    optimistic_reward_predictions_list = []
+
+    pessimistic_reward_predictions_list = []
+
 
 
     if len(representation_layer_sizes) == 0:
@@ -727,10 +731,11 @@ def train_mahalanobis_modsel(dataset, baseline_model, num_batches, batch_size,
 
             modesel_reward = (2*torch.sum(optimistic_thresholded_predictions*boolean_labels_y) - torch.sum(optimistic_thresholded_predictions))/batch_size
 
+            optimistic_reward_predictions_list.append(((2*torch.sum(optimistic_thresholded_predictions*optimistic_prob_predictions) - torch.sum(optimistic_thresholded_predictions))/batch_size).item())
+            modsel_info["optimistic_reward_predictions"] = optimistic_reward_predictions_list[-1]
 
-            modsel_info["optimistic_reward_predictions"] = ((2*torch.sum(optimistic_thresholded_predictions*optimistic_prob_predictions) - torch.sum(optimistic_thresholded_predictions))/batch_size).item()
-            modsel_info["pessimistic_reward_predictions"] = ((2*torch.sum(optimistic_thresholded_predictions*pessimistic_prob_predictions) - torch.sum(optimistic_thresholded_predictions))/batch_size).item()
-
+            pessimistic_reward_predictions_list.append(((2*torch.sum(optimistic_thresholded_predictions*pessimistic_prob_predictions) - torch.sum(optimistic_thresholded_predictions))/batch_size).item())
+            modsel_info["pessimistic_reward_predictions"] = pessimistic_reward_predictions_list[-1]
 
             modsel_manager.update_distribution(sample_idx, modesel_reward.item(), modsel_info )
 
@@ -773,6 +778,10 @@ def train_mahalanobis_modsel(dataset, baseline_model, num_batches, batch_size,
     results["false_neg_rates"] = false_neg_rates
     results["false_positive_rates"] = false_positive_rates
     results["modselect_info"] = modselect_info
+
+
+    results["optimistic_reward_predictions"] = optimistic_reward_predictions_list
+    results["pessimistic_reward_predictions"] = pessimistic_reward_predictions_list
 
     return results# instantaneous_regrets, instantaneous_accuracies, test_accuracy, modselect_info
 
@@ -868,6 +877,9 @@ def train_opt_reg_modsel(dataset, baseline_model, num_batches, batch_size,
     false_neg_rates = []
     false_positive_rates = []
 
+    optimistic_reward_predictions_list = []
+
+    pessimistic_reward_predictions_list = []
 
 
     for i in range(num_batches):
@@ -895,7 +907,7 @@ def train_opt_reg_modsel(dataset, baseline_model, num_batches, batch_size,
 
         ##### Train optimistic model.
         model = train_model_opt_reg(model, num_opt_steps, growing_training_dataset, 
-            batch_X, opt_batch_size, opt_reg = reg, restart_model_full_minimization = True)#restart_model_full_minimization )
+            batch_X, opt_batch_size, opt_reg = reg, restart_model_full_minimization = restart_model_full_minimization )
         optimistic_prob_predictions = model.predict(batch_X)
         optimistic_thresholded_predictions = model.get_thresholded_predictions(batch_X, threshold)
         print("Finished training optimistic OptReg model reg - {}".format(reg))
@@ -904,7 +916,7 @@ def train_opt_reg_modsel(dataset, baseline_model, num_batches, batch_size,
 
         ### Train pessimistic model.
         model = train_model_opt_reg(model, num_opt_steps, growing_training_dataset, 
-            batch_X, opt_batch_size, opt_reg = -reg, restart_model_full_minimization = True)#restart_model_full_minimization )
+            batch_X, opt_batch_size, opt_reg = -reg, restart_model_full_minimization = restart_model_full_minimization )
         pessimistic_prob_predictions = model.predict(batch_X)
         print("Finished training pessimistic OptReg model reg - {}".format(reg))
         print("pessimistic predictions ", pessimistic_prob_predictions)
@@ -959,9 +971,13 @@ def train_opt_reg_modsel(dataset, baseline_model, num_batches, batch_size,
             modesel_reward = (2*torch.sum(optimistic_thresholded_predictions*boolean_labels_y) - torch.sum(optimistic_thresholded_predictions))/batch_size
 
 
-            modsel_info["optimistic_reward_predictions"] = ((2*torch.sum(optimistic_thresholded_predictions*optimistic_prob_predictions) - torch.sum(optimistic_thresholded_predictions))/batch_size).item()
-            modsel_info["pessimistic_reward_predictions"] = ((2*torch.sum(optimistic_thresholded_predictions*pessimistic_prob_predictions) - torch.sum(optimistic_thresholded_predictions))/batch_size).item()
+            optimistic_reward_predictions_list.append(((2*torch.sum(optimistic_thresholded_predictions*optimistic_prob_predictions) - torch.sum(optimistic_thresholded_predictions))/batch_size).item())
 
+            modsel_info["optimistic_reward_predictions"] = optimistic_reward_predictions_list[-1]
+
+            pessimistic_reward_predictions_list.append(((2*torch.sum(optimistic_thresholded_predictions*pessimistic_prob_predictions) - torch.sum(optimistic_thresholded_predictions))/batch_size).item())
+
+            modsel_info["pessimistic_reward_predictions"] = pessimistic_reward_predictions_list[-1]
 
             modsel_manager.update_distribution(sample_idx, modesel_reward.item(), modsel_info )
 
@@ -995,6 +1011,8 @@ def train_opt_reg_modsel(dataset, baseline_model, num_batches, batch_size,
     results["false_positive_rates"] = false_positive_rates
     results["modselect_info"] = modselect_info
 
+    results["optimistic_reward_predictions"] = optimistic_reward_predictions_list
+    results["pessimistic_reward_predictions"] = pessimistic_reward_predictions_list
     
 
 

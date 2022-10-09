@@ -276,6 +276,84 @@ def plot_modsel_probabilities(algo_name, dataset, num_batches, batch_size, modse
 
 
 
+def plot_optimism_pessimism(algo_name,dataset, num_batches, batch_size, results_dictionary, 
+	hyperparams, colors, representation_layer_sizes, averaging_window = 1):
+
+	Ts = (np.arange(num_batches/averaging_window)+1)*averaging_window
+	color_index = 0
+
+	results_type = "instantaneous_accuracies"
+
+	for hyperparam in hyperparams:
+
+		hyperparam_results = results_dictionary["{}-{}".format(algo_name, hyperparam)] 
+		hyperparam_rewards = np.array([np.cumsum(x["instantaneous_accuracies"]) for x in hyperparam_results])
+		
+		hyperparam_opt_rewards = np.array([np.cumsum(x["optimistic_reward_predictions"]) for x in hyperparam_results])
+
+		hyperparam_pess_rewards = np.array([np.cumsum(x["pessimistic_reward_predictions"]) for x in hyperparam_results])
+
+
+
+
+
+		hyperparam_rewards_mean = np.mean(hyperparam_rewards,0)
+		#hyperparam_rewards_std = np.std(hyperparam_rewards,0)
+		hyperparam_opt_rewards_mean = np.mean(hyperparam_opt_rewards, 0)
+		hyperparam_pess_rewards_mean = np.mean(hyperparam_pess_rewards, 0)
+
+
+
+
+
+		hyperparam_rewards_mean = np.mean(hyperparam_rewards_mean.reshape(int(num_batches/averaging_window), averaging_window), 1)
+		#hyperparam_rewards_std = np.mean(hyperparam_rewards_std.reshape(int(num_batches/averaging_window), averaging_window), 1)
+
+		hyperparam_opt_rewards_mean = np.mean(hyperparam_opt_rewards_mean.reshape(int(num_batches/averaging_window), averaging_window), 1)
+		hyperparam_pess_rewards_mean = np.mean(hyperparam_pess_rewards_mean.reshape(int(num_batches/averaging_window), averaging_window), 1)
+
+
+
+
+
+		#IPython.embed()
+		
+
+
+		plt.plot(Ts, hyperparam_rewards_mean, color = colors[color_index] ,  label = "{}-{}".format(algo_name,hyperparam))
+		plt.plot(Ts, hyperparam_opt_rewards_mean, color = colors[color_index], linestyle = "dashed")
+		plt.plot(Ts, hyperparam_pess_rewards_mean, color = colors[color_index], linestyle = "dotted")
+
+
+		plt.fill_between(Ts, hyperparam_pess_rewards_mean, 
+			hyperparam_opt_rewards_mean, color = colors[color_index], alpha = .2)
+
+
+		color_index += 1
+
+
+	label = "Cum rewards"
+	
+
+	repres_layers_name = get_architecture_name(representation_layer_sizes)
+
+
+	plt.title("{} {} B{} N {}".format( label, dataset, batch_size, repres_layers_name))
+	plt.xlabel("Number of batches")
+
+	plt.ylabel(label)
+	# plt.legend(bbox_to_anchor=(1.05, 1), fontsize=8, loc="upper left")
+	plt.legend(fontsize=8, loc="upper left")
+
+	filename = "./ModselResults/opt_pess_{}_{}_T{}_B{}_N_{}.png".format(algo_name,dataset, 
+		num_batches, batch_size, repres_layers_name)
+
+	plt.savefig(filename)
+	plt.close("all")
+
+
+
+
 
 
 def plot_results(algo_name, dataset, results_type, num_batches, batch_size, modselalgo, 
@@ -620,5 +698,8 @@ if __name__ == "__main__":
 					results_dictionary, hyperparams, colors, representation_layer_sizes = representation_layer_sizes,
 					cummulative_plot = False, averaging_window = averaging_window, split = split)
 
+
+			plot_optimism_pessimism(algo_type_key, dataset, num_batches, batch_size, results_dictionary, 
+				hyperparams, colors, representation_layer_sizes, averaging_window = averaging_window)
 
 
