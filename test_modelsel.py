@@ -10,7 +10,7 @@ from algorithms import train_epsilon_greedy, train_mahalanobis, train_baseline, 
 from algorithms_remote import train_epsilon_greedy_remote, train_epsilon_greedy_modsel_remote, train_baseline_remote, train_mahalanobis_remote, train_mahalanobis_modsel_remote, train_opt_reg_modsel_remote, train_opt_reg_remote
 
 
-#USE_RAY = True
+#USE_RAY = False
 USE_RAY = True
 
 
@@ -526,16 +526,16 @@ if __name__ == "__main__":
 	# IPython.embed()
 	# raise ValueError("asdlfkm")
 
-	RUN_OPT_REG = True
-	PLOT_OPT_REG = True
+	RUN_OPT_REG = False#True
+	PLOT_OPT_REG = False#True
 
 
 	RUN_EPSILON = False
 	PLOT_EPSILON = False
 
 
-	RUN_MAHALANOBIS = False#True
-	PLOT_MAHALANOBIS = False#True
+	RUN_MAHALANOBIS = True
+	PLOT_MAHALANOBIS = True
 
 
 	#num_batches = 2000
@@ -562,7 +562,7 @@ if __name__ == "__main__":
 	colors = ["blue", "red", "orange", "black", "violet", "orange", "green", "brown", "gray"]
 
 	modselalgos = ["EpochBalancing", "CorralAnytime"]# "EpochBalancing", "BalancingAnalytic", "BalancingSimple", "BalancingAnalyticHybrid" ,"Corral", "CorralAnytime"]
-	datasets = [ "Adult-10_10", "German-10_10","Crime-10_10","Bank-10_10", "Adult", "German", "Bank", "Crime"]#, "German", "Bank", "Adult"]"Adult-10-10"]#,
+	datasets = ["Adult-10_10", "German-10_10","Crime-10_10","Bank-10_10", "Adult", "German", "Bank", "Crime"]#, "German", "Bank", "Adult"]"Adult-10-10"]#,
 
 	repres_layers_name = get_architecture_name(representation_layer_sizes)
 
