@@ -11,6 +11,7 @@ from algorithms_remote import train_epsilon_greedy_remote, train_epsilon_greedy_
 
 
 #USE_RAY = False
+PLOT_ALL_STATS = False
 USE_RAY = True
 
 
@@ -370,34 +371,6 @@ def plot_results(algo_name, dataset, results_type, num_batches, batch_size, mods
 		raise ValueError("Results type {} does not support cummulative plot".format(results_type))
 
 
-	##### PLOTTING modsel results.
-	modsel_results = results_dictionary["{} {}".format(algo_name, modselalgo)]
-
-	color_index = 0
-
-
-	if cummulative_plot:
-		modsel_stats = np.array([np.cumsum(x[results_type]) for x in modsel_results])
-	else:
-		modsel_stats = np.array([x[results_type] for x in modsel_results])
-
-
-	modsel_stat_mean = np.mean(modsel_stats,0)
-	modsel_stat_std = np.std(modsel_stats,0)
-
-
-	#IPython.embed()
-
-	modsel_stat_mean = np.mean(modsel_stat_mean.reshape(int(num_batches/averaging_window), averaging_window), 1)
-	modsel_stat_std = np.mean(modsel_stat_std.reshape(int(num_batches/averaging_window), averaging_window), 1)
-
-
-
-	plt.plot(Ts, modsel_stat_mean, color = colors[color_index] ,  label = "{} {}".format(algo_name, modselalgo))
-	plt.fill_between(Ts, modsel_stat_mean-.5*modsel_stat_std, 
-		modsel_stat_mean+.5*modsel_stat_std, color = colors[color_index], alpha = .2)
-
-	color_index += 1
 
 
 	
@@ -444,6 +417,36 @@ def plot_results(algo_name, dataset, results_type, num_batches, batch_size, mods
 
 		# IPython.embed()
 		# raise ValueError("asldfkm")
+
+
+
+	##### PLOTTING modsel results.
+	modsel_results = results_dictionary["{} {}".format(algo_name, modselalgo)]
+
+
+
+	if cummulative_plot:
+		modsel_stats = np.array([np.cumsum(x[results_type]) for x in modsel_results])
+	else:
+		modsel_stats = np.array([x[results_type] for x in modsel_results])
+
+
+	modsel_stat_mean = np.mean(modsel_stats,0)
+	modsel_stat_std = np.std(modsel_stats,0)
+
+
+	#IPython.embed()
+
+	modsel_stat_mean = np.mean(modsel_stat_mean.reshape(int(num_batches/averaging_window), averaging_window), 1)
+	modsel_stat_std = np.mean(modsel_stat_std.reshape(int(num_batches/averaging_window), averaging_window), 1)
+
+
+
+	plt.plot(Ts, modsel_stat_mean, color = colors[color_index] ,  label = "{} {}".format(algo_name, modselalgo))
+	plt.fill_between(Ts, modsel_stat_mean-.5*modsel_stat_std, 
+		modsel_stat_mean+.5*modsel_stat_std, color = colors[color_index], alpha = .2)
+
+	#color_index += 1
 
 
 
@@ -694,21 +697,22 @@ if __name__ == "__main__":
 					results_dictionary, hyperparams, colors, representation_layer_sizes = representation_layer_sizes,
 					cummulative_plot = False, averaging_window = averaging_window, split = split)
 
-			plot_results(algo_type_key, dataset, "num_negatives", num_batches, batch_size, modselalgo, 
-					results_dictionary, hyperparams, colors, representation_layer_sizes = representation_layer_sizes,
-					 cummulative_plot = False, averaging_window = averaging_window, split = split)
+			if PLOT_ALL_STATS:
+				plot_results(algo_type_key, dataset, "num_negatives", num_batches, batch_size, modselalgo, 
+						results_dictionary, hyperparams, colors, representation_layer_sizes = representation_layer_sizes,
+						 cummulative_plot = False, averaging_window = averaging_window, split = split)
 
-			plot_results(algo_type_key, dataset, "num_positives", num_batches, batch_size, modselalgo, 
-					results_dictionary, hyperparams, colors, representation_layer_sizes = representation_layer_sizes,
-					 cummulative_plot = False, averaging_window = averaging_window, split = split)
+				plot_results(algo_type_key, dataset, "num_positives", num_batches, batch_size, modselalgo, 
+						results_dictionary, hyperparams, colors, representation_layer_sizes = representation_layer_sizes,
+						 cummulative_plot = False, averaging_window = averaging_window, split = split)
 
-			plot_results(algo_type_key, dataset, "false_neg_rates", num_batches, batch_size, modselalgo, 
-					results_dictionary, hyperparams, colors, representation_layer_sizes = representation_layer_sizes,
-					 cummulative_plot = False, averaging_window = averaging_window, split = split)
+				plot_results(algo_type_key, dataset, "false_neg_rates", num_batches, batch_size, modselalgo, 
+						results_dictionary, hyperparams, colors, representation_layer_sizes = representation_layer_sizes,
+						 cummulative_plot = False, averaging_window = averaging_window, split = split)
 
-			plot_results(algo_type_key, dataset, "false_positive_rates", num_batches, batch_size, modselalgo, 
-					results_dictionary, hyperparams, colors, representation_layer_sizes = representation_layer_sizes,
-					cummulative_plot = False, averaging_window = averaging_window, split = split)
+				plot_results(algo_type_key, dataset, "false_positive_rates", num_batches, batch_size, modselalgo, 
+						results_dictionary, hyperparams, colors, representation_layer_sizes = representation_layer_sizes,
+						cummulative_plot = False, averaging_window = averaging_window, split = split)
 
 
 			plot_optimism_pessimism(algo_type_key, dataset, num_batches, batch_size, results_dictionary, 
