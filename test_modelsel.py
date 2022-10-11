@@ -549,7 +549,7 @@ if __name__ == "__main__":
 	epsilon = .1
 	alpha = 10
 	epsilons = [.2, .1, .01, .05]
-	alphas = [.000001, 1/4.0, 1/2.0, 1, 2, 4, 8 ]
+	alphas = [.05, .5, 1, 4]#[.000001, 1/4.0, 1/2.0, 1, 2, 4, 8 ]
 	opt_regs = [0, .1, 1, 10]
 	decaying_epsilon = False
 
