@@ -489,7 +489,7 @@ def train_epsilon_greedy_modsel(dataset, baseline_model, num_batches, batch_size
   
             mask = torch.max(epsilon_greedy_mask,predictions)
 
-            boolean_labels_y = batch_y.bool()
+            boolean_labels_y = batch_y.bool().squeeze()
             accuracy = (torch.sum(mask*boolean_labels_y) +torch.sum( ~mask*~boolean_labels_y))*1.0/batch_size
            
             #### TOTAL NUM POSITIVES
@@ -697,7 +697,7 @@ def train_mahalanobis_modsel(dataset, baseline_model, num_batches, batch_size,
             baseline_predictions = baseline_model.get_thresholded_predictions(batch_X, threshold)
 
 
-            boolean_labels_y = batch_y.bool()
+            boolean_labels_y = batch_y.bool().squeeze()
             accuracy = (torch.sum(optimistic_thresholded_predictions*boolean_labels_y) +torch.sum( ~optimistic_thresholded_predictions*~boolean_labels_y))*1.0/batch_size
 
 
@@ -747,9 +747,17 @@ def train_mahalanobis_modsel(dataset, baseline_model, num_batches, batch_size,
 
 
             accuracy_baseline = (torch.sum(baseline_predictions*boolean_labels_y) +torch.sum( ~baseline_predictions*~boolean_labels_y))*1.0/batch_size
+            #IPython.embed()
+
             instantaneous_baseline_accuracies.append(accuracy_baseline)
 
             instantaneous_regret = baseline_reward - modesel_reward
+          
+            print("Baseline Reward - {}".format(baseline_reward))
+            print("Modsel Reward -   {}".format(modesel_reward))
+
+            print("Baseline Accuracy - {}".format(accuracy_baseline))
+            print("Accuracy opt reg  - {}".format(accuracy))
 
 
             instantaneous_regrets.append(instantaneous_regret.item())
@@ -948,11 +956,13 @@ def train_opt_reg_modsel(dataset, baseline_model, num_batches, batch_size,
 
 
 
+
+
         with torch.no_grad():        
 
             baseline_predictions = baseline_model.get_thresholded_predictions(batch_X, threshold)
 
-            boolean_labels_y = batch_y.bool()
+            boolean_labels_y = batch_y.bool().squeeze()
             accuracy = (torch.sum(optimistic_thresholded_predictions*boolean_labels_y) +torch.sum( ~optimistic_thresholded_predictions*~boolean_labels_y))*1.0/batch_size
 
 
@@ -995,14 +1005,25 @@ def train_opt_reg_modsel(dataset, baseline_model, num_batches, batch_size,
 
             modsel_info["optimistic_reward_predictions"] = optimistic_reward_predictions_list[-1]
 
+
+
             pessimistic_reward_predictions_list.append(((2*torch.sum(optimistic_thresholded_predictions*pessimistic_prob_predictions) - torch.sum(optimistic_thresholded_predictions))/batch_size).item())
 
             modsel_info["pessimistic_reward_predictions"] = pessimistic_reward_predictions_list[-1]
+
+
+            #IPython.embed()
 
             modsel_manager.update_distribution(sample_idx, modesel_reward.item(), modsel_info )
 
 
             accuracy_baseline = (torch.sum(baseline_predictions*boolean_labels_y) +torch.sum( ~baseline_predictions*~boolean_labels_y))*1.0/batch_size
+            print("Baseline Accuracy - {}".format(accuracy_baseline))
+            print("Accuracy opt reg  - {}".format(accuracy))
+
+
+            #IPython.embed()
+
             instantaneous_baseline_accuracies.append(accuracy_baseline)
 
             instantaneous_regret = baseline_reward - modesel_reward

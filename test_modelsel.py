@@ -36,7 +36,8 @@ def get_pickle_filename(dataset, num_batches,batch_size,repres_layers_name, spli
 
 
 #def run_train_baseline(dataset, num_experiments, batch_size = 32, num_timesteps = 1000, representation_layer_sizes = [10,10]):
-def run_train_baseline(dataset, num_experiments, batch_size = 32, num_timesteps = 10000, representation_layer_sizes = [10,10]):
+def run_train_baseline(dataset, num_experiments, batch_size = 32, num_timesteps = 10000, 
+	representation_layer_sizes = [10,10]):
 	### BASELINE training
 	if USE_RAY:
 		baseline_results = [train_baseline_remote.remote(dataset, num_timesteps = num_timesteps, 
@@ -518,27 +519,32 @@ def get_architecture_name(representation_layer_sizes):
 
 if __name__ == "__main__":
 
-	num_batches = int(sys.argv[1])
+	algo_name = sys.argv[1]
+	if algo_name not in ["mahalanobis", "epsilon", "opt_reg"]:
+		raise ValueError("Algorithm name not in allowed algorithms {}".format(algo_name))
 
-	split = sys.argv[2] == "True" #False
-	if sys.argv[2] not in ["True", "False"]:
+	num_batches = int(sys.argv[2])
+
+	split = sys.argv[3] == "True" #False
+	if sys.argv[3] not in ["True", "False"]:
 		raise ValueError("Split key not in [True, False]")
 	# IPython.embed()
 	# raise ValueError("asdlfkm")
 
-	RUN_OPT_REG = False#True
-	PLOT_OPT_REG = False#True
+
+	RUN_OPT_REG = algo_name == "opt_reg"
+	PLOT_OPT_REG = algo_name == "opt_reg"
 
 
-	RUN_EPSILON = False
-	PLOT_EPSILON = False
+	RUN_EPSILON = algo_name == "epsilon"
+	PLOT_EPSILON = algo_name == "epsilon"
 
 
-	RUN_MAHALANOBIS = True
-	PLOT_MAHALANOBIS = True
+	RUN_MAHALANOBIS = algo_name == "mahalanobis"
+	PLOT_MAHALANOBIS = algo_name == "mahalanobis"
 
 
-	#num_batches = 2000
+
 	averaging_window = 1
 	epsilon = .1
 	alpha = 10
@@ -548,6 +554,7 @@ if __name__ == "__main__":
 	decaying_epsilon = False
 
 	num_opt_steps = 2000
+	num_baseline_steps = 20000
 	opt_batch_size = 20
 
 	#split = False
@@ -571,11 +578,14 @@ if __name__ == "__main__":
 
 	for dataset in datasets:
 		
-		if RUN_EPSILON or RUN_MAHALANOBIS or RUN_OPT_REG:
+		# if RUN_EPSILON or RUN_MAHALANOBIS or RUN_OPT_REG:
 
-			baseline_results, baseline_model = run_train_baseline(dataset, num_experiments)
+		baseline_results, baseline_model = run_train_baseline(dataset, num_experiments, 
+				representation_layer_sizes = representation_layer_sizes, num_timesteps = num_baseline_steps)
 
-			results_dictionary["baseline"] = [x[1] for x in baseline_results]
+		results_dictionary["baseline"] = [x[1] for x in baseline_results]
+
+
 
 		if RUN_MAHALANOBIS:
 
