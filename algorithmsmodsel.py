@@ -634,7 +634,7 @@ def train_mahalanobis_modsel(dataset, baseline_model, num_batches, batch_size,
     instantaneous_regrets = []
     instantaneous_accuracies = []
     modselect_info = []
-
+    instantaneous_baseline_accuracies = []
 
     num_positives = []
     num_negatives = []
