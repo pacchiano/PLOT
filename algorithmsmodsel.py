@@ -757,7 +757,7 @@ def train_mahalanobis_modsel(dataset, baseline_model, num_batches, batch_size,
             print("Modsel Reward -   {}".format(modesel_reward))
 
             print("Baseline Accuracy - {}".format(accuracy_baseline))
-            print("Accuracy opt reg  - {}".format(accuracy))
+            print("Accuracy alph reg - {}".format(accuracy))
 
 
             instantaneous_regrets.append(instantaneous_regret.item())

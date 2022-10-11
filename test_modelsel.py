@@ -248,7 +248,7 @@ def plot_modsel_probabilities(algo_name, dataset, num_batches, batch_size, modse
 
 	probs =np.array([x["modselect_info"] for x in modsel_results])
 
-	color_index = 1
+	#color_index = 1
 
 	#IPython.embed()
 	mean_probs = np.mean(probs, 0)
