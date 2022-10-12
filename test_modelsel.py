@@ -580,7 +580,7 @@ if __name__ == "__main__":
 	results_dictionary = dict([])
 
 	for dataset in datasets:
-		IPython.embed()
+		#IPython.embed()
 		# if RUN_EPSILON or RUN_MAHALANOBIS or RUN_OPT_REG:
 
 		baseline_results, baseline_model = run_train_baseline(dataset, num_experiments, 

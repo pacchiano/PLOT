@@ -669,6 +669,7 @@ def train_mahalanobis_modsel(dataset, baseline_model, num_batches, batch_size,
         alpha = alphas[sample_idx]
         print(i, " batch number ", " sample alpha ", alpha)
         print("Alphas distribution ", modsel_manager.get_distribution())
+        print("is split {}".format(split))
         if not split:
            model.alpha = alpha
 
