@@ -157,8 +157,8 @@ if __name__ == "__main__":
 	if split:
 		split_tag = " - split"
 
-
-	modselalgos =[ "UCB", "EpochBalancing", "EXP3", "EXP3Anytime", "Corral", "CorralAnytime"]#"EpochBalancing" ,
+	modselalgos = ["EpochBalancing"]
+	#modselalgos =[ "UCB", "EpochBalancing", "EXP3", "EXP3Anytime", "Corral", "CorralAnytime"]#"EpochBalancing" ,
 
 	normalization_visualization = 1.0/np.sqrt( np.arange(num_timesteps) + 1)
 	normalization_visualization *= 1.0/np.log( np.arange(num_timesteps) + 2)

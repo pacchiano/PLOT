@@ -421,7 +421,7 @@ class BalancingHyperparam:
 # class BalancingHyperParam:
 class EpochBalancingHyperparam:
     def __init__(self, m, putative_bounds_multipliers, delta =0.01, 
-        burn_in_pulls = 10, balancing_test_multiplier = .1 ):
+        burn_in_pulls = 10, balancing_test_multiplier = 0 ):
         self.m = m
         self.putative_bounds_multipliers = putative_bounds_multipliers
         ### check these putative bounds are going up
