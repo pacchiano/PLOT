@@ -17,7 +17,6 @@ from math import log, exp
 from model_training_utilities import evaluate_model, train_model
 
 
-
 from datasets import get_batches, get_dataset_simple, GrowingNumpyDataSet
 from newmodels import (
     TorchMultilayerRegression,
@@ -45,6 +44,136 @@ def binary_search(func,xmin,xmax,tol=1e-5):
 
     x = 0.5*(r + l)
     return x
+
+class UCBalgorithm:
+    def __init__(self, num_arms, burn_in = 1, min_range = 0, max_range = 1):
+        self.num_arms = num_arms
+        self.mean_estimators = [0 for _ in range(num_arms)]
+        self.counts = [0 for _ in range(num_arms)]
+        self.reward_sums = [0 for _ in range(num_arms)]
+        self.burn_in = burn_in
+        self.min_range = min_range
+        self.max_range = max_range
+
+    def update_arm_statistics(self, arm_index, reward):
+        self.counts[arm_index] += 1
+        self.reward_sums[arm_index] += reward
+        self.mean_estimators[arm_index] = self.reward_sums[arm_index]/self.counts[arm_index] 
+
+
+    def get_ucb_arm(self, confidence_radius ):
+        if sum(self.counts) <=  self.burn_in:
+            #print("HERE")
+            ucb_arm_index = random.choice(range(self.num_arms))
+            ucb_arm_value = self.max_range
+            lcb_arm_value = self.min_range
+        else:
+            ucb_bonuses = [confidence_radius*np.sqrt(1/(count + .0000000001)) for count in self.counts ]
+            ucb_arm_values = [min(self.mean_estimators[i] + ucb_bonuses[i], self.max_range) for i in range(self.num_arms)]
+            ucb_arm_index = np.argmax(ucb_arm_values)
+            ucb_arm_value = ucb_arm_values[ucb_arm_index]
+            lcb_arm_values = [max(self.mean_estimators[i] - ucb_bonuses[i], self.min_range) for i in range(self.num_arms)]
+
+            lcb_arm_value = lcb_arm_values[ucb_arm_index]
+        return ucb_arm_index, ucb_arm_value, lcb_arm_value
+
+
+class UCBHyperparam:
+
+    def __init__(self,m, burn_in = 1, confidence_radius = 2, 
+        min_range = 0, max_range = 1):
+        #self.hyperparam_list = hyperparam_list
+        self.ucb_algorithm = UCBalgorithm(m, burn_in = 1, min_range = 0, max_range = 1)
+        #self.discount_factor = discount_factor
+        #self.forced_exploration_factor = forced_exploration_factor
+        self.m = m
+        self.confidence_radius = confidence_radius
+        self.burn_in = burn_in
+        self.T = 1
+
+        #self.m = m# len(self.hyperparam_list)
+        self.base_probas = np.ones(self.m)/(1.0*self.m)
+        #self.importance_weighted_cum_rewards = np.zeros(self.m)
+        #self.T = T
+        #self.counter = 0
+        #self.anytime = False
+        #self.forced_exploration_factor = forced_exploration_factor
+        #self.discount_factor = discount_factor
+        # if self.anytime:
+        #     self.T = 1
+
+
+    def sample_base_index(self):
+        index, _, _ = self.ucb_algorithm.get_ucb_arm(self.confidence_radius)
+        if self.T <= self.burn_in:
+            self.base_probas = np.ones(self.m)/(1.0*self.m)
+        else:
+            self.base_probas = np.zeros(self.m)
+            self.base_probas[index] = 1
+        self.T += 1
+        return index
+
+
+    def get_distribution(self):
+        return self.base_probas
+
+    
+    
+    def update_distribution(self, arm_idx, reward, more_info = dict([])):        
+        self.ucb_algorithm.update_arm_statistics(arm_idx, reward)
+
+
+
+
+
+class EXP3Hyperparam:
+
+    def __init__(self,m,T=1000, anytime = False, discount_factor = .9, forced_exploration_factor = 0):
+        #self.hyperparam_list = hyperparam_list
+        self.m = m# len(self.hyperparam_list)
+        self.base_probas = np.ones(self.m)/self.m
+        self.importance_weighted_cum_rewards = np.zeros(self.m)
+        self.T = T
+        self.counter = 0
+        self.anytime = False
+        self.forced_exploration_factor = forced_exploration_factor
+
+        self.discount_factor = discount_factor
+
+        if self.anytime:
+            self.T = 1
+
+
+    def sample_base_index(self):
+        sample_array = np.random.choice(range(self.m), 1, p=self.base_probas)
+        return sample_array[0]
+
+
+    def get_distribution(self):
+        return self.base_probas
+
+    
+    
+    def update_distribution(self, arm_idx, reward, more_info = dict([])):
+        self.importance_weighted_cum_rewards[arm_idx] *= self.discount_factor
+        self.importance_weighted_cum_rewards[arm_idx] += reward/self.base_probas[arm_idx]
+        
+
+
+        eta = np.sqrt( np.log(self.m)/(self.m*self.T))
+        
+        normalization_factor = np.sum( np.exp( self.importance_weighted_cum_rewards*eta) )
+
+        self.base_probas = np.exp( self.importance_weighted_cum_rewards*eta )/normalization_factor
+
+        self.counter += 1
+        if self.anytime:
+            self.T += 1
+
+
+
+
+
 
 
 class CorralHyperparam:
@@ -150,7 +279,9 @@ class BalancingHyperparam:
         self.delta = delta
         self.algorithm_mask = [1 for _ in range(self.m)]
         self.counter = 0
-        self.distribution_base_parameters = [1.0/(x**2) for x in self.putative_bounds_multipliers]
+        #self.distribution_base_parameters = [1.0/(x**2) for x in self.putative_bounds_multipliers]
+        self.distribution_base_parameters = [1.0/x for x in self.putative_bounds_multipliers]
+
         self.reward_statistics = [0 for _ in range(m)]
         self.optimism_statistics = [0 for _ in range(m)]
 
@@ -289,7 +420,8 @@ class BalancingHyperparam:
 
 # class BalancingHyperParam:
 class EpochBalancingHyperparam:
-    def __init__(self, m, putative_bounds_multipliers, delta =0.01, burn_in_pulls = 20 ):
+    def __init__(self, m, putative_bounds_multipliers, delta =0.01, 
+        burn_in_pulls = 10, balancing_test_multiplier = .1 ):
         self.m = m
         self.putative_bounds_multipliers = putative_bounds_multipliers
         ### check these putative bounds are going up
@@ -300,7 +432,7 @@ class EpochBalancingHyperparam:
 
             curr_val = x
 
-
+        self.balancing_test_multiplier = balancing_test_multiplier
 
         self.T = 1
         self.delta = delta
@@ -310,7 +442,8 @@ class EpochBalancingHyperparam:
 
 
         self.counter = 0
-        self.distribution_base_parameters = [1.0/(x**2) for x in self.putative_bounds_multipliers]
+        self.distribution_base_parameters = [1.0/x for x in self.putative_bounds_multipliers]
+        #self.distribution_base_parameters = [1.0/(x**2) for x in self.putative_bounds_multipliers]
         
         self.all_rewards = 0
         self.epoch_reward = 0
@@ -365,13 +498,13 @@ class EpochBalancingHyperparam:
 
         self.T += 1
 
-        print("Test low ", self.epoch_reward - np.sqrt(self.epoch_steps), " > ", self.epoch_optimistic_estimators)
-        print("Test high ", self.epoch_reward + np.sqrt(self.epoch_steps), " < ", self.epoch_pessimistic_estimators)
+        print("Test low ", self.epoch_reward - self.balancing_test_multiplier*np.sqrt(self.epoch_steps), " > ", self.epoch_optimistic_estimators)
+        print("Test high ", self.epoch_reward + self.balancing_test_multiplier*np.sqrt(self.epoch_steps), " < ", self.epoch_pessimistic_estimators)
 
 
 
         ### TEST:
-        if (self.epoch_optimistic_estimators  < self.epoch_reward - np.sqrt(self.epoch_steps) or self.epoch_reward + np.sqrt(self.epoch_steps) < self.epoch_pessimistic_estimators) and self.epoch_steps > self.burn_in_pulls and sum(self.algorithm_mask) > 1:
+        if (self.epoch_optimistic_estimators  < self.epoch_reward - self.balancing_test_multiplier*np.sqrt(self.epoch_steps) or self.epoch_reward + self.balancing_test_multiplier*np.sqrt(self.epoch_steps) < self.epoch_pessimistic_estimators) and self.epoch_steps > self.burn_in_pulls and sum(self.algorithm_mask) > 1:
 
             ### RESET EPOCH
             self.epoch_reward = 0
@@ -381,7 +514,7 @@ class EpochBalancingHyperparam:
 
             self.epoch_index += 1
 
-            
+            #IPython.embed()
 
             self.min_suriving_algo_index += 1
             for i in range(self.min_suriving_algo_index):
