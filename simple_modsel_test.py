@@ -150,7 +150,7 @@ if __name__ == "__main__":
 	colors = ["red", "orange", "violet", "black", "brown", "yellow", "green", "gray"]
 	#num_timesteps = 5000
 
-	num_experiments = 5
+	num_experiments = 10
 
 	#split = True
 	split_tag = ""
@@ -158,7 +158,7 @@ if __name__ == "__main__":
 		split_tag = " - split"
 
 
-	modselalgos =[ "UCB"]#"EpochBalancing"]#"EXP3", "EXP3Anytime", "Corral", "CorralAnytime""EpochBalancing" ,
+	modselalgos =[ "UCB", "EpochBalancing", "EXP3", "EXP3Anytime", "Corral", "CorralAnytime"]#"EpochBalancing" ,
 
 	normalization_visualization = 1.0/np.sqrt( np.arange(num_timesteps) + 1)
 	normalization_visualization *= 1.0/np.log( np.arange(num_timesteps) + 2)
