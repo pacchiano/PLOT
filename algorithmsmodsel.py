@@ -421,7 +421,7 @@ class BalancingHyperparam:
 # class BalancingHyperParam:
 class EpochBalancingHyperparam:
     def __init__(self, m, putative_bounds_multipliers, delta =0.01, 
-        burn_in_pulls = 10, balancing_test_multiplier = 0 ):
+        burn_in_pulls = 10, balancing_test_multiplier = 0, uniform_sampling = False ):
         self.m = m
         self.putative_bounds_multipliers = putative_bounds_multipliers
         ### check these putative bounds are going up
@@ -442,6 +442,8 @@ class EpochBalancingHyperparam:
 
 
         self.counter = 0
+        self.uniform_sampling = uniform_sampling
+
         self.distribution_base_parameters = [1.0/x for x in self.putative_bounds_multipliers]
         #self.distribution_base_parameters = [1.0/(x**2) for x in self.putative_bounds_multipliers]
         
@@ -463,10 +465,16 @@ class EpochBalancingHyperparam:
 
 
     def normalize_distribution(self):
-        masked_distribution_base_params = [x*y for (x,y) in zip(self.algorithm_mask, self.distribution_base_parameters)]
-        normalization_factor = np.sum(masked_distribution_base_params)
-        self.base_probas = [x/normalization_factor for x in masked_distribution_base_params]
+        if self.uniform_sampling:
+            self.distribution_base_parameters = [1.0/x for x in self.putative_bounds_multipliers]
+        else:
+            masked_distribution_base_params = [x*y for (x,y) in zip(self.algorithm_mask, self.distribution_base_parameters)]
+            normalization_factor = np.sum(masked_distribution_base_params)
+            self.base_probas = [x/normalization_factor for x in masked_distribution_base_params]
        
+
+    
+
 
     def get_distribution(self):
         return self.base_probas

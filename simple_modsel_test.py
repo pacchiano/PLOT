@@ -65,6 +65,8 @@ def test_bernoulli_MAB_modsel(means, num_timesteps, confidence_radii,
 	# 		confidence_radii, delta =0.01, balancing_type = "BalancingAnalyticHybrid")
 	elif modselalgo == "EpochBalancing":
 		modsel_manager = EpochBalancingHyperparam(len(confidence_radii), [max(x, .0000000001) for x in confidence_radii])
+	elif modselalgo == "EpochBalancingUniform":
+		modsel_manager = EpochBalancingHyperparam(len(confidence_radii), [max(x, .0000000001) for x in confidence_radii], uniform_sampling = True)
 	else:
 		raise ValueError("Modselalgo type {} not recognized.".format(modselalgo))
 
