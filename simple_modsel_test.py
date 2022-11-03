@@ -163,6 +163,36 @@ if __name__ == "__main__":
 	normalization_visualization = 1.0/np.sqrt( np.arange(num_timesteps) + 1)
 	normalization_visualization *= 1.0/np.log( np.arange(num_timesteps) + 2)
 
+
+
+	#### RUN THE BASELINES
+
+	baselines_results = []
+
+	for confidence_radius in confidence_radii:
+			cum_regrets_all = []	
+			#confidence_radius_pulls_all = []
+			for _ in range(num_experiments):
+
+				rewards, mean_rewards, instantaneous_regrets, arm_pulls,_, _ = test_bernoulli_MAB_modsel(means, num_timesteps, 
+					[confidence_radius],  modselalgo = "Corral") ### Here we can use any modselalgo, it is dummy in this case.
+
+				cum_regrets_all.append(np.cumsum(instantaneous_regrets))
+
+			mean_cum_regrets = np.mean(cum_regrets_all,0)
+			std_cum_regrets = np.std(cum_regrets_all,0)
+
+			mean_cum_regrets *= normalization_visualization
+			std_cum_regrets *= normalization_visualization
+
+			baselines_results.append((mean_cum_regrets, std_cum_regrets))
+
+			#plt.plot(np.arange(num_timesteps) + 1, mean_cum_regrets, label = "radius {}".format(confidence_radius), color = color )
+			#plt.fill_between(np.arange(num_timesteps) + 1,mean_cum_regrets - .5*std_cum_regrets,mean_cum_regrets + .5*std_cum_regrets, alpha = .2 , color = color )
+
+
+
+
 	for modselalgo in modselalgos:
 	
 		modsel_cum_regrets_all = []	
@@ -231,26 +261,31 @@ if __name__ == "__main__":
 		### Run 50K
 		### 
 
-		for confidence_radius, color in zip(confidence_radii, colors):
-			cum_regrets_all = []	
-			#confidence_radius_pulls_all = []
-			for _ in range(num_experiments):
-
-				rewards, mean_rewards, instantaneous_regrets, arm_pulls,_, _ = test_bernoulli_MAB_modsel(means, num_timesteps, 
-					[confidence_radius],  modselalgo = modselalgo)
-
-				cum_regrets_all.append(np.cumsum(instantaneous_regrets))
-
-			mean_cum_regrets = np.mean(cum_regrets_all,0)
-			std_cum_regrets = np.std(cum_regrets_all,0)
-
-			mean_cum_regrets *= normalization_visualization
-			std_cum_regrets *= normalization_visualization
-
-
+		for confidence_radius, baseline_result_tuple, color in zip(confidence_radii, baselines_results, colors):
+			mean_cum_regrets, std_cum_regrets = baseline_result_tuple
 			plt.plot(np.arange(num_timesteps) + 1, mean_cum_regrets, label = "radius {}".format(confidence_radius), color = color )
-
 			plt.fill_between(np.arange(num_timesteps) + 1,mean_cum_regrets - .5*std_cum_regrets,mean_cum_regrets + .5*std_cum_regrets, alpha = .2 , color = color )
+
+		# for confidence_radius, color in zip(confidence_radii, colors):
+		# 	cum_regrets_all = []	
+		# 	#confidence_radius_pulls_all = []
+		# 	for _ in range(num_experiments):
+
+		# 		rewards, mean_rewards, instantaneous_regrets, arm_pulls,_, _ = test_bernoulli_MAB_modsel(means, num_timesteps, 
+		# 			[confidence_radius],  modselalgo = modselalgo)
+
+		# 		cum_regrets_all.append(np.cumsum(instantaneous_regrets))
+
+		# 	mean_cum_regrets = np.mean(cum_regrets_all,0)
+		# 	std_cum_regrets = np.std(cum_regrets_all,0)
+
+		# 	mean_cum_regrets *= normalization_visualization
+		# 	std_cum_regrets *= normalization_visualization
+
+
+		# 	plt.plot(np.arange(num_timesteps) + 1, mean_cum_regrets, label = "radius {}".format(confidence_radius), color = color )
+
+		# 	plt.fill_between(np.arange(num_timesteps) + 1,mean_cum_regrets - .5*std_cum_regrets,mean_cum_regrets + .5*std_cum_regrets, alpha = .2 , color = color )
 
 
 
