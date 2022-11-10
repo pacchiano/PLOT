@@ -25,6 +25,13 @@ from newmodels import (
 from model_training_utilities import train_model_opt_reg
 
 
+
+# def intersect(interval1, interval2):
+#     if interval1[0] > interval1[1] or interval2[0] > interval2[1]:
+#         raise ValueError("Intervals are malformed")
+
+#     return max(interval1[0], interval2[0]) <= min(interval1[1], interval2[1]):
+        
 def binary_search(func,xmin,xmax,tol=1e-5):
     ''' func: function
     [xmin,xmax] is the interval where func is increasing
@@ -70,7 +77,9 @@ class UCBalgorithm:
         else:
             ucb_bonuses = [confidence_radius*np.sqrt(1/(count + .0000000001)) for count in self.counts ]
             ucb_arm_values = [min(self.mean_estimators[i] + ucb_bonuses[i], self.max_range) for i in range(self.num_arms)]
-            ucb_arm_index = np.argmax(ucb_arm_values)
+            #ucb_arm_index = np.argmax(ucb_arm_values)
+            ucb_arm_values = np.array(ucb_arm_values)
+            ucb_arm_index = np.random.choice(np.flatnonzero(ucb_arm_values == ucb_arm_values.max()))
             ucb_arm_value = ucb_arm_values[ucb_arm_index]
             lcb_arm_values = [max(self.mean_estimators[i] - ucb_bonuses[i], self.min_range) for i in range(self.num_arms)]
 
@@ -267,6 +276,164 @@ class CorralHyperparam:
 
 
 
+class BalancingHyperparamSharp:
+    def __init__(self, m, putative_bounds_multipliers, delta =0.01, 
+        burn_in_pulls = 10, balancing_test_multiplier = 1, uniform_sampling = False ):
+        self.m = m
+        self.putative_bounds_multipliers = putative_bounds_multipliers
+        ### check these putative bounds are going up
+        curr_val = -float("inf")
+        for x in self.putative_bounds_multipliers:
+            if x < curr_val:
+                raise ValueError("The putative bound multipliers for EpochBalancing are not in increasing order.")
+
+            curr_val = x
+
+        self.balancing_test_multiplier = balancing_test_multiplier
+
+        self.T = 1
+        self.delta = delta
+        
+        self.min_suriving_algo_index = 0
+        self.algorithm_mask = [1 for _ in range(self.m)]
+
+
+        #self.counter = 0
+        self.uniform_sampling = uniform_sampling
+
+        #self.distribution_base_parameters = [1.0/x for x in self.putative_bounds_multipliers]
+        self.distribution_base_parameters = [1.0/(x**2) for x in self.putative_bounds_multipliers]
+        #self.base_probas = 
+
+        self.all_rewards = 0
+
+
+        #self.epoch_reward = 0
+        #self.epoch_steps = 0
+        #self.epoch_index = 0
+
+        #self.epoch_optimistic_estimators = 0
+        #self.epoch_pessimistic_estimators = 0
+
+        ### these store the optimistic and pessimistic estimators of Vstar for all 
+        ### base algorithms.
+        self.optimistic_estimators = [0 for _ in range(self.m)]
+        self.pessimistic_estimators = [0 for _ in range(self.m)]
+
+        self.cumulative_rewards = [0 for _ in range(self.m)]
+        self.mean_rewards = [0 for _ in range(self.m)]
+
+        self.num_plays = [0 for _ in range(self.m)]
+
+        self.vstar_lowerbounds = [-float("inf") for _ in range(self.m)]
+
+        self.vstar_upperbounds = [float("inf") for _ in range(self.m)]
+
+
+        self.normalize_distribution()
+        self.burn_in_pulls = burn_in_pulls
+
+
+    def sample_base_index(self):
+        sample_array = np.random.choice(range(self.m), 1, p=self.base_probas)
+        return sample_array[0]
+
+
+    def normalize_distribution(self):
+        if not self.uniform_sampling:
+            #self.distribution_base_parameters = [1.0/x for x in self.putative_bounds_multipliers]
+            #else:
+            masked_distribution_base_params = [x*y for (x,y) in zip(self.algorithm_mask, self.distribution_base_parameters)]
+            normalization_factor = np.sum(masked_distribution_base_params)
+            self.base_probas = [x/normalization_factor for x in masked_distribution_base_params]
+       
+        else:
+            self.base_probas = np.ones(self.m)/(1.0*self.m)
+    
+
+
+    def get_distribution(self):
+        return self.base_probas
+
+
+    def update_distribution(self, algo_idx, reward, more_info = dict([])):
+        #proba = self.base_probas[algo_idx]
+        #self.pulls_per_arm[algo_idx] += 1
+        self.all_rewards += reward
+
+        self.cumulative_rewards[algo_idx] += reward
+        self.num_plays[algo_idx] += 1
+
+        #### Update average reward per algorithm so far. 
+        self.mean_rewards[algo_idx] = self.cumulative_rewards[algo_idx]*1.0/self.num_plays[algo_idx]
+
+
+        self.vstar_lowerbounds[algo_idx] = self.mean_rewards[algo_idx] - self.balancing_test_multiplier/np.sqrt(self.num_plays[algo_idx])
+
+        ### Using the putative bounds:
+        #self.vstar_upperbounds[algo_idx] = self.mean_rewards[algo_idx] + self.putative_bounds_multipliers[algo_idx]/np.sqrt(self.num_plays[algo_idx])
+
+        ### alternatively
+        self.vstar_upperbounds[algo_idx] = more_info["optimistic_reward_predictions"]
+
+        ### check if more_info contains a list of all current optimistic reward predictions, not only those for the chosen algorithm.
+        ### TODO
+
+
+        print("Curr reward ", reward)
+        print("Opt reward pred ", more_info["optimistic_reward_predictions"])
+        print("Pess reward pred ", more_info["pessimistic_reward_predictions"])
+        print("All rewards ", self.all_rewards)
+        print("Cumulative rewards ", self.cumulative_rewards)
+        print("Num plays ", self.num_plays)
+        print("Mean rewards ", self.mean_rewards)
+        print("Balancing algorithm masks ", self.algorithm_mask)
+        print("Balancing probabilities ",self.base_probas)
+
+        self.T += 1
+
+
+
+        ### TEST Conditions
+        if self.vstar_upperbounds[algo_idx] < self.vstar_lowerbounds[algo_idx]:
+            ### algo_idx is misspecified
+            print("Eliminated algorithm index ", algo_idx)
+            self.min_suriving_algo_index = max(self.min_suriving_algo_index, algo_idx+1)
+
+        sandwich_intervals = list(zip(self.vstar_lowerbounds, self.vstar_upperbounds))
+
+        for i in range(self.min_suriving_algo_index, self.m):
+            for j in range(i+1, self.m):
+
+                    ### Algorithm i may be misspecified
+                    if sandwich_intervals[i][1] < sandwich_intervals[j][0]:
+                        print("Eliminated algorithm index ", i)
+                        self.min_suriving_algo_index = max(self.min_suriving_algo_index, i+1)
+                
+        
+                    ### Algorithm j may be misspecified
+                    if sandwich_intervals[j][1] < sandwich_intervals[i][0]:
+                        print("Eliminated algorithm index ", j)
+                        self.min_suriving_algo_index = max(self.min_suriving_algo_index, j+1)
+
+
+        ## Fix the algorithm mask
+        for i in range(self.min_suriving_algo_index):
+                 self.algorithm_mask[i] = 0
+
+
+        self.normalize_distribution()
+
+
+
+
+
+
+
+
+
+
+
 
 # class BalancingHyperParam:
 class BalancingHyperparam:
@@ -279,8 +446,8 @@ class BalancingHyperparam:
         self.delta = delta
         self.algorithm_mask = [1 for _ in range(self.m)]
         self.counter = 0
-        #self.distribution_base_parameters = [1.0/(x**2) for x in self.putative_bounds_multipliers]
-        self.distribution_base_parameters = [1.0/x for x in self.putative_bounds_multipliers]
+        self.distribution_base_parameters = [1.0/(x**2) for x in self.putative_bounds_multipliers]
+        #self.distribution_base_parameters = [1.0/x for x in self.putative_bounds_multipliers]
 
         self.reward_statistics = [0 for _ in range(m)]
         self.optimism_statistics = [0 for _ in range(m)]
@@ -446,7 +613,8 @@ class EpochBalancingHyperparam:
 
         self.distribution_base_parameters = [1.0/x for x in self.putative_bounds_multipliers]
         #self.distribution_base_parameters = [1.0/(x**2) for x in self.putative_bounds_multipliers]
-        
+        #self.base_probas = 
+
         self.all_rewards = 0
         self.epoch_reward = 0
         self.epoch_steps = 0
@@ -465,14 +633,15 @@ class EpochBalancingHyperparam:
 
 
     def normalize_distribution(self):
-        if self.uniform_sampling:
-            self.distribution_base_parameters = [1.0/x for x in self.putative_bounds_multipliers]
-        else:
+        if not self.uniform_sampling:
+            #self.distribution_base_parameters = [1.0/x for x in self.putative_bounds_multipliers]
+            #else:
             masked_distribution_base_params = [x*y for (x,y) in zip(self.algorithm_mask, self.distribution_base_parameters)]
             normalization_factor = np.sum(masked_distribution_base_params)
             self.base_probas = [x/normalization_factor for x in masked_distribution_base_params]
        
-
+        else:
+            self.base_probas = np.ones(self.m)/(1.0*self.m)
     
 
 
@@ -533,6 +702,12 @@ class EpochBalancingHyperparam:
 
 
         self.normalize_distribution()
+
+
+
+
+
+
 
 
 
