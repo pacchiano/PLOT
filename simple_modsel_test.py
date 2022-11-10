@@ -192,7 +192,9 @@ if __name__ == "__main__":
 
 	#split = True
 
-	modselalgos = ["BalancingSharp"]
+	#modselalgos = ["BalancingSharp"]
+	modselalgos = ["UCB", "EXP3", "Corral"]
+
 	#modselalgos =[ "UCB", "EpochBalancing", "EXP3", "EXP3Anytime", "Corral", "CorralAnytime"]#"EpochBalancing" ,
 
 	normalization_visualization = 1.0/np.sqrt( np.arange(num_timesteps) + 1)
