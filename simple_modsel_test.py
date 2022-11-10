@@ -241,13 +241,14 @@ if __name__ == "__main__":
 			modsel_cum_regrets_all = []	
 			modsel_confidence_radius_pulls_all = []
 			probabilities_all = []
+			per_algorithm_regrets_stats = []
 			for _ in range(num_experiments):
 				modsel_rewards, modsel_mean_rewards, modsel_instantaneous_regrets, modsel_arm_pulls, modsel_confidence_radius_pulls, probabilities_modsel, per_algorithm_regrets = test_bernoulli_MAB_modsel(means, num_timesteps, 
 					confidence_radii,  modselalgo = modselalgo, split = split)
 				modsel_cum_regrets_all.append(np.cumsum(modsel_instantaneous_regrets))
 				modsel_confidence_radius_pulls_all.append(modsel_confidence_radius_pulls)
 				probabilities_all.append(probabilities_modsel)
-
+				per_algorithm_regrets_stats.append(per_algorithm_regrets)
 
 
 
@@ -348,7 +349,7 @@ if __name__ == "__main__":
 				plt.plot(np.arange(num_timesteps) + 1, modsel_cum_regrets_all[i], label = modselalgo, color = "blue" )
 				#plt.fill_between(np.arange(num_timesteps) + 1,mean_modsel_cum_regrets -.5*std_modsel_cum_regrets, mean_modsel_cum_regrets +.5*std_modsel_cum_regrets, color = "blue", alpha = .2   )
 
-				for confidence_radius, info_list, color in zip(confidence_radii, per_algorithm_regrets, colors):
+				for confidence_radius, info_list, color in zip(confidence_radii, per_algorithm_regrets_stats[i], colors):
 						cum_regret = np.cumsum(info_list)
 						plt.plot(np.arange(len(cum_regret)) + 1, cum_regret, label = "radius {}".format(confidence_radius), color = color )
 						#plt.fill_between(np.arange(num_timesteps) + 1,mean_cum_regrets - .5*std_cum_regrets,mean_cum_regrets + .5*std_cum_regrets, alpha = .2 , color = color )
