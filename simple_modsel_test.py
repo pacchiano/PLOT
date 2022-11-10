@@ -36,14 +36,38 @@ class BernoulliBandit:
 
 
 
+class GaussianBandit:
+	def __init__(self, means, stds):
+		self.means = means
+		self.stds = stds
+		self.num_arms = len(means)
+		self.max_mean = max(self.means)
+
+
+	def get_reward(self, arm_index):
+		if arm_index >= self.num_arms or arm_index < 0:
+			raise ValueError("Invalid arm index {}".format(arm_index))
+
+
+		return np.random.normal(self.means[arm_index], self.stds[arm_index])
+
+
+	def get_max_mean(self):
+		return self.max_mean
+
+	def get_arm_mean(self, arm_index):
+		return self.means[arm_index]
 
 
 
 
 
-def test_bernoulli_MAB_modsel(means, num_timesteps, confidence_radii,  
-	modselalgo = "Corral", split = False):
+def test_MAB_modsel(means, stds, num_timesteps, confidence_radii,  
+	modselalgo = "Corral", split = False, algotype = "bernoulli"):
 	
+
+
+
 	if modselalgo == "Corral":
 		modsel_manager = CorralHyperparam(len(confidence_radii), T = num_timesteps) ### hack
 	elif modselalgo == "CorralAnytime":
@@ -74,7 +98,15 @@ def test_bernoulli_MAB_modsel(means, num_timesteps, confidence_radii,
 	else:
 		raise ValueError("Modselalgo type {} not recognized.".format(modselalgo))
 
-	bandit = BernoulliBandit(means)
+
+	if algotype == "bernoulli":
+
+		bandit = BernoulliBandit(means)
+	elif algotype == "gaussian":
+		bandit = GaussianBandit(means, stds)
+	else:
+		raise ValueError("unrecognized bandit type {}".format(algotype))
+
 	num_arms = len(means)
 	#empirical_means = [0 for _ in range(num_arms)]
 
@@ -157,10 +189,23 @@ if __name__ == "__main__":
 	num_timesteps = int(sys.argv[1])
 
 
+	
 
-	means = [.1, .2, .5, .55]
+	# means = [.1, .2, .5, .55]
+	# stds = []
+	# confidence_radii = [.08, .16, .64, 1.24, 2.5, 5, 10, 25	] ## increase radii
+	# algotype = "bernoulli"
+	# experiment_name = "exp1"
+
+
+	means = [.7, .8]
+	stds = [.01, 5]
 	confidence_radii = [.08, .16, .64, 1.24, 2.5, 5, 10, 25	] ## increase radii
-	experiment_name = "exp1"
+	algotype = "gaussian"
+	experiment_name = "exp2"
+
+
+
 	exp_data_dir = "./debugModsel/{}".format(experiment_name)
 	exp_info = "means - {} \n conf_radii - {}".format(means, confidence_radii)
 
@@ -194,7 +239,7 @@ if __name__ == "__main__":
 
 	#modselalgos = ["BalancingSharp"]
 	#modselalgos = ["BalancingSharp", "UCB", "EXP3", "Corral"]
-	modselalgos = ["Corral"]
+	modselalgos = ["Corral", "BalancingSharp", "UCB", "EXP3", "Corral"]
 
 	#modselalgos =[ "UCB", "EpochBalancing", "EXP3", "EXP3Anytime", "Corral", "CorralAnytime"]#"EpochBalancing" ,
 
@@ -212,8 +257,8 @@ if __name__ == "__main__":
 			#confidence_radius_pulls_all = []
 			for _ in range(num_experiments):
 
-				rewards, mean_rewards, instantaneous_regrets, arm_pulls,_, _, _ = test_bernoulli_MAB_modsel(means, num_timesteps, 
-					[confidence_radius],  modselalgo = "Corral") ### Here we can use any modselalgo, it is dummy in this case.
+				rewards, mean_rewards, instantaneous_regrets, arm_pulls,_, _, _ = test_MAB_modsel(means, stds, num_timesteps, 
+					[confidence_radius],  modselalgo = "Corral", algotype = algotype) ### Here we can use any modselalgo, it is dummy in this case.
 
 				cum_regrets_all.append(np.cumsum(instantaneous_regrets))
 
@@ -244,7 +289,7 @@ if __name__ == "__main__":
 			probabilities_all = []
 			per_algorithm_regrets_stats = []
 			for _ in range(num_experiments):
-				modsel_rewards, modsel_mean_rewards, modsel_instantaneous_regrets, modsel_arm_pulls, modsel_confidence_radius_pulls, probabilities_modsel, per_algorithm_regrets = test_bernoulli_MAB_modsel(means, num_timesteps, 
+				modsel_rewards, modsel_mean_rewards, modsel_instantaneous_regrets, modsel_arm_pulls, modsel_confidence_radius_pulls, probabilities_modsel, per_algorithm_regrets = test_MAB_modsel(means, stds, num_timesteps, 
 					confidence_radii,  modselalgo = modselalgo, split = split)
 				modsel_cum_regrets_all.append(np.cumsum(modsel_instantaneous_regrets))
 				modsel_confidence_radius_pulls_all.append(modsel_confidence_radius_pulls)
@@ -320,6 +365,15 @@ if __name__ == "__main__":
 
 
 			### Double check that random seed setting is actually correct. 
+
+
+
+
+			### Same experiment with multiple levels of noise. 
+			### Model selection algos will do well.
+
+
+
 
 			for confidence_radius, baseline_result_tuple, color in zip(confidence_radii, baselines_results, colors):
 				mean_cum_regrets, std_cum_regrets = baseline_result_tuple
