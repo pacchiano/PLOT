@@ -193,7 +193,8 @@ if __name__ == "__main__":
 	#split = True
 
 	#modselalgos = ["BalancingSharp"]
-	modselalgos = ["BalancingSharp", "UCB", "EXP3", "Corral"]
+	#modselalgos = ["BalancingSharp", "UCB", "EXP3", "Corral"]
+	modselalgos = ["Corral"]
 
 	#modselalgos =[ "UCB", "EpochBalancing", "EXP3", "EXP3Anytime", "Corral", "CorralAnytime"]#"EpochBalancing" ,
 
