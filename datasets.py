@@ -368,7 +368,16 @@ def get_batches(protected_datasets, global_dataset, batch_size):
 
 def get_dataset(dataset, batch_size, test_batch_size):
 
-    if dataset == "Mixture":
+
+    if dataset == "CLIP":
+
+        protected_datasets_test = None
+        protected_datasets_train = None
+
+        train_dataset, test_dataset = pickle.load(open("./clip_datasets.p", "rb"))
+        #IPython.embed()
+
+    elif dataset == "Mixture":
         PROTECTED_GROUPS = ["A", "B", "C", "D"]
         d = 20
         means = [

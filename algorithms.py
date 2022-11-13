@@ -30,7 +30,7 @@ from algorithmsmodsel import train_mahalanobis_modsel, train_opt_reg_modsel
 
 
 def train_baseline(dataset, num_timesteps, batch_size, 
-    representation_layer_sizes = [10, 10], threshold = .5):
+    representation_layer_sizes = [10, 10], threshold = .5, mode = "classification"):
     (
         train_dataset,
         test_dataset,
@@ -42,12 +42,19 @@ def train_baseline(dataset, num_timesteps, batch_size,
     # IPython.embed()
     # raise ValueError("Asdflkm")
 
+    if mode == "classification":
+        output_filter = 'logistic'
+    else:
+        output_filter = "none"        
+
 
     baseline_model = TorchMultilayerRegression(
         representation_layer_sizes=representation_layer_sizes,
         dim = train_dataset.dimension,
-        output_filter = 'logistic'
+        output_filter = output_filter
     )
+
+    #IPython.embed()
     baseline_model = train_model(
         baseline_model, num_timesteps, train_dataset, batch_size
     )
@@ -64,6 +71,8 @@ def train_baseline(dataset, num_timesteps, batch_size,
         baseline_test_loss = baseline_model.get_loss(batch_X, batch_y)
     print("Baseline model test accuracy {}".format(baseline_test_accuracy))
     print("Baseline test loss {}".format(baseline_test_loss))
+    #IPython.embed()
+
     with torch.no_grad():
         baseline_batch_train = train_dataset.get_batch(10000000000) 
         

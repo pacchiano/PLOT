@@ -6,9 +6,9 @@ from algorithms import train_epsilon_greedy, train_mahalanobis, train_baseline, 
 
 @ray.remote
 def train_baseline_remote(dataset, num_timesteps = 1000, batch_size = 32, 
-    representation_layer_sizes = [10,10]):
+    representation_layer_sizes = [10,10], mode = "classification"):
     return train_baseline(dataset=dataset, num_timesteps=num_timesteps, batch_size=batch_size, 
-    representation_layer_sizes=representation_layer_sizes)
+    representation_layer_sizes=representation_layer_sizes, mode = mode)
 
 
 # @ray.remote
