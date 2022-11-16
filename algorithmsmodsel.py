@@ -1265,6 +1265,9 @@ def train_opt_reg_modsel(dataset, baseline_model, num_batches, batch_size,
         #raise ValueError("asdf")
         if len(regs) > 1:
             print("is split {}".format(split))
+        
+        print("batch y labels ", batch_y.squeeze())
+
         print("        ########################################")
         print("prediction differential ", optimistic_prob_predictions - pessimistic_prob_predictions)
         print("        ########################################")
@@ -1279,7 +1282,12 @@ def train_opt_reg_modsel(dataset, baseline_model, num_batches, batch_size,
 
             baseline_predictions = baseline_model.get_thresholded_predictions(batch_X, threshold)
 
-            boolean_labels_y = batch_y.bool().squeeze()
+
+            boolean_labels_y = batch_y >= threshold
+            boolean_labels_y = boolean_labels_y.bool().squeeze()
+
+
+
             accuracy = (torch.sum(optimistic_thresholded_predictions*boolean_labels_y) +torch.sum( ~optimistic_thresholded_predictions*~boolean_labels_y))*1.0/batch_size
 
 

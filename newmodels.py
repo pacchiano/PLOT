@@ -192,6 +192,10 @@ class TorchMultilayerRegression:
         return representations
 
     def get_loss(self, batch_X, batch_y):
+        #a = "asdflkm"
+        #IPython.embed()
+
+
         # if torch.cuda.is_available():
         #     self.network.to('cuda')
         pred_tuple = self.network(batch_X.float())  # .squeeze()
@@ -202,7 +206,9 @@ class TorchMultilayerRegression:
                 torch.squeeze(prob_predictions), torch.squeeze(batch_y.float())
             )
         else:
+            
 
+            #IPython.embed()
             return self.criterion_l2(
                 torch.squeeze(prob_predictions), torch.squeeze(batch_y.float())
             )
@@ -222,8 +228,10 @@ class TorchMultilayerRegression:
 
     def get_thresholded_predictions(self, batch_X, threshold):
         
-        if self.output_filter != "logistic":
-            raise ValueError("Output filter not set to logistic")
+
+        ### REVIVE THIS ####
+        # if self.output_filter != "logistic":
+        #     raise ValueError("Output filter not set to logistic")
 
         
         prob_predictions = self.predict(batch_X)
@@ -231,8 +239,8 @@ class TorchMultilayerRegression:
         return thresholded_predictions
 
     def get_accuracy(self, batch_X, batch_y, threshold):
-        if self.output_filter != "logistic":
-            raise ValueError("Output filter not set to logistic")
+        # if self.output_filter != "logistic":
+        #     raise ValueError("Output filter not set to logistic")
 
 
         thresholded_predictions = self.get_thresholded_predictions(
