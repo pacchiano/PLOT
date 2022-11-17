@@ -396,7 +396,6 @@ class BalancingHyperparamSharp:
         self.T += 1
 
 
-
         ### TEST Conditions
         if self.vstar_upperbounds[algo_idx] < self.vstar_lowerbounds[algo_idx]:
             ### algo_idx is misspecified
@@ -419,6 +418,8 @@ class BalancingHyperparamSharp:
                         print("Eliminated algorithm index ", j)
                         self.min_suriving_algo_index = max(self.min_suriving_algo_index, j+1)
 
+
+        self.min_suriving_algo_index = min(self.min_suriving_algo_index, self.m-1)
 
         ## Fix the algorithm mask
         for i in range(self.min_suriving_algo_index):
