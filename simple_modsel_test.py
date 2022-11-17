@@ -229,7 +229,7 @@ if __name__ == "__main__":
 	colors = ["red", "orange", "violet", "black", "brown", "yellow", "green", "gray"]
 	#num_timesteps = 5000
 
-	num_experiments = 10#200
+	num_experiments = 200
 
 	#split = True
 
