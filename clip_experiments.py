@@ -69,15 +69,17 @@ def run_opt_reg_experiments(dataset, regs, num_experiments, baseline_model, num_
 
 
 if __name__ == "__main__":
+	threshold = float(sys.argv[1])
+
 	num_experiments = 2
 	regs=  [0, .1, .3, .5]
 	colors = ["red", "blue", "green", "black"]
-	num_batches = 100
+	num_batches = 1000
 	baseline_batches = 1000
 	baseline_batch_size = 32
 	batch_size = 32
 	num_opt_steps = 1000
-	threshold = .7
+	#threshold = .7
 
 
 	burn_in = 10
