@@ -588,7 +588,7 @@ if __name__ == "__main__":
 	restart_model_full_minimization = True
 
 	batch_size = 10
-	num_experiments = 2
+	num_experiments = 10
 
 	representation_layer_sizes = [10,10]
 
