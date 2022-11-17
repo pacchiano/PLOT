@@ -53,7 +53,7 @@ def binary_search(func,xmin,xmax,tol=1e-5):
     return x
 
 class UCBalgorithm:
-    def __init__(self, num_arms, burn_in = 1, min_range = 0, max_range = float("inf")):
+    def __init__(self, num_arms, burn_in = 1, min_range = -float("inf"), max_range = float("inf")):
         self.num_arms = num_arms
         self.mean_estimators = [0 for _ in range(num_arms)]
         self.counts = [0 for _ in range(num_arms)]
