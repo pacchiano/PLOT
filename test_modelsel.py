@@ -174,7 +174,8 @@ def run_base_mahalanobis_experiments(dataset, alphas, num_experiments, baseline_
 
 def run_base_opt_reg_experiments(dataset, regs, num_experiments, baseline_model, num_batches, 
 	batch_size, num_opt_steps = 1000, 
-	opt_batch_size = 20, representation_layer_sizes = [10, 10], restart_model_full_minimization = False):
+	opt_batch_size = 20, representation_layer_sizes = [10, 10], 
+	restart_model_full_minimization = False, burn_in = 0):
 
 	opt_reg_results_list = []
 
@@ -186,7 +187,7 @@ def run_base_opt_reg_experiments(dataset, regs, num_experiments, baseline_model,
     			num_opt_steps, opt_batch_size,
     			representation_layer_sizes = representation_layer_sizes, threshold = .5, reg = reg,
     			verbose = True,
-    			restart_model_full_minimization = restart_model_full_minimization) for _ in range(num_experiments)]
+    			restart_model_full_minimization = restart_model_full_minimization, burn_in = burn_in) for _ in range(num_experiments)]
 
 
 
@@ -199,7 +200,7 @@ def run_base_opt_reg_experiments(dataset, regs, num_experiments, baseline_model,
     			num_opt_steps, opt_batch_size,
     			representation_layer_sizes = representation_layer_sizes, threshold = .5, reg = reg,
     			verbose = True,
-    			restart_model_full_minimization = restart_model_full_minimization) for _ in range(num_experiments)]
+    			restart_model_full_minimization = restart_model_full_minimization, burn_in = burn_in) for _ in range(num_experiments)]
 
 		opt_reg_results_list.append(("opt_reg-{}".format(reg), opt_reg_results))
 	
@@ -210,7 +211,8 @@ def run_base_opt_reg_experiments(dataset, regs, num_experiments, baseline_model,
 
 def run_modsel_opt_reg_experiments(dataset, regs, modselalgo, num_experiments, baseline_model, num_batches, 
 	batch_size, num_opt_steps = 1000, 
-	opt_batch_size = 20, representation_layer_sizes = [10, 10], restart_model_full_minimization = False, split = False):
+	opt_batch_size = 20, representation_layer_sizes = [10, 10], restart_model_full_minimization = False, 
+	split = False, burn_in = 0):
 	
 
 	# IPython.embed()
@@ -222,7 +224,7 @@ def run_modsel_opt_reg_experiments(dataset, regs, modselalgo, num_experiments, b
     		representation_layer_sizes = representation_layer_sizes, threshold = .5, regs = regs,
     		verbose = True,
     		restart_model_full_minimization = restart_model_full_minimization, modselalgo = modselalgo, 
-    		split = split) for _ in range(num_experiments)]
+    		split = split, burn_in = burn_in) for _ in range(num_experiments)]
 		opt_reg_modsel_results = ray.get(opt_reg_modsel_results)
 
 	else:
@@ -231,7 +233,7 @@ def run_modsel_opt_reg_experiments(dataset, regs, modselalgo, num_experiments, b
     		representation_layer_sizes = representation_layer_sizes, threshold = .5, regs = regs,
     		verbose = True,
     		restart_model_full_minimization = restart_model_full_minimization, modselalgo = modselalgo, 
-    		split = split) for _ in range(num_experiments)]
+    		split = split, burn_in = burn_in) for _ in range(num_experiments)]
 		
 	return ("opt_reg {}".format(modselalgo),opt_reg_modsel_results )#, mahalanobis_results_list
 
@@ -580,6 +582,7 @@ if __name__ == "__main__":
 	num_opt_steps = 2000
 	num_baseline_steps = 20000
 	opt_batch_size = 20
+	burn_in = 10
 
 	#split = False
 	restart_model_full_minimization = True
@@ -630,7 +633,7 @@ if __name__ == "__main__":
 			opt_reg_results_list = run_base_opt_reg_experiments(dataset, opt_regs, num_experiments, baseline_model, num_batches, 
 				batch_size, num_opt_steps = num_opt_steps, 
 				opt_batch_size = 20, representation_layer_sizes = representation_layer_sizes, 
-				restart_model_full_minimization = restart_model_full_minimization)
+				restart_model_full_minimization = restart_model_full_minimization, burn_in = burn_in)
 
 			for opt_reg_res_tuple in opt_reg_results_list:
 				results_dictionary[opt_reg_res_tuple[0]] = opt_reg_res_tuple[1]	
@@ -671,7 +674,7 @@ if __name__ == "__main__":
 				opt_reg_modsel_results_tuple = run_modsel_opt_reg_experiments(dataset, opt_regs, modselalgo, num_experiments, baseline_model, num_batches, 
 										batch_size, num_opt_steps = num_opt_steps, 
 										opt_batch_size = opt_batch_size, representation_layer_sizes = representation_layer_sizes, 
-										restart_model_full_minimization = restart_model_full_minimization, split = split)
+										restart_model_full_minimization = restart_model_full_minimization, split = split, burn_in = burn_in)
 
 
 				results_dictionary[opt_reg_modsel_results_tuple[0]] = opt_reg_modsel_results_tuple[1]
