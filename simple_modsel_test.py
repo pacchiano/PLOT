@@ -234,7 +234,7 @@ if __name__ == "__main__":
 	#split = True
 
 	
-	modselalgos = ["BalancingSharp"]#, "UCB", "EXP3", "Corral" ]
+	modselalgos = ["BalancingSharp", "UCB", "EXP3", "Corral" ]
 
 	normalization_visualization = 1.0/np.sqrt( np.arange(num_timesteps) + 1)
 	normalization_visualization *= 1.0/np.log( np.arange(num_timesteps) + 2)
