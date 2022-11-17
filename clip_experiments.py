@@ -137,4 +137,4 @@ if __name__ == "__main__":
 
 
 	#train_dataset, test_dataset = pickle.load(open("./clip_datasets.p", "rb"))
-	IPython.embed()
+	#IPython.embed()
