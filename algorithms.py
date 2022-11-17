@@ -231,13 +231,13 @@ def train_opt_reg(dataset, baseline_model, num_batches, batch_size,
     num_opt_steps, opt_batch_size, 
     representation_layer_sizes = [10, 10], threshold = .5, reg = 1,
     verbose = False, 
-    restart_model_full_minimization = False):
+    restart_model_full_minimization = False, burn_in = 0):
     
     return train_opt_reg_modsel(dataset, baseline_model, num_batches, batch_size, 
     num_opt_steps, opt_batch_size,
     representation_layer_sizes = representation_layer_sizes, threshold = threshold, regs = [reg], 
     verbose = verbose,
-    restart_model_full_minimization = restart_model_full_minimization, modselalgo = "Corral")
+    restart_model_full_minimization = restart_model_full_minimization, modselalgo = "Corral", burn_in = burn_in)
 
 
 

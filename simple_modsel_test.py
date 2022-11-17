@@ -12,19 +12,26 @@ np.random.seed(1000)
 random.seed(1000)
 
 class BernoulliBandit:
-	def __init__(self, means):
-		self.means = means
-		self.num_arms = len(means)
-		self.max_mean = max(self.means)
+	def __init__(self, base_means, scalings = []):
+		self.base_means = base_means
+		
+		self.num_arms = len(base_means)
+		
+		if len(scalings) == 0:
+			self.scalings = [1 for _ in range(self.num_arms)]
+		else:
+			self.scalings = scalings
 
+		self.means = [self.base_means[i]*self.scalings[i] for i in range(self.num_arms)]
+		self.max_mean = max(self.means)
 
 	def get_reward(self, arm_index):
 		if arm_index >= self.num_arms or arm_index < 0:
 			raise ValueError("Invalid arm index {}".format(arm_index))
 
 		random_uniform_sample = random.random()
-		if random_uniform_sample <= self.means[arm_index]:
-			return 1
+		if random_uniform_sample <= self.base_means[arm_index]:
+			return 1*self.scalings[arm_index]
 		else:
 			return 0
 
@@ -62,7 +69,7 @@ class GaussianBandit:
 
 
 
-def test_MAB_modsel(means, stds, num_timesteps, confidence_radii,  
+def test_MAB_modsel(means, stds, scalings, num_timesteps, confidence_radii,  
 	modselalgo = "Corral", split = False, algotype = "bernoulli"):
 	
 
@@ -78,20 +85,6 @@ def test_MAB_modsel(means, stds, num_timesteps, confidence_radii,
 		modsel_manager = EXP3Hyperparam(len(confidence_radii), T = num_timesteps, anytime = True)
 	elif modselalgo == "UCB":
 		modsel_manager = UCBHyperparam(len(confidence_radii))
-
-	# elif modselalgo == "BalancingSimple":
-	# 	modsel_manager = BalancingHyperparam(len(confidence_radii), 
-	# 	   confidence_radii, delta =0.01, balancing_type = "BalancingSimple" )
-	# elif modselalgo == "BalancingAnalytic":
-	# 	modsel_manager = BalancingHyperparam(len(confidence_radii), 
-	# 		confidence_radii, delta =0.01, balancing_type = "BalancingAnalytic")
-	# elif modselalgo == "BalancingAnalyticHybrid":
-	# 	modsel_manager = BalancingHyperparam(len(confidence_radii), 
-	# 		confidence_radii, delta =0.01, balancing_type = "BalancingAnalyticHybrid")
-	elif modselalgo == "EpochBalancing":
-		modsel_manager = EpochBalancingHyperparam(len(confidence_radii), [max(x, .0000000001) for x in confidence_radii])
-	elif modselalgo == "EpochBalancingUniform":
-		modsel_manager = EpochBalancingHyperparam(len(confidence_radii), [max(x, .0000000001) for x in confidence_radii], uniform_sampling = True)
 	
 	elif modselalgo == "BalancingSharp":
 		modsel_manager = BalancingHyperparamSharp(len(confidence_radii), [max(x, .0000000001) for x in confidence_radii])
@@ -101,7 +94,7 @@ def test_MAB_modsel(means, stds, num_timesteps, confidence_radii,
 
 	if algotype == "bernoulli":
 
-		bandit = BernoulliBandit(means)
+		bandit = BernoulliBandit(means, scalings)
 	elif algotype == "gaussian":
 		bandit = GaussianBandit(means, stds)
 	else:
@@ -151,12 +144,8 @@ def test_MAB_modsel(means, stds, num_timesteps, confidence_radii,
 		modsel_info["optimistic_reward_predictions"] = ucb_arm_value
 		modsel_info["pessimistic_reward_predictions"] = lcb_arm_value
 
-
-
-
 		ucb_algorithm.update_arm_statistics(play_arm_index, reward)
 		
-
 		mean_reward = bandit.get_arm_mean(play_arm_index)
 
 		mean_rewards.append(mean_reward)
@@ -181,28 +170,35 @@ def test_MAB_modsel(means, stds, num_timesteps, confidence_radii,
 
 if __name__ == "__main__":
 
-	# split_settings = sys.argv[1]
-	# if split_settings not in ["True", "False"]:
-	# 	raise ValueError("Split settings not recognized.")
-	# split = split_settings == "True"
-
 	num_timesteps = int(sys.argv[1])
+	exp_type = str(sys.argv[2])
 
+	if exp_type == "exp1":
+		means = [.1, .2, .5, .55]
+		stds = []
+		scalings = []
+		confidence_radii = [.08, .16, .64, 1.24, 2.5, 5, 10, 25	] ## increase radii
+		algotype = "bernoulli"
+		experiment_name = "exp1"
 
-	
+	elif exp_type == "exp2":
+		means = [.7, .8]
+		stds = [.01, 5]
+		scalings = []
+		confidence_radii = [.08, .16, .64, 1.24, 2.5, 5, 10, 25	] ## increase radii
+		algotype = "gaussian"
+		experiment_name = "exp2"
 
-	# means = [.1, .2, .5, .55]
-	# stds = []
-	# confidence_radii = [.08, .16, .64, 1.24, 2.5, 5, 10, 25	] ## increase radii
-	# algotype = "bernoulli"
-	# experiment_name = "exp1"
+	elif exp_type == "exp3":
+		means = [.7, .01]
+		stds = []
+		scalings = [1,80]
+		confidence_radii = [.08, .16, .64, 1.24, 2.5, 5, 10, 25	] ## increase radii
+		algotype = "bernoulli"
+		experiment_name = "exp3"
 
-
-	means = [.7, .8]
-	stds = [.01, 5]
-	confidence_radii = [.08, .16, .64, 1.24, 2.5, 5, 10, 25	] ## increase radii
-	algotype = "gaussian"
-	experiment_name = "exp2"
+	else:
+		raise ValueError("experiment type not recognized")
 
 
 
@@ -237,11 +233,8 @@ if __name__ == "__main__":
 
 	#split = True
 
-	#modselalgos = ["BalancingSharp"]
-	#modselalgos = ["BalancingSharp", "UCB", "EXP3", "Corral"]
+	
 	modselalgos = ["Corral", "BalancingSharp", "UCB", "EXP3", "Corral"]
-
-	#modselalgos =[ "UCB", "EpochBalancing", "EXP3", "EXP3Anytime", "Corral", "CorralAnytime"]#"EpochBalancing" ,
 
 	normalization_visualization = 1.0/np.sqrt( np.arange(num_timesteps) + 1)
 	normalization_visualization *= 1.0/np.log( np.arange(num_timesteps) + 2)
@@ -257,7 +250,7 @@ if __name__ == "__main__":
 			#confidence_radius_pulls_all = []
 			for _ in range(num_experiments):
 
-				rewards, mean_rewards, instantaneous_regrets, arm_pulls,_, _, _ = test_MAB_modsel(means, stds, num_timesteps, 
+				rewards, mean_rewards, instantaneous_regrets, arm_pulls,_, _, _ = test_MAB_modsel(means, stds, scalings, num_timesteps, 
 					[confidence_radius],  modselalgo = "Corral", algotype = algotype) ### Here we can use any modselalgo, it is dummy in this case.
 
 				cum_regrets_all.append(np.cumsum(instantaneous_regrets))
@@ -289,8 +282,11 @@ if __name__ == "__main__":
 			probabilities_all = []
 			per_algorithm_regrets_stats = []
 			for _ in range(num_experiments):
-				modsel_rewards, modsel_mean_rewards, modsel_instantaneous_regrets, modsel_arm_pulls, modsel_confidence_radius_pulls, probabilities_modsel, per_algorithm_regrets = test_MAB_modsel(means, stds, num_timesteps, 
-					confidence_radii,  modselalgo = modselalgo, split = split)
+				modsel_rewards, modsel_mean_rewards, modsel_instantaneous_regrets, modsel_arm_pulls, modsel_confidence_radius_pulls, probabilities_modsel, per_algorithm_regrets = test_MAB_modsel(means, stds, scalings, 
+					num_timesteps, 
+					confidence_radii,  modselalgo = modselalgo, 
+					split = split, algotype = algotype)
+				
 				modsel_cum_regrets_all.append(np.cumsum(modsel_instantaneous_regrets))
 				modsel_confidence_radius_pulls_all.append(modsel_confidence_radius_pulls)
 				probabilities_all.append(probabilities_modsel)

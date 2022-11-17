@@ -1139,7 +1139,7 @@ def train_opt_reg_modsel(dataset, baseline_model, num_batches, batch_size,
     num_opt_steps, opt_batch_size,
     representation_layer_sizes = [10, 10], threshold = .5, regs = [1, .1, .01],
     verbose = False,
-    restart_model_full_minimization = False, modselalgo = "Corral", split = False):
+    restart_model_full_minimization = False, modselalgo = "Corral", split = False, burn_in  = 0):
     
 
     # IPython.embed()
@@ -1251,6 +1251,10 @@ def train_opt_reg_modsel(dataset, baseline_model, num_batches, batch_size,
             batch_X, opt_batch_size, opt_reg = reg, restart_model_full_minimization = restart_model_full_minimization )
         optimistic_prob_predictions = model.predict(batch_X)
         optimistic_thresholded_predictions = model.get_thresholded_predictions(batch_X, threshold)
+        if i < burn_in:
+            #IPython.embed()
+            optimistic_thresholded_predictions = optimistic_thresholded_predictions >= 0
+
         print("Finished training optimistic OptReg model reg - {}".format(reg))
         print("optimistic predictions ", optimistic_prob_predictions)
 
@@ -1293,7 +1297,7 @@ def train_opt_reg_modsel(dataset, baseline_model, num_batches, batch_size,
 
             #### TOTAL NUM POSITIVES
             total_num_positives = torch.sum(optimistic_thresholded_predictions)
-
+            print("Num positives ",total_num_positives )
             #### TOTAL NUM NEGATIVES   
             total_num_negatives = torch.sum(~optimistic_thresholded_predictions)
 
@@ -1379,6 +1383,9 @@ def train_opt_reg_modsel(dataset, baseline_model, num_batches, batch_size,
     results["false_neg_rates"] = false_neg_rates
     results["false_positive_rates"] = false_positive_rates
     results["modselect_info"] = modselect_info
+
+
+
 
 
     results["rewards"] = rewards
