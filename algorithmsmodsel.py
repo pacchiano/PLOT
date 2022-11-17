@@ -335,6 +335,9 @@ class BalancingHyperparamSharp:
 
 
     def sample_base_index(self):
+        if sum([np.isnan(x) for x in self.base_probas]) > 0:
+            print("Found Nan Values")
+            IPython.embed()
         sample_array = np.random.choice(range(self.m), 1, p=self.base_probas)
         return sample_array[0]
 
