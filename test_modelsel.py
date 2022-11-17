@@ -4,6 +4,8 @@ import ray
 import pickle
 import sys
 import IPython
+import os
+
 
 from algorithmsmodsel import train_epsilon_greedy_modsel, train_mahalanobis_modsel, train_opt_reg_modsel
 from algorithms import train_epsilon_greedy, train_mahalanobis, train_baseline, train_opt_reg
@@ -12,7 +14,7 @@ from algorithms_remote import train_epsilon_greedy_remote, train_epsilon_greedy_
 
 #USE_RAY = False
 PLOT_ALL_STATS = False
-USE_RAY = True
+USE_RAY = False
 
 
 def process_results(results_list):
@@ -243,6 +245,18 @@ def plot_modsel_probabilities(algo_name, dataset, num_batches, batch_size, modse
 	color_index = 0
 
 
+	logging_dir = "./ModselResults/T{}".format(num_batches)
+	if not os.path.exists(logging_dir):
+		os.mkdir(logging_dir)
+
+
+	logging_dir = "./ModselResults/T{}/{}".format(num_batches, dataset)
+	if not os.path.exists(logging_dir):
+		os.mkdir(logging_dir)
+
+
+
+
 	modsel_results = results_dictionary["{} {}".format(algo_name, modselalgo)]
 
 
@@ -268,9 +282,9 @@ def plot_modsel_probabilities(algo_name, dataset, num_batches, batch_size, modse
 	plt.legend(fontsize=8, loc="upper left")
 
 	if not split:
-		filename = "./ModselResults/modsel_probabilities-{}_{}_{}_T{}_B{}_N_{}.png".format(modselalgo,algo_name, dataset,num_batches,batch_size, repres_layers_name)
+		filename = "{}/modsel_probabilities-{}_{}_{}_T{}_B{}_N_{}.png".format(logging_dir,modselalgo,algo_name, dataset,num_batches,batch_size, repres_layers_name)
 	else:
-		filename = "./ModselResults/modsel_probabilities-split-{}_{}_{}_T{}_B{}_N_{}.png".format(modselalgo,algo_name, dataset,num_batches,batch_size, repres_layers_name)
+		filename = "{}/modsel_probabilities-split-{}_{}_{}_T{}_B{}_N_{}.png".format(logging_dir,modselalgo,algo_name, dataset,num_batches,batch_size, repres_layers_name)
 
 	plt.savefig(filename)
 	plt.close("all")
@@ -285,6 +299,17 @@ def plot_optimism_pessimism(algo_name,dataset, num_batches, batch_size, results_
 	color_index = 0
 
 	#results_type = "rewards"
+
+	logging_dir = "./ModselResults/T{}".format(num_batches)
+	if not os.path.exists(logging_dir):
+		os.mkdir(logging_dir)
+
+
+	logging_dir = "./ModselResults/T{}/{}".format(num_batches, dataset)
+	if not os.path.exists(logging_dir):
+		os.mkdir(logging_dir)
+
+
 
 	for hyperparam in hyperparams:
 
@@ -347,7 +372,7 @@ def plot_optimism_pessimism(algo_name,dataset, num_batches, batch_size, results_
 	# plt.legend(bbox_to_anchor=(1.05, 1), fontsize=8, loc="upper left")
 	plt.legend(fontsize=8, loc="upper left")
 
-	filename = "./ModselResults/opt_pess_{}_{}_T{}_B{}_N_{}.png".format(algo_name,dataset, 
+	filename = "{}/opt_pess_{}_{}_T{}_B{}_N_{}.png".format(logging_dir, algo_name,dataset, 
 		num_batches, batch_size, repres_layers_name)
 
 	plt.savefig(filename)
@@ -371,6 +396,15 @@ def plot_results(algo_name, dataset, results_type, num_batches, batch_size, mods
 		raise ValueError("Results type {} does not support cummulative plot".format(results_type))
 
 
+
+	logging_dir = "./ModselResults/T{}".format(num_batches)
+	if not os.path.exists(logging_dir):
+		os.mkdir(logging_dir)
+
+
+	logging_dir = "./ModselResults/T{}/{}".format(num_batches, dataset)
+	if not os.path.exists(logging_dir):
+		os.mkdir(logging_dir)
 
 
 	
@@ -489,12 +523,12 @@ def plot_results(algo_name, dataset, results_type, num_batches, batch_size, mods
 	plt.legend(fontsize=8, loc="upper left")
 
 	if not split:
-		filename = "./ModselResults/modsel_{}_cum_{}-{}_{}_{}_T{}_B{}_N_{}.png".format(results_type, cummulative_plot, 
+		filename = "{}/{}_cum_{}-{}_{}_{}_T{}_B{}_N_{}.png".format(logging_dir,results_type, cummulative_plot, 
 			algo_name, modselalgo,dataset, num_batches, batch_size, repres_layers_name)
 
 	else:
 
-		filename = "./ModselResults/modsel-split_{}_cum_{}-{}_{}_{}_T{}_B{}_N_{}.png".format(results_type, cummulative_plot, 
+		filename = "{}/{}-split_cum_{}-{}_{}_{}_T{}_B{}_N_{}.png".format(logging_dir,results_type, cummulative_plot, 
 			algo_name, modselalgo,dataset, num_batches, batch_size, repres_layers_name)
 
 	plt.savefig(filename)
@@ -535,19 +569,6 @@ if __name__ == "__main__":
 	# raise ValueError("asdlfkm")
 
 
-	RUN_OPT_REG = algo_name == "opt_reg"
-	PLOT_OPT_REG = algo_name == "opt_reg"
-
-
-	RUN_EPSILON = algo_name == "epsilon"
-	PLOT_EPSILON = algo_name == "epsilon"
-
-
-	RUN_MAHALANOBIS = algo_name == "mahalanobis"
-	PLOT_MAHALANOBIS = algo_name == "mahalanobis"
-
-
-
 	averaging_window = 1
 	epsilon = .1
 	alpha = 10
@@ -564,14 +585,14 @@ if __name__ == "__main__":
 	restart_model_full_minimization = True
 
 	batch_size = 10
-	num_experiments = 15
+	num_experiments = 2
 
 	representation_layer_sizes = [10,10]
 
 
 	colors = ["blue", "red", "orange", "black", "violet", "orange", "green", "brown", "gray"]
 
-	modselalgos = ["EpochBalancing", "CorralAnytime"]# "EpochBalancing", "BalancingAnalytic", "BalancingSimple", "BalancingAnalyticHybrid" ,"Corral", "CorralAnytime"]
+	modselalgos = ["Corral", "BalancingSharp", "UCB", "EXP3", "Corral"]
 	datasets = ["Adult-10_10", "German-10_10","Crime-10_10","Bank-10_10", "Adult", "German", "Bank", "Crime"]#, "German", "Bank", "Adult"]"Adult-10-10"]#,
 
 	repres_layers_name = get_architecture_name(representation_layer_sizes)
@@ -590,7 +611,7 @@ if __name__ == "__main__":
 
 
 
-		if RUN_MAHALANOBIS:
+		if algo_name == "mahalanobis":
 
 
 			mahalanobis_results_list = run_base_mahalanobis_experiments(dataset, alphas, num_experiments, baseline_model, num_batches, 
@@ -603,7 +624,7 @@ if __name__ == "__main__":
 
 
 
-		if RUN_OPT_REG:
+		if algo_name == "opt_reg":
 
 
 			opt_reg_results_list = run_base_opt_reg_experiments(dataset, opt_regs, num_experiments, baseline_model, num_batches, 
@@ -621,7 +642,7 @@ if __name__ == "__main__":
 		for modselalgo in modselalgos:
 
 			### Run epsilon-greedy model selection experiments
-			if RUN_EPSILON:
+			if algo_name == "epsilon":
 
 				epsilon_greedy_modsel_results_tuple, epsilon_greedy_results_list  =	run_epsilon_greedy_experiments(dataset, epsilons, modselalgo, num_experiments, baseline_model, num_batches, batch_size, decaying_epsilon, num_opt_steps = 1000, 
 					opt_batch_size = opt_batch_size, representation_layer_sizes = representation_layer_sizes, 
@@ -633,7 +654,7 @@ if __name__ == "__main__":
 					results_dictionary[eps_res_tuple[0]] = eps_res_tuple[1]
 
 
-			if RUN_MAHALANOBIS:
+			if algo_name == "mahalanobis":
 
 				mahalanobis_modsel_results_tuple = run_modsel_mahalanobis_experiments(dataset, alphas, modselalgo, num_experiments, baseline_model, num_batches, 
 										batch_size, num_opt_steps = num_opt_steps, 
@@ -645,7 +666,7 @@ if __name__ == "__main__":
 
 
 
-			if RUN_OPT_REG:
+			if algo_name == "opt_reg":
 
 				opt_reg_modsel_results_tuple = run_modsel_opt_reg_experiments(dataset, opt_regs, modselalgo, num_experiments, baseline_model, num_batches, 
 										batch_size, num_opt_steps = num_opt_steps, 
@@ -662,7 +683,9 @@ if __name__ == "__main__":
 
 
 
-			if RUN_EPSILON or RUN_MAHALANOBIS or RUN_OPT_REG:
+			if algo_name == "epsilon" or algo_name == "mahalanobis" or algo_name == "opt_reg":
+				
+
 				pickle.dump(results_dictionary, 
 				    open("ModselResults/{}".format(pickle_results_filename), "wb"))
 
@@ -674,15 +697,15 @@ if __name__ == "__main__":
 			color_index = 0
 
 
-			if PLOT_EPSILON:
+			if algo_name == "epsilon":
 				algo_type_key = "epsilon"
 				hyperparams = epsilons
 
-			if PLOT_MAHALANOBIS:
+			if algo_name == "mahalanobis":
 				algo_type_key = "alpha"
 				hyperparams = alphas
 
-			if PLOT_OPT_REG:
+			if algo_name == "opt_reg":
 				algo_type_key = "opt_reg"
 				hyperparams = opt_regs
 

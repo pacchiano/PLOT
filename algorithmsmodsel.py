@@ -1142,31 +1142,27 @@ def train_opt_reg_modsel(dataset, baseline_model, num_batches, batch_size,
     restart_model_full_minimization = False, modselalgo = "Corral", split = False, burn_in  = 0):
     
 
-    # IPython.embed()
-    # raise ValueError("train opt reg modsel")
-
     num_regs = len(regs)
+
 
     if modselalgo == "Corral":
         modsel_manager = CorralHyperparam(len(regs), T = num_batches) ### hack
     elif modselalgo == "CorralAnytime":
-        modsel_manager = CorralHyperparam(len(regs), T = num_batches, anytime = True) 
-    elif modselalgo == "BalancingSimple":
-        modsel_manager = BalancingHyperparam(len(regs), 
-           [ x*representation_layer_sizes[-1] for x in regs], delta =0.01, balancing_type = "BalancingSimple" )
-    elif modselalgo == "BalancingAnalytic":
-        modsel_manager = BalancingHyperparam(len(regs), 
-            [ x*representation_layer_sizes[-1] for x in regs], delta =0.01, balancing_type = "BalancingAnalytic")
-    elif modselalgo == "BalancingAnalyticHybrid":
-        modsel_manager = BalancingHyperparam(len(regs), 
-            [ x*representation_layer_sizes[-1] for x in regs], delta =0.01, balancing_type = "BalancingAnalyticHybrid")
-    elif modselalgo == "EpochBalancing":
-        modsel_manager = EpochBalancingHyperparam(len(regs), [max(x, .0000000001) for x in regs])
+        modsel_manager = CorralHyperparam(len(regs), T = num_batches, eta = 1.0/np.sqrt(num_batches), anytime = True) 
+    elif modselalgo == "EXP3":
+        modsel_manager = EXP3Hyperparam(len(regs), T = num_batches)
+    elif modselalgo == "EXP3Anytime":
+        modsel_manager = EXP3Hyperparam(len(regs), T = num_batches, anytime = True)
+    elif modselalgo == "UCB":
+        modsel_manager = UCBHyperparam(len(regs))
+    
+    elif modselalgo == "BalancingSharp":
+        modsel_manager = BalancingHyperparamSharp(len(regs), [max(x, .0000000001) for x in regs])
     else:
         raise ValueError("Modselalgo type {} not recognized.".format(modselalgo))
+
     reg = regs[0]
     ### THE above is going to fail for linear representations.
-
 
     (
         train_dataset,
