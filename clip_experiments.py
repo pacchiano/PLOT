@@ -76,9 +76,9 @@ if __name__ == "__main__":
 	regs=  [0, .1, .3, .5]
 	colors = ["red", "blue", "green", "black"]
 	#num_batches = 1000
-	baseline_batches = 1000
+	baseline_batches = 10000
 	baseline_batch_size = 32
-	batch_size = 32
+	batch_size = 1
 	num_opt_steps = 1000
 	#threshold = .7
 
