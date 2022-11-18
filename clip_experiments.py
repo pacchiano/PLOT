@@ -131,7 +131,7 @@ if __name__ == "__main__":
 	plt.xlabel("timesteps")
 	plt.ylabel("num positives")
 	plt.legend(fontsize=8, loc="upper left")	
-	plt.savefig("./CLIP/CLIP_num_positives_{}.png".format(threshold))
+	plt.savefig("./CLIP/CLIP_num_positives_{}_T{}.png".format(threshold, num_batches))
 	plt.close("all")
 
 
