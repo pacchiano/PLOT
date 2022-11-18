@@ -73,7 +73,7 @@ if __name__ == "__main__":
 	num_batches = int(sys.argv[2])
 
 	num_experiments = 2
-	regs=  [0, .1, .3, .5]
+	regs=  [0, .01, .03, .05]
 	colors = ["red", "blue", "green", "black"]
 	#num_batches = 1000
 	baseline_batches = 10000
