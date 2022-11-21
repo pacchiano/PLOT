@@ -159,7 +159,7 @@ if __name__ == "__main__":
 	plt.ylabel("regret")		
 
 	plt.legend(fontsize=8, loc="upper left")	
-	plt.savefig("./CLIP/CLIP_regrets_{}_T{}_B{}_split_{}.png".format(threshold, num_batches, batch_size, split))
+	plt.savefig("./CLIP/regrets_{}_T{}_B{}_split_{}.png".format(threshold, num_batches, batch_size, split))
 	plt.close("all")
 
 	### Plot cum num positives
@@ -179,8 +179,16 @@ if __name__ == "__main__":
 	plt.xlabel("timesteps")
 	plt.ylabel("num positives")
 	plt.legend(fontsize=8, loc="upper left")	
-	plt.savefig("./CLIP/CLIP_num_positives_{}_T{}_B{}_split_{}.png".format(threshold, num_batches, batch_size, split))
+	plt.savefig("./CLIP/num_positives_{}_T{}_B{}_split_{}.png".format(threshold, num_batches, batch_size, split))
 	plt.close("all")
+
+
+
+	##
+
+
+	pickle.dump(opt_reg_results_list, 
+				    open("./CLIP/data_{}_T{}_B{}_split_{}.p".format(threshold, num_batches, batch_size, split), "wb"))
 
 
 
