@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import os
 
 import IPython
-from algorithmsmodsel import CorralHyperparam, EpochBalancingHyperparam, EXP3Hyperparam, UCBHyperparam, BalancingHyperparamSharp
+from algorithmsmodsel import CorralHyperparam, EpochBalancingHyperparam, EXP3Hyperparam, UCBHyperparam, BalancingHyperparamSharp, BalancingHyperparamDoubling
 from algorithmsmodsel import UCBalgorithm
 
 np.random.seed(1000)
@@ -88,6 +88,11 @@ def test_MAB_modsel(means, stds, scalings, num_timesteps, confidence_radii,
 	
 	elif modselalgo == "BalancingSharp":
 		modsel_manager = BalancingHyperparamSharp(len(confidence_radii), [max(x, .0000000001) for x in confidence_radii])
+	elif modselalgo == "BalancingDoubling":
+		modsel_manager = BalancingHyperparamDoubling(len(confidence_radii), min(confidence_radii))
+	elif modselalgo == "BalancingDoResurrect":
+		modsel_manager = BalancingHyperparamDoubling(len(confidence_radii), min(confidence_radii), resurrecting = True)
+
 	else:
 		raise ValueError("Modselalgo type {} not recognized.".format(modselalgo))
 
@@ -197,6 +202,15 @@ if __name__ == "__main__":
 		algotype = "bernoulli"
 		experiment_name = "exp3"
 
+	elif exp_type == "exp4":
+		means = [.7, .01, .8, .9, .91, .7, .01, .8,.7, .01, .8,]
+		stds = []
+		scalings = [1,1,1,1,1,1,1,1,1,1,1]
+		confidence_radii = [.08, .16, .64, 1.24, 2.5, 5, 10, 25	] ## increase radii
+		algotype = "bernoulli"
+		experiment_name = "exp4"
+
+
 	else:
 		raise ValueError("experiment type not recognized")
 
@@ -234,7 +248,7 @@ if __name__ == "__main__":
 	#split = True
 
 	
-	modselalgos = ["BalancingSharp", "UCB", "EXP3", "Corral" ]
+	modselalgos = [ "BalancingDoubling"]#"BalancingDoResurrect", "BalancingSharp", "UCB", "EXP3", "Corral" ]
 
 	normalization_visualization = 1.0/np.sqrt( np.arange(num_timesteps) + 1)
 	normalization_visualization *= 1.0/np.log( np.arange(num_timesteps) + 2)
