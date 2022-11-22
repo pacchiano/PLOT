@@ -595,7 +595,7 @@ if __name__ == "__main__":
 
 	colors = ["blue", "red", "orange", "black", "violet", "orange", "green", "brown", "gray"]
 
-	modselalgos = ["BalancingDoubling", "BalancingDoResurrect"]# ["Corral", "BalancingSharp", "UCB", "EXP3", "Corral"]
+	modselalgos = ["BalancingDoubling"]#, "BalancingDoResurrect"]# ["Corral", "BalancingSharp", "UCB", "EXP3", "Corral"]
 	datasets = ["Adult", "Adult-10_10"]# ["Adult-10_10", "German-10_10","Crime-10_10","Bank-10_10", "Adult", "German", "Bank", "Crime"]#, "German", "Bank", "Adult"]"Adult-10-10"]#,
 
 	repres_layers_name = get_architecture_name(representation_layer_sizes)
