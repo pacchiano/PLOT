@@ -1333,6 +1333,12 @@ def train_opt_reg_modsel(dataset, baseline_model, num_batches, batch_size,
     
     elif modselalgo == "BalancingSharp":
         modsel_manager = BalancingHyperparamSharp(len(regs), [max(x, .0000000001) for x in regs])
+    elif modselalgo == "BalancingDoubling":
+        modsel_manager = BalancingHyperparamDoubling(len(regs), min(regs))
+   
+    elif modselalgo == "BalancingDoResurrect":
+        modsel_manager = BalancingHyperparamDoubling(len(regs), min(regs), resurrecting = True)
+
     else:
         raise ValueError("Modselalgo type {} not recognized.".format(modselalgo))
 
