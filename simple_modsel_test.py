@@ -210,6 +210,13 @@ if __name__ == "__main__":
 		algotype = "bernoulli"
 		experiment_name = "exp4"
 
+	elif exp_type == "exp5":
+		means = [.7, .01, .8, .9, .91, .7, .01, .8,.7, .01, .8]
+		stds = [.1, .8, .1, .1, .1, .1, .9, .1,.1, .8, .1]
+		scalings = [1,1,1,1,1,1,1,1,1,1,1]
+		confidence_radii = [.08, .16, .64, 1.24, 2.5, 5, 10, 25	] ## increase radii
+		algotype = "gaussian"
+		experiment_name = "exp5"
 
 	else:
 		raise ValueError("experiment type not recognized")
@@ -376,6 +383,10 @@ if __name__ == "__main__":
 
 			### Double check that random seed setting is actually correct. 
 
+
+
+
+			### Try our original balancing with the widths of the base learners. 
 
 
 

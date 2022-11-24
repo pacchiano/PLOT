@@ -127,7 +127,7 @@ if __name__ == "__main__":
 	batch_size = 1
 	num_opt_steps = 1000
 	#threshold = .7
-	model_selection_algos = ["Corral", "UCB", "EXP3", "BalancingSharp"]
+	model_selection_algos = ["BalancingDoubling"]#"Corral", "UCB", "EXP3", "BalancingSharp"]
 	burn_in = 10
 	if len(model_selection_algos) + len(regs) > len(colors):
 		raise ValueError("Num experiment params is > num colors")
