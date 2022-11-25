@@ -390,21 +390,26 @@ class BalancingHyperparamDoubling:
 
         if self.resurrecting:
 
-            new_vstar_upperbounds = [0 for _ in range(self.m)]
+            #new_vstar_upperbounds = [0 for _ in range(self.m)]
+            max_lower_bound = max(self.vstar_lowerbounds)
 
             for i in range(self.m):
                 putative_multiplier = max(self.putative_bounds_multipliers[i]/2, self.initial_putative_bound, .01)
-                new_vstar_upperbounds[i] = self.mean_rewards[i] + putative_multiplier/np.sqrt(self.num_plays[i])
-            
-            sandwich_intervals = list(zip(self.vstar_lowerbounds, new_vstar_upperbounds))
+                new_upperbound = self.mean_rewards[i] + putative_multiplier/np.sqrt(self.num_plays[i])
+                if max_lower_bound <= new_upperbound:
+                        self.putative_bounds_multipliers[i] = putative_multiplier
 
-            misspecified_algo_indices = self.get_misspecified_algos(sandwich_intervals)
+            #sandwich_intervals = list(zip(self.vstar_lowerbounds, new_vstar_upperbounds))
+
+            #for i in range(self.m):
+
+            #misspecified_algo_indices = self.get_misspecified_algos(sandwich_intervals)
 
             #### algos to resurrect are those that are not misspecified after this halving
 
-            for k in set(range(self.m)).difference(set(misspecified_algo_indices)):
-                self.putative_bounds_multipliers[i] *= .5
-                self.putative_bounds_multipliers[i] = max(self.putative_bounds_multipliers[i], self.initial_putative_bound, .01) 
+            # for k in set(range(self.m)).difference(set(misspecified_algo_indices)):
+            #     self.putative_bounds_multipliers[i] *= .5
+            #     self.putative_bounds_multipliers[i] = max(self.putative_bounds_multipliers[i], self.initial_putative_bound, .01) 
 
 
 
@@ -1417,8 +1422,6 @@ def train_opt_reg_modsel(dataset, baseline_model, num_batches, batch_size,
 
         
         modselect_info.append(modsel_manager.get_distribution())
-
-
 
 
 

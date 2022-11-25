@@ -222,6 +222,7 @@ if __name__ == "__main__":
 		raise ValueError("experiment type not recognized")
 
 
+	PLOT_ALL_STATS = False
 
 	exp_data_dir = "./debugModsel/{}".format(experiment_name)
 	exp_info = "means - {} \n conf_radii - {}".format(means, confidence_radii)
@@ -255,7 +256,7 @@ if __name__ == "__main__":
 	#split = True
 
 	
-	modselalgos = [ "BalancingDoubling"]#"BalancingDoResurrect", "BalancingSharp", "UCB", "EXP3", "Corral" ]
+	modselalgos = [ "BalancingDoResurrect"]# "BalancingDoubling"]#"BalancingDoResurrect", "BalancingSharp", "UCB", "EXP3", "Corral" ]
 
 	normalization_visualization = 1.0/np.sqrt( np.arange(num_timesteps) + 1)
 	normalization_visualization *= 1.0/np.log( np.arange(num_timesteps) + 2)
@@ -416,28 +417,31 @@ if __name__ == "__main__":
 			plt.close("all")
 
 			
-			### PLOT last modsel experiment info
-			for i in range(num_experiments):
-				plt.title("Single Experiment Regrets - {}".format(split_tag))
-				plt.legend(fontsize=8, loc="upper left")
+			if PLOT_ALL_STATS:
 
 
-				plt.plot(np.arange(num_timesteps) + 1, modsel_cum_regrets_all[i], label = modselalgo, color = "blue" )
-				#plt.fill_between(np.arange(num_timesteps) + 1,mean_modsel_cum_regrets -.5*std_modsel_cum_regrets, mean_modsel_cum_regrets +.5*std_modsel_cum_regrets, color = "blue", alpha = .2   )
+				### PLOT last modsel experiment info
+				for i in range(num_experiments):
+					plt.title("Single Experiment Regrets - {}".format(split_tag))
+					plt.legend(fontsize=8, loc="upper left")
 
-				for confidence_radius, info_list, color in zip(confidence_radii, per_algorithm_regrets_stats[i], colors):
-						cum_regret = np.cumsum(info_list)
-						plt.plot(np.arange(len(cum_regret)) + 1, cum_regret, label = "radius {}".format(confidence_radius), color = color )
-						#plt.fill_between(np.arange(num_timesteps) + 1,mean_cum_regrets - .5*std_cum_regrets,mean_cum_regrets + .5*std_cum_regrets, alpha = .2 , color = color )
 
-				plt.legend(fontsize=8, loc="upper left")
+					plt.plot(np.arange(num_timesteps) + 1, modsel_cum_regrets_all[i], label = modselalgo, color = "blue" )
+					#plt.fill_between(np.arange(num_timesteps) + 1,mean_modsel_cum_regrets -.5*std_modsel_cum_regrets, mean_modsel_cum_regrets +.5*std_modsel_cum_regrets, color = "blue", alpha = .2   )
 
-				if split:
-					plt.savefig("{}/singlerun_modsel_test_split_exp{}_{}_T{}.png".format( per_experiment_data, i+1, modselalgo,num_timesteps))
-				else:
-					plt.savefig("{}/singlerun_modsel_test_exp{}_{}_T{}.png".format(per_experiment_data, i+1, modselalgo,num_timesteps))
+					for confidence_radius, info_list, color in zip(confidence_radii, per_algorithm_regrets_stats[i], colors):
+							cum_regret = np.cumsum(info_list)
+							plt.plot(np.arange(len(cum_regret)) + 1, cum_regret, label = "radius {}".format(confidence_radius), color = color )
+							#plt.fill_between(np.arange(num_timesteps) + 1,mean_cum_regrets - .5*std_cum_regrets,mean_cum_regrets + .5*std_cum_regrets, alpha = .2 , color = color )
 
-				plt.close("all")
+					plt.legend(fontsize=8, loc="upper left")
 
-			
+					if split:
+						plt.savefig("{}/singlerun_modsel_test_split_exp{}_{}_T{}.png".format( per_experiment_data, i+1, modselalgo,num_timesteps))
+					else:
+						plt.savefig("{}/singlerun_modsel_test_exp{}_{}_T{}.png".format(per_experiment_data, i+1, modselalgo,num_timesteps))
+
+					plt.close("all")
+
+				
 
