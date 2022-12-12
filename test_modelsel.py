@@ -5,7 +5,7 @@ import pickle
 import sys
 import IPython
 import os
-
+from utilities import pickle_and_zip
 
 from algorithmsmodsel import train_epsilon_greedy_modsel, train_mahalanobis_modsel, train_opt_reg_modsel
 from algorithms import train_epsilon_greedy, train_mahalanobis, train_baseline, train_opt_reg
@@ -16,7 +16,6 @@ from algorithms_remote import train_epsilon_greedy_remote, train_epsilon_greedy_
 PLOT_ALL_STATS = False
 USE_RAY = True
 
-
 def process_results(results_list):
     mean = np.mean(results_list, 0)
     standard_dev = np.std(results_list, 0)
@@ -25,14 +24,14 @@ def process_results(results_list):
     return mean, standard_dev
 
 
-def get_pickle_filename(dataset, num_batches,batch_size,repres_layers_name, split):
+def get_pickle_filename_stub(dataset, num_batches,batch_size,repres_layers_name, split):
 	if not split:
-		filename = "results_modsel_{}_T{}_B{}_N_{}.p".format(dataset, num_batches,batch_size,repres_layers_name )
+		filename_stub = "results_modsel_{}_T{}_B{}_N_{}".format(dataset, num_batches,batch_size,repres_layers_name )
 
 	else:
-		filename = "results_modsel-split_{}_T{}_B{}_N_{}.p".format(dataset, num_batches,batch_size,repres_layers_name )
+		filename_stub = "results_modsel-split_{}_T{}_B{}_N_{}".format(dataset, num_batches,batch_size,repres_layers_name )
 
-	return filename
+	return filename_stub
 
 
 
@@ -596,7 +595,7 @@ if __name__ == "__main__":
 	colors = ["blue", "red", "orange", "black", "violet", "orange", "green", "brown", "gray"]
 
 	modselalgos = [ "BalancingDoResurrect"]#"BalancingDoubling"]## ["Corral", "BalancingSharp", "UCB", "EXP3", "Corral"]
-	datasets = ["German-10_10","Crime-10_10","Bank-10_10", "Adult", "German", "Bank", "Crime"]# ["Adult-10_10", "German-10_10","Crime-10_10","Bank-10_10", "Adult", "German", "Bank", "Crime"]#, "German", "Bank", "Adult"]"Adult-10-10"]#,
+	datasets = ["Adult-10_10", "German-10_10","Crime-10_10","Bank-10_10", "Adult", "German", "Bank", "Crime"]# ["Adult-10_10", "German-10_10","Crime-10_10","Bank-10_10", "Adult", "German", "Bank", "Crime"]#, "German", "Bank", "Adult"]"Adult-10-10"]#,
 
 	repres_layers_name = get_architecture_name(representation_layer_sizes)
 
@@ -682,19 +681,18 @@ if __name__ == "__main__":
 
 
 
-			pickle_results_filename = get_pickle_filename(dataset, num_batches,batch_size,repres_layers_name, split)
+			pickle_results_filename_stub = get_pickle_filename_stub(dataset, num_batches,batch_size,repres_layers_name, split)
 
 
 
 
 			if algo_name == "epsilon" or algo_name == "mahalanobis" or algo_name == "opt_reg":
+			
+				pickle_and_zip(results_dictionary, "ModselResults/{}".format(pickle_results_filename_stub))
 				
 
-				pickle.dump(results_dictionary, 
-				    open("ModselResults/{}".format(pickle_results_filename), "wb"))
 
-
-			results_dictionary = pickle.load(open("ModselResults/{}".format(pickle_results_filename), "rb")) 
+			#results_dictionary = pickle.load(open("ModselResults/{}".format(pickle_results_filename), "rb")) 
 
 
 			Ts = np.arange(num_batches)+1

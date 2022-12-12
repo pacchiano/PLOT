@@ -137,7 +137,8 @@ class UCBHyperparam:
 
 class EXP3Hyperparam:
 
-    def __init__(self,m,T=1000, anytime = False, discount_factor = .9, forced_exploration_factor = 0):
+    def __init__(self,m,T=1000, anytime = False, discount_factor = .9, 
+        eta_multiplier = 1, forced_exploration_factor = 0):
         #self.hyperparam_list = hyperparam_list
         self.m = m# len(self.hyperparam_list)
         self.base_probas = np.ones(self.m)/self.m
@@ -146,7 +147,7 @@ class EXP3Hyperparam:
         self.counter = 0
         self.anytime = False
         self.forced_exploration_factor = forced_exploration_factor
-
+        self.eta_multiplier = eta_multiplier
         self.discount_factor = discount_factor
 
         if self.anytime:
@@ -169,7 +170,7 @@ class EXP3Hyperparam:
         
 
 
-        eta = np.sqrt( np.log(self.m)/(self.m*self.T))
+        eta = self.eta_multiplier*np.sqrt( np.log(self.m)/(self.m*self.T))
         
         normalization_factor = np.sum( np.exp( self.importance_weighted_cum_rewards*eta) )
 
@@ -273,13 +274,21 @@ class CorralHyperparam:
 
 
 
-
+### when the descending keyword is active the balancing algorithm starts with 
+### high putative bounds and reduces them
 class BalancingHyperparamDoubling:
-    def __init__(self, m, initial_putative_bound, delta =0.01, balancing_test_multiplier = 1 , resurrecting = False ):
+    def __init__(self, m, initial_putative_bound, delta =0.01, 
+        balancing_test_multiplier = 1 , resurrecting = False, classic = False ):
+        
+        self.minimum_putative = .0001
+        self.maximum_putative = 10000
+
+        self.classic = classic
+
         self.m = m
         self.resurrecting = resurrecting
-        self.initial_putative_bound = max(initial_putative_bound, .01)
-        self.putative_bounds_multipliers = [max(initial_putative_bound, .01) for _ in range(m)]
+        self.initial_putative_bound = max(initial_putative_bound, self.minimum_putative)
+        self.putative_bounds_multipliers = [max(initial_putative_bound, self.minimum_putative) for _ in range(m)]
         ### check these putative bounds are going up
         curr_val = -float("inf")
         for x in self.putative_bounds_multipliers:
@@ -297,10 +306,6 @@ class BalancingHyperparamDoubling:
         self.algorithm_mask = [1 for _ in range(self.m)]
 
 
-
-        #self.distribution_base_parameters = [1.0/x for x in self.putative_bounds_multipliers]
-        #self.distribution_base_parameters = [1.0/(x**2) for x in self.putative_bounds_multipliers]
-        #self.base_probas = 
 
         self.all_rewards = 0
 
@@ -324,19 +329,27 @@ class BalancingHyperparamDoubling:
 
 
     def sample_base_index(self):
-        if sum([np.isnan(x) for x in self.base_probas]) > 0:
-            print("Found Nan Values")
-            IPython.embed()
-        sample_array = np.random.choice(range(self.m), 1, p=self.base_probas)
-        return sample_array[0]
+        if self.classic:
+            evaluated_putative_bounds = [self.putative_bounds_multipliers[i]*np.sqrt(self.num_plays[i]) for i in range(self.m)]
+            return np.argmin(evaluated_putative_bounds)
+        else:
+            if sum([np.isnan(x) for x in self.base_probas]) > 0:
+                print("Found Nan Values in the sampling procedure for base index")
+                IPython.embed()
+            sample_array = np.random.choice(range(self.m), 1, p=self.base_probas)
+            return sample_array[0]
 
 
     def normalize_distribution(self):
-        self.distribution_base_parameters = [1.0/(x**2) for x in self.putative_bounds_multipliers]
+        if self.classic:
+            self.base_probas = [0 for _ in range(self.m)]
+            self.base_probas[self.sample_base_index()] = 1 
 
-        #masked_distribution_base_params = [x*y for (x,y) in zip(self.algorithm_mask, self.distribution_base_parameters)]
-        normalization_factor = np.sum(self.distribution_base_parameters)
-        self.base_probas = [x/normalization_factor for x in self.distribution_base_parameters]
+        else:
+            self.distribution_base_parameters = [1.0/(x**2) for x in self.putative_bounds_multipliers]
+
+            normalization_factor = np.sum(self.distribution_base_parameters)
+            self.base_probas = [x/normalization_factor for x in self.distribution_base_parameters]
     
 
 
@@ -344,30 +357,24 @@ class BalancingHyperparamDoubling:
         return self.base_probas
 
 
-    def get_misspecified_algos(self,sandwich_intervals):
+    def get_misspecified_algos(self,lower_bounds, upper_bounds):
         misspecified_algo_indices = []
 
+        max_lower_bound = max(lower_bounds)
+
+        misspecified_algo_indices = []
+        wellspecified_algo_indices = []
         for i in range(self.m):
-            for j in range(i+1, self.m):
+            if upper_bounds[i] < max_lower_bound:
+                misspecified_algo_indices.append(i)
+            else:
+                wellspecified_algo_indices.append(i)
+        return misspecified_algo_indices, wellspecified_algo_indices
 
-                    ### Algorithm i may be misspecified
-                    if sandwich_intervals[i][1] < sandwich_intervals[j][0]:
-                        print("Detected Misspecification for algorithm ", i)
-                        misspecified_algo_indices.append(i)
-                        #self.min_suriving_algo_index = max(self.min_suriving_algo_index, i+1)
-                
-        
-                    ### Algorithm j may be misspecified
-                    if sandwich_intervals[j][1] < sandwich_intervals[i][0]:
-                        print("Detected Misspecification for algorithm ", j)
-                        misspecified_algo_indices.append(j)
-                        #self.min_suriving_algo_index = max(self.min_suriving_algo_index, j+1)
 
-        return misspecified_algo_indices
+
 
     def update_distribution(self, algo_idx, reward, more_info = dict([])):
-        #proba = self.base_probas[algo_idx]
-        #self.pulls_per_arm[algo_idx] += 1
         self.all_rewards += reward
 
         self.cumulative_rewards[algo_idx] += reward
@@ -377,7 +384,12 @@ class BalancingHyperparamDoubling:
         self.mean_rewards[algo_idx] = self.cumulative_rewards[algo_idx]*1.0/self.num_plays[algo_idx]
 
 
+        vstar_lowerbounds = [0 for _ in range(self.m)]
+        vstar_upperbounds = [0 for _ in range(self.m)]
 
+        for i in range(self.m):
+            vstar_lowerbounds[i] = self.mean_rewards[i] - self.balancing_test_multiplier/np.sqrt(self.num_plays[i])
+            vstar_upperbounds[i] =  self.mean_rewards[i] + self.putative_bounds_multipliers[i]/np.sqrt(self.num_plays[i])
 
 
 
@@ -386,30 +398,36 @@ class BalancingHyperparamDoubling:
             self.vstar_upperbounds[i] =  self.mean_rewards[i] + self.putative_bounds_multipliers[i]/np.sqrt(self.num_plays[i])
 
         
+        misspecified_algo_indices, wellspecified_algo_indices = self.get_misspecified_algos(vstar_lowerbounds, vstar_upperbounds)
 
+        ### all putative bounds for misspecified algo indices need to be increased  
+        for i in misspecified_algo_indices:
+            new_putative_bound = 2*self.putative_bounds_multipliers[i]
+            self.putative_bounds_multipliers[i] = min(new_putative_bound, self.maximum_putative)
+
+
+        ### Compute upper bounds using half the current putative bounds
+        vstar_upperbounds = [0 for _ in range(self.m)]
+
+        for i in range(self.m):
+            vstar_upperbounds[i] =  self.mean_rewards[i] + .5*self.putative_bounds_multipliers[i]/np.sqrt(self.num_plays[i])
+
+
+        misspecified_algo_indices, wellspecified_algo_indices = self.get_misspecified_algos(vstar_lowerbounds, vstar_upperbounds)
+
+        ### Misspecified algorithms shouldn't be halved. Well specified should.
+        ### all putative bounds for misspecified algo indices need to be increased (only in resurrecting mode)  
 
         if self.resurrecting:
+            for i in wellspecified_algo_indices:
+                new_putative_bound = .5*self.putative_bounds_multipliers[i]
+                self.putative_bounds_multipliers[i] = max(new_putative_bound, self.minimum_putative)
 
-            #new_vstar_upperbounds = [0 for _ in range(self.m)]
-            max_lower_bound = max(self.vstar_lowerbounds)
 
-            for i in range(self.m):
-                putative_multiplier = max(self.putative_bounds_multipliers[i]/2, self.initial_putative_bound, .01)
-                new_upperbound = self.mean_rewards[i] + putative_multiplier/np.sqrt(self.num_plays[i])
-                if max_lower_bound <= new_upperbound:
-                        self.putative_bounds_multipliers[i] = putative_multiplier
+        for i in range(self.m):
+            self.vstar_lowerbounds[i] = self.mean_rewards[i] - self.balancing_test_multiplier/np.sqrt(self.num_plays[i])
+            self.vstar_upperbounds[i] =  self.mean_rewards[i] + self.putative_bounds_multipliers[i]/np.sqrt(self.num_plays[i])
 
-            #sandwich_intervals = list(zip(self.vstar_lowerbounds, new_vstar_upperbounds))
-
-            #for i in range(self.m):
-
-            #misspecified_algo_indices = self.get_misspecified_algos(sandwich_intervals)
-
-            #### algos to resurrect are those that are not misspecified after this halving
-
-            # for k in set(range(self.m)).difference(set(misspecified_algo_indices)):
-            #     self.putative_bounds_multipliers[i] *= .5
-            #     self.putative_bounds_multipliers[i] = max(self.putative_bounds_multipliers[i], self.initial_putative_bound, .01) 
 
 
 
@@ -425,27 +443,9 @@ class BalancingHyperparamDoubling:
 
         self.T += 1
 
-        sandwich_intervals = list(zip(self.vstar_lowerbounds, self.vstar_upperbounds))
-        misspecified_algo_indices = self.get_misspecified_algos(sandwich_intervals)
-
-        print("putative bounds multipliers ", self.putative_bounds_multipliers)
-        print("misspecified algo indices   ", misspecified_algo_indices)
-        print("sandwich_intervals          ", sandwich_intervals)
-
-        misspecified_algo_indices = set(misspecified_algo_indices)
-        for k in misspecified_algo_indices:
-            self.putative_bounds_multipliers[k] *= 2
-
-
-
-
 
 
         self.normalize_distribution()
-
-
-
-
 
 
 
@@ -615,283 +615,6 @@ class BalancingHyperparamSharp:
 
 
 
-# class BalancingHyperParam:
-class BalancingHyperparam:
-    def __init__(self, m, putative_bounds_multipliers, delta =0.01, 
-        importance_weighted = True, balancing_type = "BalancingSimple", burn_in_pulls = 5 ):
-        #self.hyperparam_list = hyperparam_list
-        self.m = m
-        self.putative_bounds_multipliers = putative_bounds_multipliers
-        self.T = 1
-        self.delta = delta
-        self.algorithm_mask = [1 for _ in range(self.m)]
-        self.counter = 0
-        self.distribution_base_parameters = [1.0/(x**2) for x in self.putative_bounds_multipliers]
-        #self.distribution_base_parameters = [1.0/x for x in self.putative_bounds_multipliers]
-
-        self.reward_statistics = [0 for _ in range(m)]
-        self.optimism_statistics = [0 for _ in range(m)]
-
-        self.pessimism_statistics = [0 for _ in range(m)]
-
-        self.normalize_distribution()
-        self.importance_weighted = importance_weighted
-        self.pulls_per_arm = [0 for _ in range(m)]
-
-        self.all_rewards = 0
-
-        self.burn_in_pulls = burn_in_pulls
-
-        self.balancing_type = balancing_type
-
-    def sample_base_index(self):
-        sample_array = np.random.choice(range(self.m), 1, p=self.base_probas)
-        return sample_array[0]
-
-
-    def normalize_distribution(self):
-        masked_distribution_base_params = [x*y for (x,y) in zip(self.algorithm_mask, self.distribution_base_parameters)]
-        normalization_factor = np.sum(masked_distribution_base_params)
-        self.base_probas = [x/normalization_factor for x in masked_distribution_base_params]
-       
-
-    def get_distribution(self):
-        return self.base_probas
-
-
-    def update_distribution(self, algo_idx, reward, more_info = dict([])):
-        proba = self.base_probas[algo_idx]
-        self.pulls_per_arm[algo_idx] += 1
-        self.all_rewards += reward
-
-
-
-
-
-        if proba == 0:
-            raise ValueError("Probability of taking this action was zero in balancing")
-        if self.importance_weighted:
-            self.reward_statistics[algo_idx] += reward/proba
-            self.pessimism_statistics[algo_idx]  += more_info["pessimistic_reward_predictions"]/proba
-            self.optimism_statistics[algo_idx]  += more_info["optimistic_reward_predictions"]/proba
-        else:
-            curr_arm_pulls = self.pulls_per_arm[algo_idx]
-            curr_avg = self.reward_statistics[algo_idx]
-            self.reward_statistics[algo_idx] = (curr_avg*(curr_arm_pulls-1) + reward)/curr_arm_pulls
-            curr_pess_avg = self.pessimism_statistics[algo_idx]
-            pess_reward = more_info["pessimistic_reward_predictions"]
-            self.pessimism_statistics[algo_idx]  += (curr_pess_avg*(curr_arm_pulls-1) + pess_reward)/curr_arm_pulls
-            curr_opt_avg = self.optimism_statistics[algo_idx]
-            opt_reward = more_info["optimistic_reward_predictions"]
-            self.optimism_statistics[algo_idx]  += (curr_opt_avg*(curr_arm_pulls-1) + opt_reward)/curr_arm_pulls
-
-
-        upper_bounds = []
-        lower_bounds = []
-
-
-
-        #if self.balancing_type in ["BalancingSimple", "BalancingAnalyticHybrid", "BalancingAnalytic"]
-
-
-        for i in range(self.m):
-            
-            putative_multiplier = self.putative_bounds_multipliers[i]
-            
-            if self.balancing_type == "BalancingSimple":
-
-
-                if self.importance_weighted:
-                    upper_bounds.append(self.reward_statistics[i] + (putative_multiplier**2)*np.sqrt(self.T) )
-                    lower_bounds.append(self.reward_statistics[i] - putative_multiplier*np.sqrt(self.T) )
-                else:
-                    upper_bounds.append(self.reward_statistics[i] + (putative_multiplier+1)/np.sqrt(self.pulls_per_arm[i]) )
-                    lower_bounds.append(self.reward_statistics[i] - 1.0/np.sqrt(self.pulls_per_arm[i] + .000000001) )
-
-
-            elif self.balancing_type == "BalancingAnalyticHybrid":
-
-                if self.importance_weighted:
-                    upper_bounds.append(self.optimism_statistics[i] + (putative_multiplier**2)*np.sqrt(self.T) )
-                    lower_bounds.append(self.reward_statistics[i] - putative_multiplier*np.sqrt(self.T) )
-                else:
-                    upper_bounds.append(self.optimism_statistics[i] )
-                    lower_bounds.append(self.reward_statistics[i] - 1.0/np.sqrt(self.pulls_per_arm[i]+ .000000001) )
-
-
-            elif self.balancing_type == "BalancingAnalytic":
-
-                if self.importance_weighted:
-                    upper_bounds.append(self.optimism_statistics[i] + (putative_multiplier**2)*np.sqrt(self.T) ) 
-                    lower_bounds.append(self.pessimism_statistics[i] - putative_multiplier*np.sqrt(self.T) )   
-                else:
-                    upper_bounds.append(self.optimism_statistics[i] ) 
-                    lower_bounds.append(self.pessimism_statistics[i] )
-
-
-            
-
-        print(self.balancing_type)
-        print("Rewards statistics ", self.reward_statistics)
-        print("pulls per arm ", self.pulls_per_arm)
-        print("Balancing Upper Bounds ", upper_bounds)
-        print("Balancing Lower Bounds ", lower_bounds)
-        print("Balancing algorithm masks ", self.algorithm_mask)
-        print("Balancing probabilities ",self.base_probas)
-
-        max_lower_bound = np.max(lower_bounds)
-
-
-
-
-
-
-
-        for i, mask in enumerate(self.algorithm_mask):
-            if mask  == 0: ## If the mask equals zero, get rid of the 
-                continue
-
-            if self.pulls_per_arm[i] < self.burn_in_pulls:
-                continue
-
-            if upper_bounds[i] < max_lower_bound:
-
-                print("The balancing algorithm eliminated a base learner.")
-                self.algorithm_mask[i] = 0
-
-        self.T += 1
-
-        self.normalize_distribution()
-
-
-
-# class BalancingHyperParam:
-class EpochBalancingHyperparam:
-    def __init__(self, m, putative_bounds_multipliers, delta =0.01, 
-        burn_in_pulls = 10, balancing_test_multiplier = 0, uniform_sampling = False ):
-        self.m = m
-        self.putative_bounds_multipliers = putative_bounds_multipliers
-        ### check these putative bounds are going up
-        curr_val = -float("inf")
-        for x in self.putative_bounds_multipliers:
-            if x < curr_val:
-                raise ValueError("The putative bound multipliers for EpochBalancing are not in increasing order.")
-
-            curr_val = x
-
-        self.balancing_test_multiplier = balancing_test_multiplier
-
-        self.T = 1
-        self.delta = delta
-        
-        self.min_suriving_algo_index = 0
-        self.algorithm_mask = [1 for _ in range(self.m)]
-
-
-        self.counter = 0
-        self.uniform_sampling = uniform_sampling
-
-        self.distribution_base_parameters = [1.0/x for x in self.putative_bounds_multipliers]
-        #self.distribution_base_parameters = [1.0/(x**2) for x in self.putative_bounds_multipliers]
-        #self.base_probas = 
-
-        self.all_rewards = 0
-        self.epoch_reward = 0
-        self.epoch_steps = 0
-        self.epoch_index = 0
-
-        self.epoch_optimistic_estimators = 0
-        self.epoch_pessimistic_estimators = 0
-
-        self.normalize_distribution()
-        self.burn_in_pulls = burn_in_pulls
-
-
-    def sample_base_index(self):
-        sample_array = np.random.choice(range(self.m), 1, p=self.base_probas)
-        return sample_array[0]
-
-
-    def normalize_distribution(self):
-        if not self.uniform_sampling:
-            #self.distribution_base_parameters = [1.0/x for x in self.putative_bounds_multipliers]
-            #else:
-            masked_distribution_base_params = [x*y for (x,y) in zip(self.algorithm_mask, self.distribution_base_parameters)]
-            normalization_factor = np.sum(masked_distribution_base_params)
-            self.base_probas = [x/normalization_factor for x in masked_distribution_base_params]
-       
-        else:
-            self.base_probas = np.ones(self.m)/(1.0*self.m)
-    
-
-
-    def get_distribution(self):
-        return self.base_probas
-
-
-    def update_distribution(self, algo_idx, reward, more_info = dict([])):
-        #proba = self.base_probas[algo_idx]
-        #self.pulls_per_arm[algo_idx] += 1
-        self.all_rewards += reward
-
-        self.epoch_reward += reward
-        self.epoch_steps += 1
-        self.epoch_optimistic_estimators += more_info["optimistic_reward_predictions"]
-        self.epoch_pessimistic_estimators += more_info["pessimistic_reward_predictions"]
-
-
-        print("Curr reward ", reward)
-        print("Opt reward pred ", more_info["optimistic_reward_predictions"])
-        print("Pess reward pred ", more_info["pessimistic_reward_predictions"])
-        print("All rewards ", self.all_rewards)
-        print("Epoch reward ", self.epoch_reward)
-        print("Epoch Steps ", self.epoch_steps)
-        print("Epoch index ", self.epoch_index)
-        print("Epoch optimistic estimators ", self.epoch_optimistic_estimators)
-        print("Epoch pessimistic estimators ", self.epoch_pessimistic_estimators)
-
-        print("Balancing algorithm masks ", self.algorithm_mask)
-        print("Balancing probabilities ",self.base_probas)
-
-        self.T += 1
-
-        print("Test low ", self.epoch_reward - self.balancing_test_multiplier*np.sqrt(self.epoch_steps), " > ", self.epoch_optimistic_estimators)
-        print("Test high ", self.epoch_reward + self.balancing_test_multiplier*np.sqrt(self.epoch_steps), " < ", self.epoch_pessimistic_estimators)
-
-
-
-        ### TEST:
-        if (self.epoch_optimistic_estimators  < self.epoch_reward - self.balancing_test_multiplier*np.sqrt(self.epoch_steps) or self.epoch_reward + self.balancing_test_multiplier*np.sqrt(self.epoch_steps) < self.epoch_pessimistic_estimators) and self.epoch_steps > self.burn_in_pulls and sum(self.algorithm_mask) > 1:
-
-            ### RESET EPOCH
-            self.epoch_reward = 0
-            self.epoch_steps = 0
-            self.epoch_optimistic_estimators = 0
-            self.epoch_pessimistic_estimators = 0
-
-            self.epoch_index += 1
-
-            #IPython.embed()
-
-            self.min_suriving_algo_index += 1
-            for i in range(self.min_suriving_algo_index):
-                self.algorithm_mask[i] = 0
-
-
-
-
-
-        self.normalize_distribution()
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -901,18 +624,8 @@ def train_epsilon_greedy_modsel(dataset, baseline_model, num_batches, batch_size
     verbose = False, decaying_epsilon = False, 
     restart_model_full_minimization = False, modselalgo = "Corral"):
     
-    # IPython.embed()
-    # raise ValueError("asldfkmalsdkfm")
 
-    if modselalgo == "Corral":
-        modsel_manager = CorralHyperparam(len(epsilons), T = num_batches) 
-    elif modselalgo == "CorralAnytime":
-        modsel_manager = CorralHyperparam(len(epsilons), T = num_batches, anytime = True) 
-    elif modselalgo == "BalancingSimple":
-        modsel_manager = SimpleBalancingHyperparam(len(epsilons), 
-            [1 for _ in range(len(epsilons))], delta =0.01)
-    else:
-        raise ValueError("Modselalgo type {} not recognized.".format(modselalgo))
+    modsel_manager = get_modsel_manager(modselalgo, epsilons, num_batches)
 
     (
         train_dataset,
@@ -1053,6 +766,46 @@ def train_epsilon_greedy_modsel(dataset, baseline_model, num_batches, batch_size
 
 
 
+
+def get_modsel_manager(modselalgo, parameters, num_batches):
+    if modselalgo == "Corral":
+        modsel_manager = CorralHyperparam(len(parameters), T = num_batches) ### hack
+    elif modselalgo == "CorralAnytime":
+        modsel_manager = CorralHyperparam(len(parameters), T = num_batches, eta = 1.0/np.sqrt(num_batches), anytime = True) 
+    elif modselalgo == "EXP3":
+        modsel_manager = EXP3Hyperparam(len(parameters), T = num_batches)
+    elif modselalgo == "EXP3Anytime":
+        modsel_manager = EXP3Hyperparam(len(parameters), T = num_batches, anytime = True)
+    elif modselalgo == "UCB":
+        modsel_manager = UCBHyperparam(len(parameters))
+    elif modselalgo == "BalancingSharp":
+        modsel_manager = BalancingHyperparamSharp(len(parameters), [max(x, .0000000001) for x in parameters])
+    elif modselalgo == "BalancingDoubling":
+        modsel_manager = BalancingHyperparamDoubling(len(parameters), min(parameters))
+    elif modselalgo == "BalancingDoResurrect":
+        modsel_manager = BalancingHyperparamDoubling(len(parameters), min(parameters), resurrecting = True)
+    elif modselalgo == "BalancingSharp":
+        modsel_manager = BalancingHyperparamSharp(len(parameters), [max(x, .0000000001) for x in parameters])
+    elif modselalgo == "BalancingDoubling":
+        modsel_manager = BalancingHyperparamDoubling(len(parameters), min(parameters))
+    elif modselalgo == "BalancingDoResurrect":
+        modsel_manager = BalancingHyperparamDoubling(len(parameters), min(parameters), resurrecting = True)
+    elif modselalgo == "BalancingDoResurrectDown":
+        modsel_manager = BalancingHyperparamDoubling(len(parameters), 10, resurrecting = True)
+    elif modselalgo == "BalancingDoResurrectClassic":
+        modsel_manager = BalancingHyperparamDoubling(len(parameters), min(parameters), 
+            resurrecting = True, classic = True)
+    else:
+        raise ValueError("Modselalgo type {} not recognized.".format(modselalgo))
+
+    return modsel_manager
+
+
+
+
+
+
+
 def train_mahalanobis_modsel(dataset, baseline_model, num_batches, batch_size, 
     num_opt_steps, opt_batch_size,
     representation_layer_sizes = [10, 10], threshold = .5, alphas = [1, .1, .01], lambda_reg = 1,
@@ -1062,23 +815,8 @@ def train_mahalanobis_modsel(dataset, baseline_model, num_batches, batch_size,
 
     num_alphas = len(alphas)
 
-    if modselalgo == "Corral":
-        modsel_manager = CorralHyperparam(len(alphas), T = num_batches) ### hack
-    elif modselalgo == "CorralAnytime":
-        modsel_manager = CorralHyperparam(len(alphas), T = num_batches, anytime = True) 
-    elif modselalgo == "BalancingSimple":
-        modsel_manager = BalancingHyperparam(len(alphas), 
-           [ x*representation_layer_sizes[-1] for x in alphas], delta =0.01, balancing_type = "BalancingSimple" )
-    elif modselalgo == "BalancingAnalytic":
-        modsel_manager = BalancingHyperparam(len(alphas), 
-            [ x*representation_layer_sizes[-1] for x in alphas], delta =0.01, balancing_type = "BalancingAnalytic")
-    elif modselalgo == "BalancingAnalyticHybrid":
-        modsel_manager = BalancingHyperparam(len(alphas), 
-            [ x*representation_layer_sizes[-1] for x in alphas], delta =0.01, balancing_type = "BalancingAnalyticHybrid")
-    elif modselalgo == "EpochBalancing":
-        modsel_manager = EpochBalancingHyperparam(len(alphas),   [ x*representation_layer_sizes[-1] for x in alphas])
-    else:
-        raise ValueError("Modselalgo type {} not recognized.".format(modselalgo))
+    modsel_manager = get_modsel_manager(modselalgo, alphas, num_batches)
+
     alpha = alphas[0]
     ### THE above is going to fail for linear representations.
 
@@ -1323,29 +1061,7 @@ def train_opt_reg_modsel(dataset, baseline_model, num_batches, batch_size,
     
 
     num_regs = len(regs)
-
-
-    if modselalgo == "Corral":
-        modsel_manager = CorralHyperparam(len(regs), T = num_batches) ### hack
-    elif modselalgo == "CorralAnytime":
-        modsel_manager = CorralHyperparam(len(regs), T = num_batches, eta = 1.0/np.sqrt(num_batches), anytime = True) 
-    elif modselalgo == "EXP3":
-        modsel_manager = EXP3Hyperparam(len(regs), T = num_batches)
-    elif modselalgo == "EXP3Anytime":
-        modsel_manager = EXP3Hyperparam(len(regs), T = num_batches, anytime = True)
-    elif modselalgo == "UCB":
-        modsel_manager = UCBHyperparam(len(regs))
-    
-    elif modselalgo == "BalancingSharp":
-        modsel_manager = BalancingHyperparamSharp(len(regs), [max(x, .0000000001) for x in regs])
-    elif modselalgo == "BalancingDoubling":
-        modsel_manager = BalancingHyperparamDoubling(len(regs), min(regs))
-   
-    elif modselalgo == "BalancingDoResurrect":
-        modsel_manager = BalancingHyperparamDoubling(len(regs), min(regs), resurrecting = True)
-
-    else:
-        raise ValueError("Modselalgo type {} not recognized.".format(modselalgo))
+    modsel_manager = get_modsel_manager(modselalgo, regs, num_batches)
 
     reg = regs[0]
     ### THE above is going to fail for linear representations.

@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import os
 
 import IPython
-from algorithmsmodsel import CorralHyperparam, EpochBalancingHyperparam, EXP3Hyperparam, UCBHyperparam, BalancingHyperparamSharp, BalancingHyperparamDoubling
+from algorithmsmodsel import CorralHyperparam, EXP3Hyperparam, UCBHyperparam, BalancingHyperparamSharp, BalancingHyperparamDoubling
 from algorithmsmodsel import UCBalgorithm
 
 np.random.seed(1000)
@@ -77,6 +77,10 @@ def test_MAB_modsel(means, stds, scalings, num_timesteps, confidence_radii,
 
 	if modselalgo == "Corral":
 		modsel_manager = CorralHyperparam(len(confidence_radii), T = num_timesteps) ### hack
+	elif modselalgo == "CorralHigh":
+		modsel_manager = CorralHyperparam(len(confidence_radii),  eta = 10, T = num_timesteps) ### hack
+	elif modselalgo == "CorralLow":
+		modsel_manager = CorralHyperparam(len(confidence_radii),  eta = .01, T = num_timesteps) ### hack
 	elif modselalgo == "CorralAnytime":
 		modsel_manager = CorralHyperparam(len(confidence_radii), T = num_timesteps, eta = 1.0/np.sqrt(num_timesteps), anytime = True) 
 	elif modselalgo == "EXP3":
@@ -86,12 +90,23 @@ def test_MAB_modsel(means, stds, scalings, num_timesteps, confidence_radii,
 	elif modselalgo == "UCB":
 		modsel_manager = UCBHyperparam(len(confidence_radii))
 	
+	elif modselalgo == "EXP3Low":
+			modsel_manager = EXP3Hyperparam(len(confidence_radii), T = num_timesteps, eta_multiplier = .1)
+
+	elif modselalgo == "EXP3High":
+			modsel_manager = EXP3Hyperparam(len(confidence_radii), T = num_timesteps, eta_multiplier = 10)
+
 	elif modselalgo == "BalancingSharp":
 		modsel_manager = BalancingHyperparamSharp(len(confidence_radii), [max(x, .0000000001) for x in confidence_radii])
 	elif modselalgo == "BalancingDoubling":
 		modsel_manager = BalancingHyperparamDoubling(len(confidence_radii), min(confidence_radii))
 	elif modselalgo == "BalancingDoResurrect":
 		modsel_manager = BalancingHyperparamDoubling(len(confidence_radii), min(confidence_radii), resurrecting = True)
+	elif modselalgo == "BalancingDoResurrectDown":
+		modsel_manager = BalancingHyperparamDoubling(len(confidence_radii), 10, resurrecting = True)
+	elif modselalgo == "BalancingDoResurrectClassic":
+		modsel_manager = BalancingHyperparamDoubling(len(confidence_radii), min(confidence_radii), 
+			resurrecting = True, classic = True)
 
 	else:
 		raise ValueError("Modselalgo type {} not recognized.".format(modselalgo))
@@ -177,6 +192,7 @@ if __name__ == "__main__":
 
 	num_timesteps = int(sys.argv[1])
 	exp_type = str(sys.argv[2])
+	num_experiments = int(sys.argv[3])
 
 	if exp_type == "exp1":
 		means = [.1, .2, .5, .55]
@@ -230,7 +246,6 @@ if __name__ == "__main__":
 	if not os.path.exists(exp_data_dir):
 		os.mkdir(exp_data_dir)
 
-
 	exp_data_dir_T = "{}/T{}".format(exp_data_dir, num_timesteps)
 	if not os.path.exists(exp_data_dir_T):
 		os.mkdir(exp_data_dir_T)
@@ -239,24 +254,12 @@ if __name__ == "__main__":
 	if not os.path.exists(per_experiment_data):
 		os.mkdir(per_experiment_data)
 
-
 	with open('{}/info.txt'.format(exp_data_dir), 'w') as f:
 	    f.write(exp_info)
 
 
-	#raise ValueError("alsdkfmaslkdfmaslkdfmalsdkmf")
-
-
-
-	colors = ["red", "orange", "violet", "black", "brown", "yellow", "green", "gray"]
-	#num_timesteps = 5000
-
-	num_experiments = 200
-
-	#split = True
-
-	
-	modselalgos = [ "BalancingDoResurrect"]# "BalancingDoubling"]#"BalancingDoResurrect", "BalancingSharp", "UCB", "EXP3", "Corral" ]
+	colors = ["red", "orange", "violet", "black", "brown", "yellow", "green", "gray"]	
+	modselalgos = ['BalancingDoResurrectClassic','BalancingDoResurrectDown', "BalancingDoResurrect"]#"BalancingDoubling"]# "BalancingDoubling"]#"BalancingDoResurrect", "BalancingSharp", "UCB", "EXP3", "Corral" ]
 
 	normalization_visualization = 1.0/np.sqrt( np.arange(num_timesteps) + 1)
 	normalization_visualization *= 1.0/np.log( np.arange(num_timesteps) + 2)
@@ -264,7 +267,6 @@ if __name__ == "__main__":
 
 
 	#### RUN THE BASELINES
-
 	baselines_results = []
 
 	for confidence_radius in confidence_radii:
@@ -375,27 +377,31 @@ if __name__ == "__main__":
 			### EXP3 check probabilities.
 			### Add artificially wrong learners.?
 
-			### Do one run. Plot the actual regrets of the base learners played by 
-			### the model selection algorithm.
-
-			### plot the computed regret upper bounds for the bases.
-			### change np.argmax in the UCB algorithm
 
 
-			### Double check that random seed setting is actually correct. 
 
 
+
+			### plot all the model selection together .... Add an extra plot. 
+			### Implement SuperClassic^2 --- original version (with elimination)
 
 
 			### Try our original balancing with the widths of the base learners. 
+			### halving algorithm
 
+			### Fair tuning of the baselines. 
+			### different learning rates for CORRAL / EXP3. (sensitivity analysis). Pick the best LR. 
 
+			### Multiple levels of noise. --- We want to see the algorithm is flexible enough to operate well 
+			### accross different scenarios. 
+			### when the variance is small. Bernstein stuff works. 
 
-			### Same experiment with multiple levels of noise. 
 			### Model selection algos will do well.
 
+			### Nested Corrals to pick learning rates.
 
-
+			## Doubling with a smaller putative bound. (say log t)
+			## CRITEO dataset
 
 			for confidence_radius, baseline_result_tuple, color in zip(confidence_radii, baselines_results, colors):
 				mean_cum_regrets, std_cum_regrets = baseline_result_tuple
@@ -415,6 +421,8 @@ if __name__ == "__main__":
 				plt.savefig("{}/regret_modsel_test_{}_T{}.png".format(exp_data_dir_T, modselalgo,num_timesteps))
 
 			plt.close("all")
+
+			#IPython.embed()
 
 			
 			if PLOT_ALL_STATS:
