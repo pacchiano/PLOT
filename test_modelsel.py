@@ -611,6 +611,8 @@ if __name__ == "__main__":
 
 	results_dictionary = dict([])
 
+
+
 	for dataset in datasets:
 		#IPython.embed()
 		# if RUN_EPSILON or RUN_MAHALANOBIS or RUN_OPT_REG:
@@ -646,6 +648,8 @@ if __name__ == "__main__":
 			for opt_reg_res_tuple in opt_reg_results_list:
 				results_dictionary[opt_reg_res_tuple[0]] = opt_reg_res_tuple[1]	
 
+
+		IPython.embed()
 
 		results_dictionary_split = deepcopy(results_dictionary)
 		
