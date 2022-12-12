@@ -259,7 +259,7 @@ def plot_modsel_probabilities(algo_name, dataset, num_batches, batch_size, modse
 
 
 
-	modsel_results = results_dictionary["{} {}".format(algo_name, modselalgo)]
+	modsel_results = results_dictionary["{} split{} {}".format(algo_name, split, modselalgo)]
 
 
 	probs =np.array([x["modselect_info"] for x in modsel_results])
@@ -654,7 +654,7 @@ if __name__ == "__main__":
 
 		#IPython.embed()
 
-		results_dictionary_split = deepcopy(results_dictionary)
+		#results_dictionary_split = deepcopy(results_dictionary)
 		
 		for split in [True, False]:
 
@@ -762,5 +762,11 @@ if __name__ == "__main__":
 
 				plot_optimism_pessimism(algo_type_key, dataset, num_batches, batch_size, results_dictionary, 
 					hyperparams, colors, representation_layer_sizes, averaging_window = averaging_window)
+
+
+			# ## plot all the model selection results together
+			# plot_results(algo_type_key, dataset, "instantaneous_accuracies", num_batches, batch_size, modselalgo, 
+			# 			results_dictionary, hyperparams, colors, representation_layer_sizes = representation_layer_sizes,
+			# 			cummulative_plot = False, averaging_window = averaging_window, split = split)
 
 
