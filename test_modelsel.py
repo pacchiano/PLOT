@@ -525,7 +525,7 @@ def plot_results(algo_name, dataset, results_type, num_batches, batch_size, mods
 
 
 
-def plot_contrast_modsel_results(algo_name, dataset, results_type, num_batches, batch_size, modsel_keys, 
+def plot_contrast_modsel_results(algo_name, dataset, results_type, num_batches, batch_size, modselalgos, modsel_keys, 
 	results_dictionary, colors, representation_layer_sizes, cummulative_plot = False, 
 	averaging_window = 1 , split=False):
 
@@ -547,7 +547,7 @@ def plot_contrast_modsel_results(algo_name, dataset, results_type, num_batches, 
 		os.mkdir(logging_dir)
 
 
-	for modsel_key in modsel_keys:
+	for modsel_key, modselalgo in zip(modsel_keys, modselalgos):
 
 		##### PLOTTING modsel results.
 		modsel_results = results_dictionary[modsel_key]
@@ -858,10 +858,10 @@ if __name__ == "__main__":
 				plot_optimism_pessimism(algo_type_key, dataset, num_batches, batch_size, results_dictionary, 
 					hyperparams, colors, representation_layer_sizes, averaging_window = averaging_window)
 
-			IPython.embed()
+			#IPython.embed()
 
 			# ## plot all the model selection results together
-			plot_contrast_modsel_results(algo_type_key, dataset, "instantaneous_regrets", num_batches, batch_size, modsel_keys, 
+			plot_contrast_modsel_results(algo_type_key, dataset, "instantaneous_regrets", num_batches, batch_size, modselalgos, modsel_keys, 
 				results_dictionary, colors, representation_layer_sizes, cummulative_plot = True, 
 				averaging_window = averaging_window , split=split)
 
