@@ -570,7 +570,7 @@ if __name__ == "__main__":
 	num_experiments = int(sys.argv[3])
 
 	USE_RAY = sys.argv[4] == "True" #False
-	if sys.argv[3] not in ["True", "False"]:
+	if sys.argv[4] not in ["True", "False"]:
 		raise ValueError("USE_RAY key not in [True, False]")
 	# IPython.embed()
 	# raise ValueError("asdlfkm")
