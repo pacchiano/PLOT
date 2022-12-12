@@ -16,7 +16,6 @@ from algorithms_remote import train_epsilon_greedy_remote, train_epsilon_greedy_
 
 #USE_RAY = False
 PLOT_ALL_STATS = False
-USE_RAY = True
 
 def process_results(results_list):
     mean = np.mean(results_list, 0)
@@ -559,15 +558,20 @@ def get_architecture_name(representation_layer_sizes):
 
 if __name__ == "__main__":
 
+
+	
+
 	algo_name = sys.argv[1]
 	if algo_name not in ["mahalanobis", "epsilon", "opt_reg"]:
 		raise ValueError("Algorithm name not in allowed algorithms {}".format(algo_name))
 
 	num_batches = int(sys.argv[2])
 
-	# split = sys.argv[3] == "True" #False
-	# if sys.argv[3] not in ["True", "False"]:
-	# 	raise ValueError("Split key not in [True, False]")
+	num_experiments = int(sys.argv[3])
+
+	USE_RAY = sys.argv[4] == "True" #False
+	if sys.argv[3] not in ["True", "False"]:
+		raise ValueError("USE_RAY key not in [True, False]")
 	# IPython.embed()
 	# raise ValueError("asdlfkm")
 
@@ -589,7 +593,6 @@ if __name__ == "__main__":
 	restart_model_full_minimization = True
 
 	batch_size = 10
-	num_experiments = 10
 
 	representation_layer_sizes = [100,10]
 
