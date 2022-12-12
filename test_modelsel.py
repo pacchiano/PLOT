@@ -701,7 +701,7 @@ if __name__ == "__main__":
 
 	#colors = plt.cm.viridis(range(len(modselalgos) + len(alphas)))
 
-	colors = matplotlib.colors.TABLEAU_COLORS.keys()
+	colors = list(matplotlib.colors.TABLEAU_COLORS.keys())
 
 
 
