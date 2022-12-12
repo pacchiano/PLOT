@@ -435,26 +435,12 @@ def plot_results(algo_name, dataset, results_type, num_batches, batch_size, mods
 
 
 
-
-
-
-
-
-		#IPython.embed()
-		
-
-
 		plt.plot(Ts, hyperparam_results_mean, color = colors[color_index] ,  label = "{}-{}".format(algo_name,hyperparam))
 		plt.fill_between(Ts, hyperparam_results_mean-.5*hyperparam_results_std, 
 			hyperparam_results_mean+.5*hyperparam_results_std, color = colors[color_index], alpha = .2)
 
 
 		color_index += 1
-
-		# IPython.embed()
-		# raise ValueError("asldfkm")
-
-
 
 	##### PLOTTING modsel results.
 	modsel_results = results_dictionary["{} split{} {}".format(algo_name, split, modselalgo)]
@@ -591,7 +577,7 @@ def plot_contrast_modsel_results(algo_name, dataset, results_type, num_batches, 
 
 
 
-
+		color_index += 1
 
 	##### get label
 	label = results_type
@@ -631,12 +617,12 @@ def plot_contrast_modsel_results(algo_name, dataset, results_type, num_batches, 
 	plt.legend(fontsize=8, loc="upper left")
 
 	if not split:
-		filename = "{}/{}_cum_{}-{}_{}_T{}_B{}_N_{}.png".format(logging_dir,results_type, cummulative_plot, 
+		filename = "{}/combined_{}_cum_{}-{}_{}_T{}_B{}_N_{}.png".format(logging_dir,results_type, cummulative_plot, 
 			algo_name,dataset, num_batches, batch_size, repres_layers_name)
 
 	else:
 
-		filename = "{}/{}-split_cum_{}-{}_{}_T{}_B{}_N_{}.png".format(logging_dir,results_type, cummulative_plot, 
+		filename = "{}/combined_{}-split_cum_{}-{}_{}_T{}_B{}_N_{}.png".format(logging_dir,results_type, cummulative_plot, 
 			algo_name,dataset, num_batches, batch_size, repres_layers_name)
 
 	plt.savefig(filename)
@@ -807,7 +793,7 @@ if __name__ == "__main__":
 
 					results_dictionary[opt_reg_modsel_results_tuple[0]] = opt_reg_modsel_results_tuple[1]
 
-					mosel_keys.append(opt_reg_modsel_results_tuple[0])
+					modsel_keys.append(opt_reg_modsel_results_tuple[0])
 
 				pickle_results_filename_stub = get_pickle_filename_stub(dataset, num_batches,batch_size,repres_layers_name, split)
 
@@ -871,6 +857,8 @@ if __name__ == "__main__":
 
 				plot_optimism_pessimism(algo_type_key, dataset, num_batches, batch_size, results_dictionary, 
 					hyperparams, colors, representation_layer_sizes, averaging_window = averaging_window)
+
+			IPython.embed()
 
 			# ## plot all the model selection results together
 			plot_contrast_modsel_results(algo_type_key, dataset, "instantaneous_regrets", num_batches, batch_size, modsel_keys, 
