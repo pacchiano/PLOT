@@ -674,7 +674,7 @@ if __name__ == "__main__":
 	epsilon = .1
 	alpha = 10
 	epsilons = [.2, .1, .01, .05]
-	alphas = [.05, .5, 1, 4]#[.000001, 1/4.0, 1/2.0, 1, 2, 4, 8 ]
+	alphas = [.05, .5]#, 1, 4]#[.000001, 1/4.0, 1/2.0, 1, 2, 4, 8 ]
 	opt_regs = [.08, .16, 1, 10]
 	decaying_epsilon = False
 
@@ -692,7 +692,7 @@ if __name__ == "__main__":
 
 
 
-	modselalgos = [ 'BalancingDoResurrectClassic','BalancingDoResurrectDown', "BalancingDoResurrect", "BalancingDoubling", "Corral", "UCB", "EXP3"]
+	modselalgos = [ 'BalancingDoResurrectClassic','BalancingDoResurrectDown', "BalancingDoResurrect"]#, "BalancingDoubling", "Corral", "UCB", "EXP3"]
 	datasets = ["Adult"]#, "German", "Bank", "Crime", "Adult-10_10", "German-10_10","Crime-10_10","Bank-10_10", ]# ["Adult-10_10", "German-10_10","Crime-10_10","Bank-10_10", "Adult", "German", "Bank", "Crime"]#, "German", "Bank", "Adult"]"Adult-10-10"]#,
 
 
