@@ -525,7 +525,8 @@ def plot_results(algo_name, dataset, results_type, num_batches, batch_size, mods
 
 
 
-def plot_contrast_modsel_results(algo_name, dataset, results_type, num_batches, batch_size, modselalgos, modsel_keys, 
+def plot_contrast_modsel_results(algo_name, dataset, results_type, num_batches, batch_size, 
+	modselalgos, modsel_keys, 
 	results_dictionary, colors, representation_layer_sizes, cummulative_plot = False, 
 	averaging_window = 1 , split=False):
 
@@ -546,6 +547,8 @@ def plot_contrast_modsel_results(algo_name, dataset, results_type, num_batches, 
 	if not os.path.exists(logging_dir):
 		os.mkdir(logging_dir)
 
+
+	IPython.embed()
 
 	for modsel_key, modselalgo in zip(modsel_keys, modselalgos):
 
@@ -696,9 +699,9 @@ if __name__ == "__main__":
 	datasets = ["Adult"]#, "German", "Bank", "Crime", "Adult-10_10", "German-10_10","Crime-10_10","Bank-10_10", ]# ["Adult-10_10", "German-10_10","Crime-10_10","Bank-10_10", "Adult", "German", "Bank", "Crime"]#, "German", "Bank", "Adult"]"Adult-10-10"]#,
 
 
-	colors = plt.cm.viridis(range(len(modselalgos) + len(alphas)))
+	#colors = plt.cm.viridis(range(len(modselalgos) + len(alphas)))
 
-	#matplotlib.colors.TABLEAU_COLORS.keys()
+	colors = matplotlib.colors.TABLEAU_COLORS.keys()
 
 
 
