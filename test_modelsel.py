@@ -235,7 +235,7 @@ def run_modsel_opt_reg_experiments(dataset, regs, modselalgo, num_experiments, b
     		restart_model_full_minimization = restart_model_full_minimization, modselalgo = modselalgo, 
     		split = split, burn_in = burn_in) for _ in range(num_experiments)]
 		
-	return ("opt_reg split {} {}".format(split, modselalgo),opt_reg_modsel_results )#, mahalanobis_results_list
+	return ("opt_reg split{} {}".format(split, modselalgo),opt_reg_modsel_results )#, mahalanobis_results_list
 
 
 
@@ -457,7 +457,7 @@ def plot_results(algo_name, dataset, results_type, num_batches, batch_size, mods
 
 
 	##### PLOTTING modsel results.
-	modsel_results = results_dictionary["{} split {} {}".format(algo_name, split, modselalgo)]
+	modsel_results = results_dictionary["{} split{} {}".format(algo_name, split, modselalgo)]
 
 
 
@@ -652,7 +652,7 @@ if __name__ == "__main__":
 				results_dictionary[opt_reg_res_tuple[0]] = opt_reg_res_tuple[1]	
 
 
-		IPython.embed()
+		#IPython.embed()
 
 		results_dictionary_split = deepcopy(results_dictionary)
 		
