@@ -59,7 +59,7 @@ def run_train_baseline(dataset, num_experiments, batch_size = 32, num_timesteps 
 
 def run_epsilon_greedy_experiments(dataset, epsilons, modselalgo, num_experiments, baseline_model, 
 	num_batches, batch_size, decaying_epsilon, num_opt_steps = 1000, 
-	opt_batch_size = 20, representation_layer_sizes = [10, 10], restart_model_full_minimization = False):
+	opt_batch_size = 20, representation_layer_sizes = [10, 10], restart_model_full_minimization = False, split = False):
 	if USE_RAY:
 		
 		epsilon_greedy_modsel_results = [train_epsilon_greedy_modsel_remote.remote(dataset, baseline_model, 
@@ -109,7 +109,7 @@ def run_epsilon_greedy_experiments(dataset, epsilons, modselalgo, num_experiment
 
 		epsilon_greedy_results_list.append(("epsilon-{}".format(epsilon), epsilon_greedy_results))
 
-	return ("epsilon {}".format(modselalgo), epsilon_greedy_modsel_results), epsilon_greedy_results_list
+	return ("epsilon split{} {}".format(split, modselalgo), epsilon_greedy_modsel_results), epsilon_greedy_results_list
 
 
 
@@ -539,6 +539,114 @@ def plot_results(algo_name, dataset, results_type, num_batches, batch_size, mods
 
 
 
+def plot_contrast_modsel_results(algo_name, dataset, results_type, num_batches, batch_size, modsel_keys, 
+	results_dictionary, colors, representation_layer_sizes, cummulative_plot = False, 
+	averaging_window = 1 , split=False):
+
+
+	Ts = (np.arange(num_batches/averaging_window)+1)*averaging_window
+	color_index = 0
+
+
+	if results_type != "instantaneous_regrets" and cummulative_plot == True:
+		raise ValueError("Results type {} does not support cummulative plot".format(results_type))
+
+	logging_dir = "./ModselResults/T{}".format(num_batches)
+	if not os.path.exists(logging_dir):
+		os.mkdir(logging_dir)
+
+
+	logging_dir = "./ModselResults/T{}/{}".format(num_batches, dataset)
+	if not os.path.exists(logging_dir):
+		os.mkdir(logging_dir)
+
+
+	for modsel_key in modsel_keys:
+
+		##### PLOTTING modsel results.
+		modsel_results = results_dictionary[modsel_key]
+
+
+
+		if cummulative_plot:
+			modsel_stats = np.array([np.cumsum(x[results_type]) for x in modsel_results])
+		else:
+			modsel_stats = np.array([x[results_type] for x in modsel_results])
+
+
+		modsel_stat_mean = np.mean(modsel_stats,0)
+		modsel_stat_std = np.std(modsel_stats,0)
+
+
+		#IPython.embed()
+
+		modsel_stat_mean = np.mean(modsel_stat_mean.reshape(int(num_batches/averaging_window), averaging_window), 1)
+		modsel_stat_std = np.mean(modsel_stat_std.reshape(int(num_batches/averaging_window), averaging_window), 1)
+
+
+
+		plt.plot(Ts, modsel_stat_mean, color = colors[color_index] ,  label = "{} {}".format(algo_name, modselalgo))
+		plt.fill_between(Ts, modsel_stat_mean-.5*modsel_stat_std, 
+			modsel_stat_mean+.5*modsel_stat_std, color = colors[color_index], alpha = .2)
+
+
+
+
+
+	##### get label
+	label = results_type
+	if results_type == "instantaneous_regrets" and cummulative_plot == True:
+		label = "Regret"
+
+	elif results_type == "instantaneous_regrets" and cummulative_plot == False:
+		label = "Instantaneous regrets"
+
+
+	elif results_type == "instantaneous_accuracies":
+		label = "Instantaneous accuracies"
+
+	elif results_type == "num_negatives":
+		label = "Negatives"
+
+	elif results_type == "num_positives":
+		label = "Positives"
+
+	elif results_type == "false_neg_rates":
+		label = "False Negatives"
+
+	elif results_type == "false_positive_rates":
+		label = "False Positives"
+	else:
+		raise ValueError("Unrecognized option {}".format(results_type))
+	
+
+	repres_layers_name = get_architecture_name(representation_layer_sizes)
+
+
+	plt.title("{} {} {} B{} N {}".format( label, modselalgo, dataset, batch_size, repres_layers_name))
+	plt.xlabel("Number of batches")
+
+	plt.ylabel(label)
+	# plt.legend(bbox_to_anchor=(1.05, 1), fontsize=8, loc="upper left")
+	plt.legend(fontsize=8, loc="upper left")
+
+	if not split:
+		filename = "{}/{}_cum_{}-{}_{}_T{}_B{}_N_{}.png".format(logging_dir,results_type, cummulative_plot, 
+			algo_name,dataset, num_batches, batch_size, repres_layers_name)
+
+	else:
+
+		filename = "{}/{}-split_cum_{}-{}_{}_T{}_B{}_N_{}.png".format(logging_dir,results_type, cummulative_plot, 
+			algo_name,dataset, num_batches, batch_size, repres_layers_name)
+
+	plt.savefig(filename)
+	plt.close("all")
+
+
+
+
+
+
 
 
 
@@ -602,7 +710,7 @@ if __name__ == "__main__":
 	datasets = ["Adult"]#, "German", "Bank", "Crime", "Adult-10_10", "German-10_10","Crime-10_10","Bank-10_10", ]# ["Adult-10_10", "German-10_10","Crime-10_10","Bank-10_10", "Adult", "German", "Bank", "Crime"]#, "German", "Bank", "Adult"]"Adult-10-10"]#,
 
 
-	colors = plt.cm.viridis(len(modselalgos) + len(alphas))
+	colors = plt.cm.viridis(range(len(modselalgos) + len(alphas)))
 
 	#matplotlib.colors.TABLEAU_COLORS.keys()
 
@@ -657,7 +765,7 @@ if __name__ == "__main__":
 		#results_dictionary_split = deepcopy(results_dictionary)
 		
 		for split in [True, False]:
-
+			modsel_keys = []
 			for modselalgo in modselalgos:
 
 				### Run epsilon-greedy model selection experiments
@@ -675,7 +783,7 @@ if __name__ == "__main__":
 						#else:
 						#	results_dictionary[eps_res_tuple[0]] = eps_res_tuple[1]
 
-
+					modsel_keys.append(eps_res_tuple[0])
 				if algo_name == "mahalanobis":
 
 					mahalanobis_modsel_results_tuple = run_modsel_mahalanobis_experiments(dataset, alphas, modselalgo, num_experiments, baseline_model, num_batches, 
@@ -687,7 +795,8 @@ if __name__ == "__main__":
 					results_dictionary[mahalanobis_modsel_results_tuple[0]] = mahalanobis_modsel_results_tuple[1]
 
 
-
+					modsel_keys.append(mahalanobis_modsel_results_tuple[0])
+				
 				if algo_name == "opt_reg":
 
 					opt_reg_modsel_results_tuple = run_modsel_opt_reg_experiments(dataset, opt_regs, modselalgo, num_experiments, baseline_model, num_batches, 
@@ -698,7 +807,7 @@ if __name__ == "__main__":
 
 					results_dictionary[opt_reg_modsel_results_tuple[0]] = opt_reg_modsel_results_tuple[1]
 
-
+					mosel_keys.append(opt_reg_modsel_results_tuple[0])
 
 				pickle_results_filename_stub = get_pickle_filename_stub(dataset, num_batches,batch_size,repres_layers_name, split)
 
@@ -763,10 +872,10 @@ if __name__ == "__main__":
 				plot_optimism_pessimism(algo_type_key, dataset, num_batches, batch_size, results_dictionary, 
 					hyperparams, colors, representation_layer_sizes, averaging_window = averaging_window)
 
-
 			# ## plot all the model selection results together
-			# plot_results(algo_type_key, dataset, "instantaneous_accuracies", num_batches, batch_size, modselalgo, 
-			# 			results_dictionary, hyperparams, colors, representation_layer_sizes = representation_layer_sizes,
-			# 			cummulative_plot = False, averaging_window = averaging_window, split = split)
+			plot_contrast_modsel_results(algo_type_key, dataset, "instantaneous_regrets", num_batches, batch_size, modsel_keys, 
+				results_dictionary, colors, representation_layer_sizes, cummulative_plot = True, 
+				averaging_window = averaging_window , split=split)
+
 
 
