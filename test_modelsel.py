@@ -5,8 +5,10 @@ import pickle
 import sys
 import IPython
 import os
-from utilities import pickle_and_zip
+from copy import deepcopy
+import matplotlib.colors
 
+from utilities import pickle_and_zip
 from algorithmsmodsel import train_epsilon_greedy_modsel, train_mahalanobis_modsel, train_opt_reg_modsel
 from algorithms import train_epsilon_greedy, train_mahalanobis, train_baseline, train_opt_reg
 from algorithms_remote import train_epsilon_greedy_remote, train_epsilon_greedy_modsel_remote, train_baseline_remote, train_mahalanobis_remote, train_mahalanobis_modsel_remote, train_opt_reg_modsel_remote, train_opt_reg_remote
@@ -133,7 +135,7 @@ def run_modsel_mahalanobis_experiments(dataset, alphas, modselalgo, num_experime
 	    restart_model_full_minimization = restart_model_full_minimization, modselalgo = modselalgo,
 	    split = split) for _ in range(num_experiments)]
 		
-	return ("alpha {}".format(modselalgo),mahalanobis_modsel_results )#, mahalanobis_results_list
+	return ("alpha split{} {}".format(split, modselalgo),mahalanobis_modsel_results )#, mahalanobis_results_list
 
 
 
@@ -234,7 +236,7 @@ def run_modsel_opt_reg_experiments(dataset, regs, modselalgo, num_experiments, b
     		restart_model_full_minimization = restart_model_full_minimization, modselalgo = modselalgo, 
     		split = split, burn_in = burn_in) for _ in range(num_experiments)]
 		
-	return ("opt_reg {}".format(modselalgo),opt_reg_modsel_results )#, mahalanobis_results_list
+	return ("opt_reg split {} {}".format(split, modselalgo),opt_reg_modsel_results )#, mahalanobis_results_list
 
 
 
@@ -456,7 +458,7 @@ def plot_results(algo_name, dataset, results_type, num_batches, batch_size, mods
 
 
 	##### PLOTTING modsel results.
-	modsel_results = results_dictionary["{} {}".format(algo_name, modselalgo)]
+	modsel_results = results_dictionary["{} split {} {}".format(algo_name, split, modselalgo)]
 
 
 
@@ -589,13 +591,19 @@ if __name__ == "__main__":
 	batch_size = 10
 	num_experiments = 10
 
-	representation_layer_sizes = [10,10]
+	representation_layer_sizes = [100,10]
 
 
-	colors = ["blue", "red", "orange", "black", "violet", "orange", "green", "brown", "gray"]
 
-	modselalgos = [ "BalancingDoResurrect"]#"BalancingDoubling"]## ["Corral", "BalancingSharp", "UCB", "EXP3", "Corral"]
+	modselalgos = [ 'BalancingDoResurrectClassic','BalancingDoResurrectDown', "BalancingDoResurrect", "BalancingDoubling", "Corral", "UCB", "EXP3"]
 	datasets = ["Adult"]#, "German", "Bank", "Crime", "Adult-10_10", "German-10_10","Crime-10_10","Bank-10_10", ]# ["Adult-10_10", "German-10_10","Crime-10_10","Bank-10_10", "Adult", "German", "Bank", "Crime"]#, "German", "Bank", "Adult"]"Adult-10-10"]#,
+
+
+	colors = plt.cm.viridis(len(modselalgos) + len(alphas))
+
+	#matplotlib.colors.TABLEAU_COLORS.keys()
+
+
 
 	repres_layers_name = get_architecture_name(representation_layer_sizes)
 
@@ -639,7 +647,8 @@ if __name__ == "__main__":
 				results_dictionary[opt_reg_res_tuple[0]] = opt_reg_res_tuple[1]	
 
 
-
+		results_dictionary_split = deepcopy(results_dictionary)
+		
 		for split in [True, False]:
 
 			for modselalgo in modselalgos:
@@ -654,7 +663,10 @@ if __name__ == "__main__":
 					results_dictionary[epsilon_greedy_modsel_results_tuple[0]] = epsilon_greedy_modsel_results_tuple[1]
 
 					for eps_res_tuple in epsilon_greedy_results_list:
-						results_dictionary[eps_res_tuple[0]] = eps_res_tuple[1]
+						#if split:
+							results_dictionary[eps_res_tuple[0]] = eps_res_tuple[1]
+						#else:
+						#	results_dictionary[eps_res_tuple[0]] = eps_res_tuple[1]
 
 
 				if algo_name == "mahalanobis":
@@ -684,8 +696,6 @@ if __name__ == "__main__":
 				pickle_results_filename_stub = get_pickle_filename_stub(dataset, num_batches,batch_size,repres_layers_name, split)
 
 
-
-
 				if algo_name == "epsilon" or algo_name == "mahalanobis" or algo_name == "opt_reg":
 				
 					pickle_and_zip(results_dictionary, "ModselResults/{}".format(pickle_results_filename_stub))
@@ -693,6 +703,9 @@ if __name__ == "__main__":
 
 
 				#results_dictionary = pickle.load(open("ModselResults/{}".format(pickle_results_filename), "rb")) 
+
+
+
 
 
 				Ts = np.arange(num_batches)+1
