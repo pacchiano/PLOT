@@ -65,20 +65,19 @@ class GrowingNumpyDataSet:
         return len(self.dataset_Y)
 
     def add_data(self, X, Y):
+        #IPython.embed()
         if self.dataset_X is None and self.dataset_Y is None:
-            self.dataset_X = X
-            self.dataset_Y = Y
+            self.dataset_X = pd.DataFrame(X.numpy())
+            self.dataset_Y = pd.DataFrame(Y.numpy())
             self.dimension = X.shape[1]
         else:
-            self.dataset_X = torch.cat((self.dataset_X, X), dim=0)
-            self.dataset_Y = torch.cat((self.dataset_Y, Y), dim=0)
-        # print("shapes")
-        # print(self.dataset_X.shape)
-        # print(X.shape)
-        # print("datasets")
-        # print(self.dataset_X)
-        # print(X)
-        # print(self.dataset_X.shape)
+            dataframe_X = pd.DataFrame(X.numpy())
+            self.dataset_X = pd.concat([self.dataset_X, dataframe_X])
+            dataframe_Y = pd.DataFrame(Y.numpy())
+            self.dataset_Y = pd.concat([self.dataset_Y, dataframe_Y])
+            #self.dataset_X = torch.cat((self.dataset_X, X), dim=0)
+            #self.dataset_Y = torch.cat((self.dataset_Y, Y), dim=0)
+        
 
         self.last_data_addition = X.shape[0]
 
@@ -98,15 +97,77 @@ class GrowingNumpyDataSet:
             X = torch.empty(0)
             Y = torch.empty(0)
         elif batch_size > self.dataset_X.shape[0]:
-            X = self.dataset_X
-            Y = self.dataset_Y
+            X = self.dataset_X.values
+            Y = self.dataset_Y.values
         else:
-            indices = random.sample(range(self.dataset_X.shape[0]), batch_size)
-            indices = torch.tensor(indices)
-            X = self.dataset_X[indices]
-            Y = self.dataset_Y[indices]
+            X = self.dataset_X.sample(batch_size, random_state=self.random_state).values
+            Y = self.dataset_Y.sample(batch_size, random_state=self.random_state).values
+            
         self.random_state += 1
-        return (X, Y)
+        return (torch.tensor(X), torch.tensor(Y))
+
+
+
+
+
+
+# class GrowingNumpyDataSet:
+#     def __init__(self):
+#         self.dataset_X = None
+#         self.dataset_Y = None
+#         self.last_data_addition = None
+#         self.random_state = 0
+#         self.dimension = None
+
+#     def get_size(self):
+#         if self.dataset_Y is None:
+#             return 0
+#         return len(self.dataset_Y)
+
+#     def add_data(self, X, Y):
+#         IPython.embed()
+#         if self.dataset_X is None and self.dataset_Y is None:
+#             self.dataset_X = X
+#             self.dataset_Y = Y
+#             self.dimension = X.shape[1]
+#         else:
+#             self.dataset_X = torch.cat((self.dataset_X, X), dim=0)
+#             self.dataset_Y = torch.cat((self.dataset_Y, Y), dim=0)
+#         # print("shapes")
+#         # print(self.dataset_X.shape)
+#         # print(X.shape)
+#         # print("datasets")
+#         # print(self.dataset_X)
+#         # print(X)
+#         # print(self.dataset_X.shape)
+
+#         self.last_data_addition = X.shape[0]
+
+#     def pop_last_data(self):
+#         if self.dataset_X.shape[0] == self.last_data_addition:
+#             self.dataset_X = None
+#             self.dataset_Y = None
+
+#         else:
+#             # self.dataset_X = self.dataset_X[: -self.last_data_addition, :]
+#             # self.dataset_Y = self.dataset_Y[: -self.last_data_addition, :]
+#             self.dataset_X = self.dataset_X[: -self.last_data_addition]
+#             self.dataset_Y = self.dataset_Y[: -self.last_data_addition]
+
+#     def get_batch(self, batch_size):
+#         if self.dataset_X is None:
+#             X = torch.empty(0)
+#             Y = torch.empty(0)
+#         elif batch_size > self.dataset_X.shape[0]:
+#             X = self.dataset_X
+#             Y = self.dataset_Y
+#         else:
+#             indices = random.sample(range(self.dataset_X.shape[0]), batch_size)
+#             indices = torch.tensor(indices)
+#             X = self.dataset_X[indices]
+#             Y = self.dataset_Y[indices]
+#         self.random_state += 1
+#         return (X, Y)
 
 
 class MNISTDataset:

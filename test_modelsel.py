@@ -667,7 +667,7 @@ if __name__ == "__main__":
 	num_experiments = int(sys.argv[3])
 
 	datasets = str(sys.argv[4]).split(",")
-	IPython.embed()
+	#IPython.embed()
 
 	USE_RAY = sys.argv[5] == "True" #False
 	if sys.argv[5] not in ["True", "False"]:
