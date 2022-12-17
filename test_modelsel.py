@@ -666,8 +666,11 @@ if __name__ == "__main__":
 
 	num_experiments = int(sys.argv[3])
 
-	USE_RAY = sys.argv[4] == "True" #False
-	if sys.argv[4] not in ["True", "False"]:
+	datasets = str(sys.argv[4]).split(",")
+	IPython.embed()
+
+	USE_RAY = sys.argv[5] == "True" #False
+	if sys.argv[5] not in ["True", "False"]:
 		raise ValueError("USE_RAY key not in [True, False]")
 	# IPython.embed()
 	# raise ValueError("asdlfkm")
@@ -695,8 +698,8 @@ if __name__ == "__main__":
 
 
 
-	modselalgos = [ 'BalancingDoResurrectClassic','BalancingDoResurrectDown', "BalancingDoResurrect", "BalancingDoubling"]#, "BalancingDoubling", "Corral", "UCB", "EXP3"]
-	datasets = ["Adult"]#, "German", "Bank", "Crime", "Adult-10_10", "German-10_10","Crime-10_10","Bank-10_10", ]# ["Adult-10_10", "German-10_10","Crime-10_10","Bank-10_10", "Adult", "German", "Bank", "Crime"]#, "German", "Bank", "Adult"]"Adult-10-10"]#,
+	modselalgos = [ 'BalancingDoResurrectClassic','BalancingDoResurrectDown', "BalancingDoResurrect", "BalancingDoubling", "Corral", "UCB", "EXP3"]
+	#datasets = ["Adult"]#, "German", "Bank", "Crime", "Adult-10_10", "German-10_10","Crime-10_10","Bank-10_10", ]# ["Adult-10_10", "German-10_10","Crime-10_10","Bank-10_10", "Adult", "German", "Bank", "Crime"]#, "German", "Bank", "Adult"]"Adult-10-10"]#,
 
 
 	#colors = plt.cm.viridis(range(len(modselalgos) + len(alphas)))
