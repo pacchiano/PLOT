@@ -403,6 +403,17 @@ if __name__ == "__main__":
 			## Doubling with a smaller putative bound. (say log t)
 			## CRITEO dataset
 
+
+
+			## Smoothing window for balancing Classic. 
+			## Network architecture selection. Try many networks?
+			## Run UCB / Corral / Etc on the same experiments. 
+			## Is doubling too aggressive? This is a hyperparameter. 
+
+			
+
+
+
 			for confidence_radius, baseline_result_tuple, color in zip(confidence_radii, baselines_results, colors):
 				mean_cum_regrets, std_cum_regrets = baseline_result_tuple
 				plt.plot(np.arange(num_timesteps) + 1, mean_cum_regrets, label = "radius {}".format(confidence_radius), color = color )
