@@ -52,59 +52,136 @@ class DataSet:
 
 
 class GrowingNumpyDataSet:
-    def __init__(self):
-        self.dataset_X = None
-        self.dataset_Y = None
+    def __init__(self, num_batches, batch_size, dimension):
+        #self.dataset_X = None
+        #self.dataset_Y = None
         self.last_data_addition = None
         self.random_state = 0
         self.dimension = None
 
+        self.dimension = dimension
+        self.num_batches = num_batches
+        self.batch_size = batch_size
+
+        self.all_dataset_X = pd.DataFrame(np.zeros((num_batches*batch_size, dimension)))
+        self.all_dataset_Y = pd.DataFrame(np.zeros((num_batches*batch_size, )))
+
+        self.data_index = 0
+
+
     def get_size(self):
-        if self.dataset_Y is None:
-            return 0
-        return len(self.dataset_Y)
+        return self.data_index + 1
+        # if self.dataset_Y is None:
+        #     return 0
+        # return len(self.dataset_Y)
 
     def add_data(self, X, Y):
         #IPython.embed()
-        if self.dataset_X is None and self.dataset_Y is None:
-            self.dataset_X = pd.DataFrame(X.numpy())
-            self.dataset_Y = pd.DataFrame(Y.numpy())
-            self.dimension = X.shape[1]
-        else:
-            dataframe_X = pd.DataFrame(X.numpy())
-            self.dataset_X = pd.concat([self.dataset_X, dataframe_X])
-            dataframe_Y = pd.DataFrame(Y.numpy())
-            self.dataset_Y = pd.concat([self.dataset_Y, dataframe_Y])
-            #self.dataset_X = torch.cat((self.dataset_X, X), dim=0)
-            #self.dataset_Y = torch.cat((self.dataset_Y, Y), dim=0)
+
+        self.all_dataset_X[self.data_index:self.data_index+X.shape[0]] = X.numpy()
+        self.all_dataset_Y[self.data_index:self.data_index+X.shape[0]] = np.expand_dims(Y.numpy(), 1)
+        self.data_index += X.shape[0]
+
+        # if self.dataset_X is None and self.dataset_Y is None:
+        #     self.dataset_X = pd.DataFrame(X.numpy())
+        #     self.dataset_Y = pd.DataFrame(Y.numpy())
+        #     self.dimension = X.shape[1]
+        # else:
+        #     dataframe_X = pd.DataFrame(X.numpy())
+        #     self.dataset_X = pd.concat([self.dataset_X, dataframe_X])
+        #     dataframe_Y = pd.DataFrame(Y.numpy())
+        #     self.dataset_Y = pd.concat([self.dataset_Y, dataframe_Y])
+        #     #self.dataset_X = torch.cat((self.dataset_X, X), dim=0)
+        #     #self.dataset_Y = torch.cat((self.dataset_Y, Y), dim=0)
         
 
-        self.last_data_addition = X.shape[0]
+        # self.last_data_addition = X.shape[0]
 
     def pop_last_data(self):
-        if self.dataset_X.shape[0] == self.last_data_addition:
-            self.dataset_X = None
-            self.dataset_Y = None
+        
+        self.data_index = max(self.data_index - self.batch_size, 0)
+        self.all_dataset_X[self.data_index:self.data_index+self.batch_size] = np.zeros((self.batch_size, self.dimension))
+        self.all_dataset_Y[self.data_index:self.data_index+self.batch_size] = np.zeros((self.batch_size,1))
 
-        else:
-            # self.dataset_X = self.dataset_X[: -self.last_data_addition, :]
-            # self.dataset_Y = self.dataset_Y[: -self.last_data_addition, :]
-            self.dataset_X = self.dataset_X[: -self.last_data_addition]
-            self.dataset_Y = self.dataset_Y[: -self.last_data_addition]
+
+        # if self.dataset_X.shape[0] == self.last_data_addition:
+        #     self.dataset_X = None
+        #     self.dataset_Y = None
+
+        # else:
+        #     # self.dataset_X = self.dataset_X[: -self.last_data_addition, :]
+        #     # self.dataset_Y = self.dataset_Y[: -self.last_data_addition, :]
+        #     self.dataset_X = self.dataset_X[: -self.last_data_addition]
+        #     self.dataset_Y = self.dataset_Y[: -self.last_data_addition]
 
     def get_batch(self, batch_size):
-        if self.dataset_X is None:
-            X = torch.empty(0)
-            Y = torch.empty(0)
-        elif batch_size > self.dataset_X.shape[0]:
-            X = self.dataset_X.values
-            Y = self.dataset_Y.values
+        if self.data_index <= batch_size:
+             X = self.all_dataset_X[:self.data_index].values 
+             Y = self.all_dataset_Y[:self.data_index].values 
         else:
-            X = self.dataset_X.sample(batch_size, random_state=self.random_state).values
-            Y = self.dataset_Y.sample(batch_size, random_state=self.random_state).values
-            
+            X = self.all_dataset_X[:self.data_index].sample(batch_size, random_state=self.random_state).values
+            Y = self.all_dataset_Y[:self.data_index].sample(batch_size, random_state=self.random_state).values
+
         self.random_state += 1
-        return (torch.tensor(X), torch.tensor(Y))
+        #IPython.embed()
+        return (torch.tensor(X), torch.tensor(Y.squeeze()))
+
+# class GrowingNumpyDataSet:
+#     def __init__(self, num_batches, batch_size):
+#         self.dataset_X = None
+#         self.dataset_Y = None
+#         self.last_data_addition = None
+#         self.random_state = 0
+#         self.dimension = None
+
+        
+
+#     def get_size(self):
+#         if self.dataset_Y is None:
+#             return 0
+#         return len(self.dataset_Y)
+
+#     def add_data(self, X, Y):
+#         #IPython.embed()
+#         if self.dataset_X is None and self.dataset_Y is None:
+#             self.dataset_X = pd.DataFrame(X.numpy())
+#             self.dataset_Y = pd.DataFrame(Y.numpy())
+#             self.dimension = X.shape[1]
+#         else:
+#             dataframe_X = pd.DataFrame(X.numpy())
+#             self.dataset_X = pd.concat([self.dataset_X, dataframe_X])
+#             dataframe_Y = pd.DataFrame(Y.numpy())
+#             self.dataset_Y = pd.concat([self.dataset_Y, dataframe_Y])
+#             #self.dataset_X = torch.cat((self.dataset_X, X), dim=0)
+#             #self.dataset_Y = torch.cat((self.dataset_Y, Y), dim=0)
+        
+
+#         self.last_data_addition = X.shape[0]
+
+#     def pop_last_data(self):
+#         if self.dataset_X.shape[0] == self.last_data_addition:
+#             self.dataset_X = None
+#             self.dataset_Y = None
+
+#         else:
+#             # self.dataset_X = self.dataset_X[: -self.last_data_addition, :]
+#             # self.dataset_Y = self.dataset_Y[: -self.last_data_addition, :]
+#             self.dataset_X = self.dataset_X[: -self.last_data_addition]
+#             self.dataset_Y = self.dataset_Y[: -self.last_data_addition]
+
+#     def get_batch(self, batch_size):
+#         if self.dataset_X is None:
+#             X = torch.empty(0)
+#             Y = torch.empty(0)
+#         elif batch_size > self.dataset_X.shape[0]:
+#             X = self.dataset_X.values
+#             Y = self.dataset_Y.values
+#         else:
+#             X = self.dataset_X.sample(batch_size, random_state=self.random_state).values
+#             Y = self.dataset_Y.sample(batch_size, random_state=self.random_state).values
+            
+#         self.random_state += 1
+#         return (torch.tensor(X), torch.tensor(Y))
 
 
 

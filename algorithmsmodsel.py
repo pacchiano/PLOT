@@ -652,7 +652,7 @@ def train_epsilon_greedy_modsel(dataset, baseline_model, num_batches, batch_size
     #     dim = train_dataset.dimension
     # )
 
-    growing_training_dataset = GrowingNumpyDataSet()
+    growing_training_dataset = GrowingNumpyDataSet(num_batches, batch_size, train_dataset.dimension)
     instantaneous_regrets = []
     instantaneous_accuracies = []
     eps_multiplier = 1.0
@@ -848,7 +848,7 @@ def train_mahalanobis_modsel(dataset, baseline_model, num_batches, batch_size,
             output_filter = 'logistic'
         )
 
-        growing_training_dataset = GrowingNumpyDataSet()
+        growing_training_dataset = GrowingNumpyDataSet(num_batches, batch_size, train_dataset.dimension)
 
     if split:
 
@@ -859,7 +859,7 @@ def train_mahalanobis_modsel(dataset, baseline_model, num_batches, batch_size,
             output_filter = 'logistic'
         ) for alpha in alphas]
 
-        growing_training_datasets = [GrowingNumpyDataSet() for _ in range(num_alphas)]
+        growing_training_datasets = [GrowingNumpyDataSet(num_batches, batch_size, train_dataset.dimension) for _ in range(num_alphas)]
 
 
 
@@ -1086,7 +1086,7 @@ def train_opt_reg_modsel(dataset, baseline_model, num_batches, batch_size,
             output_filter = 'logistic'
         )
 
-        growing_training_dataset = GrowingNumpyDataSet()
+        growing_training_dataset = GrowingNumpyDataSet(num_batches, batch_size, train_dataset.dimension)
 
     if split:
 
@@ -1096,7 +1096,7 @@ def train_opt_reg_modsel(dataset, baseline_model, num_batches, batch_size,
             output_filter = 'logistic'
         ) for reg in regs]
 
-        growing_training_datasets = [GrowingNumpyDataSet() for _ in range(num_regs)]
+        growing_training_datasets = [GrowingNumpyDataSet(num_batches, batch_size, train_dataset.dimension) for _ in range(num_regs)]
 
 
 
