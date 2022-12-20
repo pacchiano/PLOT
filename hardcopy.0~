@@ -1,0 +1,55 @@
+04401034, 0.07564102715979784, -0.36000000685453415]
+(train_mahalanobis_modsel_remote pid=139712) Balancing algorithm masks  [1, 1, 1, 1]
+(train_mahalanobis_modsel_remote pid=139712) Balancing probabilities  [0, 0, 1, 0]
+(train_mahalanobis_modsel_remote pid=139712) Baseline Reward - 0.20000000298023224
+(train_mahalanobis_modsel_remote pid=139712) Modsel Reward -   0.20000000298023224
+(train_mahalanobis_modsel_remote pid=139712) Baseline Accuracy - 0.8999999761581421
+(train_mahalanobis_modsel_remote pid=139712) Accuracy alph reg - 0.8999999761581421
+(train_mahalanobis_modsel_remote pid=139712) Reset parameters
+(train_mahalanobis_modsel_remote pid=139712) Reset parameters
+(train_mahalanobis_modsel_remote pid=139712) Reset parameters
+(train_mahalanobis_modsel_remote pid=139714) Processing mahalanobis batch  4696
+(train_mahalanobis_modsel_remote pid=139714) 4696  batch number   sample alpha  0.05
+(train_mahalanobis_modsel_remote pid=139714) Alphas distribution  [1, 0, 0, 0]
+(train_mahalanobis_modsel_remote pid=139714) is split True
+(train_mahalanobis_modsel_remote pid=139714) Curr reward  0.0
+(train_mahalanobis_modsel_remote pid=139714) Opt reward pred  0.0
+(train_mahalanobis_modsel_remote pid=139714) Pess reward pred  0.0
+(train_mahalanobis_modsel_remote pid=139714) All rewards  356.0000072196126
+(train_mahalanobis_modsel_remote pid=139714) Cumulative rewards  [121.30000246316195, 118.20
+000240206718, 120.10000242292881, -3.6000000685453415]
+(train_mahalanobis_modsel_remote pid=139714) Num plays  [1563, 1562, 1562, 10]
+(train_mahalanobis_modsel_remote pid=139714) Mean rewards  [0.07760716728289312, 0.075672216
+64664993, 0.0768886059045639, -0.36000000685453415]
+(train_mahalanobis_modsel_remote pid=139714) Balancing algorithm masks  [1, 1, 1, 1]
+(train_mahalanobis_modsel_remote pid=139714) Balancing probabilities  [1, 0, 0, 0]
+(train_mahalanobis_modsel_remote pid=139714) Baseline Reward - 0.20000000298023224
+(train_mahalanobis_modsel_remote pid=139714) Modsel Reward -   0.0
+(train_mahalanobis_modsel_remote pid=139714) Baseline Accuracy - 1.0
+(train_mahalanobis_modsel_remote pid=139714) Accuracy alph reg - 0.800000011920929
+(train_mahalanobis_modsel_remote pid=139714) Reset parameters
+(train_mahalanobis_modsel_remote pid=139714) Reset parameters
+(train_mahalanobis_modsel_remote pid=139714) Reset parameters
+(train_mahalanobis_modsel_remote pid=139676) Processing mahalanobis batch  4611
+(train_mahalanobis_modsel_remote pid=139676) 4611  batch number   sample alpha  1
+(train_mahalanobis_modsel_remote pid=139676) Alphas distribution  [0, 0, 1, 0]
+(train_mahalanobis_modsel_remote pid=139676) is split True
+(train_mahalanobis_modsel_remote pid=139676) Curr reward  0.10000000149011612
+(train_mahalanobis_modsel_remote pid=139676) Opt reward pred  0.05280039459466934
+(train_mahalanobis_modsel_remote pid=139676) Pess reward pred  0.04443894699215889
+(train_mahalanobis_modsel_remote pid=139676) All rewards  340.30000680685043
+(train_mahalanobis_modsel_remote pid=139676) Cumulative rewards  [114.60000228881836, 115.10
+000232607126, 114.20000226050615, -3.6000000685453415]
+(train_mahalanobis_modsel_remote pid=139676) Num plays  [1534, 1534, 1534, 10]
+(train_mahalanobis_modsel_remote pid=139676) Mean rewards  [0.07470665077497937, 0.075032596
+04046367, 0.07444589456356333, -0.36000000685453415]
+(train_mahalanobis_modsel_remote pid=139676) Balancing algorithm masks  [1, 1, 1, 1]
+(train_mahalanobis_modsel_remote pid=139676) Balancing probabilities  [0, 0, 1, 0]
+(train_mahalanobis_modsel_remote pid=139676) Baseline Reward - 0.20000000298023224
+(train_mahalanobis_modsel_remote pid=139676) Modsel Reward -   0.10000000149011612
+(train_mahalanobis_modsel_remote pid=139676) Baseline Accuracy - 1.0
+(train_mahalanobis_modsel_remote pid=139676) Accuracy alph reg - 0.8999999761581421
+(train_mahalanobis_modsel_remote pid=139676) Reset parameters
+(train_mahalanobis_modsel_remote pid=139676) Reset parameters
+(train_mahalanobis_modsel_remote pid=139676) Reset parameters
+
