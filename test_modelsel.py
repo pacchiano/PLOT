@@ -657,23 +657,38 @@ if __name__ == "__main__":
 
 
 	
-
+	### Algorithm name
 	algo_name = sys.argv[1]
 	if algo_name not in ["mahalanobis", "epsilon", "opt_reg"]:
 		raise ValueError("Algorithm name not in allowed algorithms {}".format(algo_name))
 
+	### Number of batches
 	num_batches = int(sys.argv[2])
 
+	### Number of experiments
 	num_experiments = int(sys.argv[3])
 
-	datasets = str(sys.argv[4]).split(",")
-	#IPython.embed()
 
-	USE_RAY = sys.argv[5] == "True" #False
-	if sys.argv[5] not in ["True", "False"]:
+	### List of datasets
+	datasets = str(sys.argv[4]).split(",")
+
+	### Neural architecture
+	representation_layer_sizes = str(sys.argv[5]).split("_")
+	representation_layer_sizes = [int(a) for a in representation_layer_sizes]
+
+
+	### USE Ray
+	USE_RAY = sys.argv[6] == "True" #False
+	if sys.argv[6] not in ["True", "False"]:
 		raise ValueError("USE_RAY key not in [True, False]")
 	# IPython.embed()
 	# raise ValueError("asdlfkm")
+
+
+	num_opt_steps = 20
+	num_baseline_steps = 20000
+	opt_batch_size = 20
+	burn_in = 10
 
 
 	averaging_window = 1
@@ -684,10 +699,6 @@ if __name__ == "__main__":
 	opt_regs = [.08, .16, 1, 10]
 	decaying_epsilon = False
 
-	num_opt_steps = 20
-	num_baseline_steps = 2000
-	opt_batch_size = 20
-	burn_in = 10
 
 	#split = False
 	restart_model_full_minimization = False
