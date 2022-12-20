@@ -24,15 +24,17 @@ def train_model(
 ):
     if restart_model_full_minimization: 
         model.reset_weights()
+        model.restart_optimizer()
 
-    optimizer = torch.optim.Adam(model.network.parameters(), lr=0.01, weight_decay=weight_decay )
+
+   
 
     for i in range(num_steps):
         if verbose:
             print("train model iteration ", i)
         batch_X, batch_y = train_dataset.get_batch(batch_size)
 
-        model, optimizer = gradient_step(model, optimizer, batch_X, batch_y)
+        model, optimizer = gradient_step(model, model.optimizer, batch_X, batch_y)
 
     return model
 
@@ -53,8 +55,9 @@ def train_model_opt_reg(
 
     if restart_model_full_minimization: 
         model.reset_weights()
+        model.restart_optimizer()
 
-    optimizer = torch.optim.Adam(model.network.parameters(), lr=0.01, weight_decay=weight_decay )
+    #optimizer = torch.optim.Adam(model.network.parameters(), lr=0.01, weight_decay=weight_decay )
 
     for i in range(num_steps):
         if verbose:
@@ -70,7 +73,7 @@ def train_model_opt_reg(
             # IPython.embed()
             # print("asdlfkmasdlfkmasdlfkm loss ")
 
-            optimizer.zero_grad()
+            model.optimizer.zero_grad()
 
             loss = model.get_loss(batch_X, batch_y)
         
@@ -90,7 +93,7 @@ def train_model_opt_reg(
             #IPython.embed()
 
             loss.backward()
-            optimizer.step()
+            model.optimizer.step()
 
 
     return model

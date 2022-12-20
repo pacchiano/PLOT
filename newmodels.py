@@ -46,9 +46,14 @@ class FeedforwardMultiLayerOneDim(torch.nn.Module):
 
         self.layers.to(device)
 
+        #IPython.embed()
 
 
+        self.optimizer = torch.optim.Adam(self.parameters(), lr=0.01, weight_decay=0.0 )
 
+
+    def restart_optimizer(self):
+        self.optimizer = torch.optim.Adam(self.parameters(), lr=0.01, weight_decay=0.0 )
 
 
     def forward(self, x):
@@ -177,6 +182,11 @@ class TorchMultilayerRegression:
             device = device)
 
         self.network.to(self.device)
+        self.optimizer= torch.optim.Adam(self.network.parameters(), lr=0.01, weight_decay=0.0 )
+
+
+    def restart_optimizer(self):
+        self.optimizer = torch.optim.Adam(self.parameters(), lr=0.01, weight_decay=0.0 )
 
 
     def reset_weights(self):

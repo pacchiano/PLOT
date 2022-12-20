@@ -684,13 +684,13 @@ if __name__ == "__main__":
 	opt_regs = [.08, .16, 1, 10]
 	decaying_epsilon = False
 
-	num_opt_steps = 2000
-	num_baseline_steps = 20000
+	num_opt_steps = 20
+	num_baseline_steps = 2000
 	opt_batch_size = 20
 	burn_in = 10
 
 	#split = False
-	restart_model_full_minimization = True
+	restart_model_full_minimization = False
 
 	batch_size = 10
 

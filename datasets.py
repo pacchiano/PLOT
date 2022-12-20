@@ -123,7 +123,9 @@ class GrowingNumpyDataSet:
             Y = self.all_dataset_Y[:self.data_index].sample(batch_size, random_state=self.random_state).values
 
         self.random_state += 1
-        #IPython.embed()
+    
+        ### Use Numpy. 
+
         return (torch.tensor(X), torch.tensor(Y.squeeze()))
 
 # class GrowingNumpyDataSet:

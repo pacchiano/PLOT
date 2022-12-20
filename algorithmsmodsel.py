@@ -278,7 +278,7 @@ class CorralHyperparam:
 ### high putative bounds and reduces them
 class BalancingHyperparamDoubling:
     def __init__(self, m, initial_putative_bound, delta =0.01, 
-        balancing_test_multiplier = 1 , resurrecting = False, classic = False ):
+        balancing_test_multiplier = 1 , resurrecting = False, classic = False, empirical = False ):
         
         self.minimum_putative = .0001
         self.maximum_putative = 10000
@@ -881,6 +881,8 @@ def train_mahalanobis_modsel(dataset, baseline_model, num_batches, batch_size,
 
     rewards = []
 
+
+
     if len(representation_layer_sizes) == 0:
         covariance  = lambda_reg*torch.eye(dataset_dimension)#.cuda()
     else:
@@ -918,15 +920,9 @@ def train_mahalanobis_modsel(dataset, baseline_model, num_batches, batch_size,
             inverse_covariance = torch.linalg.inv(covariance)
 
 
-
             ##### Get thresholded predictions and uncertanties
             optimistic_thresholded_predictions, optimistic_prob_predictions, pessimistic_prob_predictions = model.get_all_predictions_info(batch_X, threshold, inverse_covariance)
-            # IPython.embed()
-
-            # raise ValueError("alsdkfm")
-
-
-
+         
 
 
             baseline_predictions = baseline_model.get_thresholded_predictions(batch_X, threshold)
