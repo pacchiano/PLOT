@@ -285,10 +285,10 @@ def plot_modsel_probabilities(algo_name, dataset, num_batches, batch_size, modse
 
 	if not split:
 		filename = "{}/modsel_probabilities-{}_{}_{}_T{}_B{}_N_{}.png".format(logging_dir,modselalgo,algo_name, dataset,num_batches,batch_size, repres_layers_name)
-		plt.title("Probabilities evolution {} {} B{} N {}".format(modselalgo, dataset, batch_size, repres_layers_name))
+		plt.title("Probs {} {} B{} N {}".format(modselalgo, dataset, batch_size, repres_layers_name))
 	else:
 		filename = "{}/modsel_probabilities-split-{}_{}_{}_T{}_B{}_N_{}.png".format(logging_dir,modselalgo,algo_name, dataset,num_batches,batch_size, repres_layers_name)
-		plt.title("Probabilities evolution split {} {} B{} N {}".format(modselalgo, dataset, batch_size, repres_layers_name))
+		plt.title("Probs split {} {} B{} N {}".format(modselalgo, dataset, batch_size, repres_layers_name))
 	plt.savefig(filename)
 	plt.close("all")
 	
@@ -515,12 +515,12 @@ def plot_results(algo_name, dataset, results_type, num_batches, batch_size, mods
 	if not split:
 		filename = "{}/{}_cum_{}-{}_{}_{}_T{}_B{}_N_{}.png".format(logging_dir,results_type, cummulative_plot, 
 			algo_name, modselalgo,dataset, num_batches, batch_size, repres_layers_name)
-		plt.title("{} {} Split {} B{} N {}".format( label, modselalgo, dataset, batch_size, repres_layers_name))	
+		plt.title("{} {} {} B{} N {}".format( label, modselalgo, dataset, batch_size, repres_layers_name))	
 	else:
 
 		filename = "{}/{}-split_cum_{}-{}_{}_{}_T{}_B{}_N_{}.png".format(logging_dir,results_type, cummulative_plot, 
 			algo_name, modselalgo,dataset, num_batches, batch_size, repres_layers_name)
-		plt.title("{} {} {} B{} N {}".format( label, modselalgo, dataset, batch_size, repres_layers_name))
+		plt.title("{} {} split {} B{} N {}".format( label, modselalgo, dataset, batch_size, repres_layers_name))
 	
 	plt.savefig(filename)
 	plt.close("all")
@@ -624,13 +624,13 @@ def plot_contrast_modsel_results(algo_name, dataset, results_type, num_batches, 
 	if not split:
 		filename = "{}/combined_{}_cum_{}-{}_{}_T{}_B{}_N_{}.png".format(logging_dir,results_type, cummulative_plot, 
 			algo_name,dataset, num_batches, batch_size, repres_layers_name)
-		plt.title("{} {} {} B{} N {}".format( label, modselalgo, dataset, batch_size, repres_layers_name))
+		plt.title("{} {} B{} N {}".format( label, dataset, batch_size, repres_layers_name))
 
 	else:
 
 		filename = "{}/combined_{}-split_cum_{}-{}_{}_T{}_B{}_N_{}.png".format(logging_dir,results_type, cummulative_plot, 
 			algo_name,dataset, num_batches, batch_size, repres_layers_name)
-		plt.title("{} {} split {} B{} N {}".format( label, modselalgo, dataset, batch_size, repres_layers_name))
+		plt.title("{} split {} B{} N {}".format( label, dataset, batch_size, repres_layers_name))
 
 	plt.savefig(filename)
 	plt.close("all")
