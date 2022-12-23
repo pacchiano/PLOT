@@ -69,7 +69,7 @@ def train_mahalanobis_remote(dataset, baseline_model, num_batches, batch_size,
     num_opt_steps, opt_batch_size,
     representation_layer_sizes = [10,10], threshold = .5, alpha = 1, lambda_reg = 1,
     verbose = False, 
-    restart_model_full_minimization = False, burn_in = -1):
+    restart_model_full_minimization = False, retraining_frequency = 1, burn_in = -1):
 
 
     return train_mahalanobis(dataset=dataset, baseline_model=baseline_model, num_batches=num_batches, batch_size=batch_size, 
@@ -78,6 +78,7 @@ def train_mahalanobis_remote(dataset, baseline_model, num_batches, batch_size,
     alpha = alpha, lambda_reg = lambda_reg,
     verbose = verbose, 
     restart_model_full_minimization = restart_model_full_minimization,
+    retraining_frequency = retraining_frequency, 
     burn_in = burn_in)
 
 
