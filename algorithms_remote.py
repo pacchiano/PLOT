@@ -88,7 +88,8 @@ def train_mahalanobis_modsel_remote(dataset, baseline_model, num_batches, batch_
     num_opt_steps, opt_batch_size, 
     representation_layer_sizes = [10, 10], threshold = .5, alphas = [1, .1, .01], lambda_reg = 1,
     verbose = False, 
-    restart_model_full_minimization = False, modselalgo = "Corral", split = False, retraining_frequency = 1, burn_in = -1):
+    restart_model_full_minimization = False, modselalgo = "Corral", split = False, retraining_frequency = 1, 
+    burn_in = -1):
 
 
 
