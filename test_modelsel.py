@@ -705,15 +705,11 @@ if __name__ == "__main__":
 	opt_regs = [.08, .16, 1, 10]
 	decaying_epsilon = False
 
-
-	#split = False
 	restart_model_full_minimization = True
 	batch_size = 10
-	representation_layer_sizes = [100,10]
+	
 
-
-
-	modselalgos = [ 'BalancingDoResurrectClassic']#,'BalancingDoResurrectDown', "BalancingDoResurrect", "BalancingDoubling", "Corral", "UCB", "EXP3"]
+	modselalgos = [ 'BalancingDoResurrectClassic','BalancingDoResurrectDown', "BalancingDoResurrect", "BalancingDoubling", "Corral", "UCB", "EXP3"]
 	#datasets = ["Adult"]#, "German", "Bank", "Crime", "Adult-10_10", "German-10_10","Crime-10_10","Bank-10_10", ]# ["Adult-10_10", "German-10_10","Crime-10_10","Bank-10_10", "Adult", "German", "Bank", "Crime"]#, "German", "Bank", "Adult"]"Adult-10-10"]#,
 
 
