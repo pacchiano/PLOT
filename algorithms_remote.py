@@ -69,7 +69,7 @@ def train_mahalanobis_remote(dataset, baseline_model, num_batches, batch_size,
     num_opt_steps, opt_batch_size,
     representation_layer_sizes = [10,10], threshold = .5, alpha = 1, lambda_reg = 1,
     verbose = False, 
-    restart_model_full_minimization = False):
+    restart_model_full_minimization = False, burn_in = -1):
 
 
     return train_mahalanobis(dataset=dataset, baseline_model=baseline_model, num_batches=num_batches, batch_size=batch_size, 
@@ -77,7 +77,8 @@ def train_mahalanobis_remote(dataset, baseline_model, num_batches, batch_size,
     representation_layer_sizes = representation_layer_sizes, threshold = threshold, 
     alpha = alpha, lambda_reg = lambda_reg,
     verbose = verbose, 
-    restart_model_full_minimization = restart_model_full_minimization)
+    restart_model_full_minimization = restart_model_full_minimization,
+    burn_in = burn_in)
 
 
 
@@ -87,7 +88,7 @@ def train_mahalanobis_modsel_remote(dataset, baseline_model, num_batches, batch_
     num_opt_steps, opt_batch_size, 
     representation_layer_sizes = [10, 10], threshold = .5, alphas = [1, .1, .01], lambda_reg = 1,
     verbose = False, 
-    restart_model_full_minimization = False, modselalgo = "Corral", split = False):
+    restart_model_full_minimization = False, modselalgo = "Corral", split = False, retraining_frequency = 1, burn_in = -1):
 
 
 
@@ -95,7 +96,8 @@ def train_mahalanobis_modsel_remote(dataset, baseline_model, num_batches, batch_
     num_opt_steps=num_opt_steps, opt_batch_size=opt_batch_size, 
     representation_layer_sizes = representation_layer_sizes, threshold = threshold, alphas = alphas, lambda_reg = lambda_reg,
     verbose = verbose, 
-    restart_model_full_minimization = restart_model_full_minimization, modselalgo = modselalgo, split = split)
+    restart_model_full_minimization = restart_model_full_minimization, modselalgo = modselalgo, split = split, retraining_frequency = retraining_frequency,
+    burn_in = burn_in)
 
 
 @ray.remote

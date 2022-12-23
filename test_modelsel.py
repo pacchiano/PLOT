@@ -115,7 +115,7 @@ def run_epsilon_greedy_experiments(dataset, epsilons, modselalgo, num_experiment
 
 def run_modsel_mahalanobis_experiments(dataset, alphas, modselalgo, num_experiments, baseline_model, num_batches, 
 	batch_size, num_opt_steps = 1000, 
-	opt_batch_size = 20, representation_layer_sizes = [10, 10], restart_model_full_minimization = False, split = False):
+	opt_batch_size = 20, representation_layer_sizes = [10, 10], restart_model_full_minimization = False, split = False, retraining_frequency = 1, burn_in = -1):
 
 	if USE_RAY:
 		mahalanobis_modsel_results = [train_mahalanobis_modsel_remote.remote(dataset, baseline_model, 
@@ -123,7 +123,7 @@ def run_modsel_mahalanobis_experiments(dataset, alphas, modselalgo, num_experime
 	    num_opt_steps = num_opt_steps, opt_batch_size = opt_batch_size, 
 	    representation_layer_sizes = representation_layer_sizes, threshold = .5, verbose = True, alphas = alphas,
 	    restart_model_full_minimization = restart_model_full_minimization, modselalgo = modselalgo,
-	    split = split) for _ in range(num_experiments)]
+	    split = split, retraining_frequency = retraining_frequency, burn_in = burn_in) for _ in range(num_experiments)]
 		mahalanobis_modsel_results = ray.get(mahalanobis_modsel_results)
 
 	else:
@@ -132,7 +132,7 @@ def run_modsel_mahalanobis_experiments(dataset, alphas, modselalgo, num_experime
 	    num_opt_steps = num_opt_steps, opt_batch_size = opt_batch_size, 
 	    representation_layer_sizes = representation_layer_sizes, threshold = .5, verbose = True, alphas = alphas,
 	    restart_model_full_minimization = restart_model_full_minimization, modselalgo = modselalgo,
-	    split = split) for _ in range(num_experiments)]
+	    split = split, retraining_frequency = retraining_frequency, burn_in = burn_in) for _ in range(num_experiments)]
 		
 	return ("alpha split{} {}".format(split, modselalgo),mahalanobis_modsel_results )#, mahalanobis_results_list
 
@@ -140,7 +140,7 @@ def run_modsel_mahalanobis_experiments(dataset, alphas, modselalgo, num_experime
 
 def run_base_mahalanobis_experiments(dataset, alphas, num_experiments, baseline_model, num_batches, 
 	batch_size, num_opt_steps = 1000, 
-	opt_batch_size = 20, representation_layer_sizes = [10, 10], restart_model_full_minimization = False):
+	opt_batch_size = 20, representation_layer_sizes = [10, 10], restart_model_full_minimization = False, retraining_frequency = 1, burn_in = -1):
 
 	mahalanobis_results_list = []
 
@@ -153,18 +153,18 @@ def run_base_mahalanobis_experiments(dataset, alphas, num_experiments, baseline_
 	   				 num_batches = num_batches, batch_size = batch_size, 
 	   				 num_opt_steps = num_opt_steps, opt_batch_size = opt_batch_size, 
 	   				 representation_layer_sizes = representation_layer_sizes, threshold = .5, verbose = True,  alpha = alpha, 
-	   				 lambda_reg = 1, restart_model_full_minimization = False) for _ in range(num_experiments)]
+	   				 lambda_reg = 1, restart_model_full_minimization = False, retraining_frequency = retraining_frequency, burn_in = burn_in) for _ in range(num_experiments)]
 
 			mahalanobis_results = ray.get(mahalanobis_results)
 
 		else:
 
-
+			#IPython.embed()
 			mahalanobis_results = [train_mahalanobis(dataset, baseline_model, 
 	   				 num_batches = num_batches, batch_size = batch_size, 
 	   				 num_opt_steps = num_opt_steps, opt_batch_size = opt_batch_size, 
 	   				 representation_layer_sizes = representation_layer_sizes, threshold = .5, verbose = True,  alpha = alpha, 
-	   				 lambda_reg = 1, restart_model_full_minimization = False) for _ in range(num_experiments)]
+	   				 lambda_reg = 1, restart_model_full_minimization = False, retraining_frequency = retraining_frequency, burn_in = burn_in) for _ in range(num_experiments)]
 
 		mahalanobis_results_list.append(("alpha-{}".format(alpha), mahalanobis_results))
 	
@@ -689,11 +689,13 @@ if __name__ == "__main__":
 	# raise ValueError("asdlfkm")
 
 
-	num_opt_steps = 20
+	num_opt_steps = 2000
 	num_baseline_steps = 20000
 	opt_batch_size = 20
 	burn_in = 10
 
+
+	retraining_frequency = 10
 
 	averaging_window = 1
 	epsilon = .1
@@ -705,13 +707,13 @@ if __name__ == "__main__":
 
 
 	#split = False
-	restart_model_full_minimization = False
+	restart_model_full_minimization = True
 	batch_size = 10
 	representation_layer_sizes = [100,10]
 
 
 
-	modselalgos = [ 'BalancingDoResurrectClassic','BalancingDoResurrectDown', "BalancingDoResurrect", "BalancingDoubling", "Corral", "UCB", "EXP3"]
+	modselalgos = [ 'BalancingDoResurrectClassic']#,'BalancingDoResurrectDown', "BalancingDoResurrect", "BalancingDoubling", "Corral", "UCB", "EXP3"]
 	#datasets = ["Adult"]#, "German", "Bank", "Crime", "Adult-10_10", "German-10_10","Crime-10_10","Bank-10_10", ]# ["Adult-10_10", "German-10_10","Crime-10_10","Bank-10_10", "Adult", "German", "Bank", "Crime"]#, "German", "Bank", "Adult"]"Adult-10-10"]#,
 
 
@@ -746,7 +748,8 @@ if __name__ == "__main__":
 			mahalanobis_results_list = run_base_mahalanobis_experiments(dataset, alphas, num_experiments, baseline_model, num_batches, 
 				batch_size, num_opt_steps = num_opt_steps, 
 				opt_batch_size = 20, representation_layer_sizes = representation_layer_sizes, 
-				restart_model_full_minimization = restart_model_full_minimization)
+				restart_model_full_minimization = restart_model_full_minimization,
+				retraining_frequency = retraining_frequency, burn_in = burn_in)
 
 			for mahalanobis_res_tuple in mahalanobis_results_list:
 				results_dictionary[mahalanobis_res_tuple[0]] = mahalanobis_res_tuple[1]	
@@ -794,7 +797,7 @@ if __name__ == "__main__":
 					mahalanobis_modsel_results_tuple = run_modsel_mahalanobis_experiments(dataset, alphas, modselalgo, num_experiments, baseline_model, num_batches, 
 											batch_size, num_opt_steps = num_opt_steps, 
 											opt_batch_size = opt_batch_size, representation_layer_sizes = representation_layer_sizes, 
-											restart_model_full_minimization = restart_model_full_minimization, split = split)
+											restart_model_full_minimization = restart_model_full_minimization, split = split, retraining_frequency = retraining_frequency)
 
 
 					results_dictionary[mahalanobis_modsel_results_tuple[0]] = mahalanobis_modsel_results_tuple[1]

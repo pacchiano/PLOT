@@ -215,14 +215,15 @@ def train_mahalanobis(dataset, baseline_model, num_batches, batch_size,
     num_opt_steps, opt_batch_size, 
     representation_layer_sizes = [10, 10], threshold = .5, alpha = 1, lambda_reg = 1,
     verbose = False, 
-    restart_model_full_minimization = False):
+    restart_model_full_minimization = False, retraining_frequency = 1, burn_in = -1):
     
     return train_mahalanobis_modsel(dataset, baseline_model, num_batches, batch_size, 
     num_opt_steps, opt_batch_size,
     representation_layer_sizes = representation_layer_sizes, threshold = threshold, alphas = [alpha], 
     lambda_reg = lambda_reg,
     verbose = verbose,
-    restart_model_full_minimization = restart_model_full_minimization, modselalgo = "Corral")
+    restart_model_full_minimization = restart_model_full_minimization, modselalgo = "Corral", 
+    retraining_frequency = retraining_frequency, burn_in = burn_in)
 
 
 

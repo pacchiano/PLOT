@@ -810,7 +810,8 @@ def train_mahalanobis_modsel(dataset, baseline_model, num_batches, batch_size,
     num_opt_steps, opt_batch_size,
     representation_layer_sizes = [10, 10], threshold = .5, alphas = [1, .1, .01], lambda_reg = 1,
     verbose = False,
-    restart_model_full_minimization = False, modselalgo = "Corral", split = False):
+    restart_model_full_minimization = False, modselalgo = "Corral", split = False, retraining_frequency = 1, 
+    burn_in = -1):
     
 
     num_alphas = len(alphas)
@@ -903,6 +904,7 @@ def train_mahalanobis_modsel(dataset, baseline_model, num_batches, batch_size,
         ### Sample epsilon using model selection
         sample_idx = modsel_manager.sample_base_index()
         alpha = alphas[sample_idx]
+        print("Modselalgo {}".format(modselalgo))
         print(i, " batch number ", " sample alpha ", alpha)
         print("Alphas distribution ", modsel_manager.get_distribution())
         print("is split {}".format(split))
@@ -923,6 +925,12 @@ def train_mahalanobis_modsel(dataset, baseline_model, num_batches, batch_size,
             ##### Get thresholded predictions and uncertanties
             optimistic_thresholded_predictions, optimistic_prob_predictions, pessimistic_prob_predictions = model.get_all_predictions_info(batch_X, threshold, inverse_covariance)
          
+            # IPython.embed()
+            # raise ValueError("asdlfkm")
+
+            if i <= burn_in:
+                #IPython.embed()
+                optimistic_thresholded_predictions = optimistic_thresholded_predictions >= -10
 
 
             baseline_predictions = baseline_model.get_thresholded_predictions(batch_X, threshold)
@@ -1009,10 +1017,13 @@ def train_mahalanobis_modsel(dataset, baseline_model, num_batches, batch_size,
 
         #### Filter the batch using the predictions
         #### Add the accepted points and their labels to the growing training dataset
-        model = train_model( model, num_opt_steps, 
-                growing_training_dataset, opt_batch_size, 
-                restart_model_full_minimization = restart_model_full_minimization)
-
+        if i%retraining_frequency == 0:
+            #IPython.embed()
+            print("Training Model --- iteration {}".format(i))
+            model = train_model( model, num_opt_steps, 
+                    growing_training_dataset, opt_batch_size, 
+                    restart_model_full_minimization = restart_model_full_minimization)
+     
                 
     print("Finished training mahalanobis model alpha - {}".format(alpha))
     test_accuracy = evaluate_model(test_dataset, model, threshold).item()
