@@ -4,7 +4,7 @@ opt_batch_size = 20
 burn_in = 10
 
 
-retraining_frequency = 50
+retraining_frequency = 40
 
 averaging_window = 1
 epsilon = .1
