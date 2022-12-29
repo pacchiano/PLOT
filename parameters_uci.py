@@ -1,10 +1,10 @@
-num_opt_steps = 5000
+num_opt_steps = 2000
 num_baseline_steps = 20000
 opt_batch_size = 20
 burn_in = 10
 
 
-retraining_frequency = 100
+retraining_frequency = 50
 
 averaging_window = 1
 epsilon = .1
@@ -17,4 +17,5 @@ decaying_epsilon = False
 restart_model_full_minimization = True
 batch_size = 10
 
-modselalgos = [ 'BalancingDoResurrectClassic','BalancingDoResurrectDown', "BalancingDoResurrect", "BalancingDoubling", "Corral", "UCB", "EXP3"]
+modselalgos = [ 'BalancingDoResurrectClassic','BalancingDoResurrectDown', 
+	"BalancingDoResurrect", "BalancingDoubling", "Corral", "UCB", "EXP3"]
