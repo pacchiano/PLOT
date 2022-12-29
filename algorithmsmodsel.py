@@ -831,11 +831,6 @@ def train_mahalanobis_modsel(dataset, baseline_model, num_batches, batch_size,
         test_batch_size=10000000)
 
 
-    # IPython.embed()
-    # raise ValueError("asdlf;km")
-
-
-
     dataset_dimension = train_dataset.dimension
 
 
@@ -1017,7 +1012,7 @@ def train_mahalanobis_modsel(dataset, baseline_model, num_batches, batch_size,
 
         #### Filter the batch using the predictions
         #### Add the accepted points and their labels to the growing training dataset
-        if i%retraining_frequency == 0:
+        if i%retraining_frequency == 0 or i== burn_in:
             #IPython.embed()
             print("Training Model --- iteration {}".format(i))
             model = train_model( model, num_opt_steps, 
