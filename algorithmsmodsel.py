@@ -832,7 +832,7 @@ def train_mahalanobis_modsel(dataset, baseline_model, num_batches, batch_size,
 
 
     dataset_dimension = train_dataset.dimension
-
+    model_samples = [0 for _ in range(num_alphas)]
 
     if not split:
 
@@ -856,7 +856,6 @@ def train_mahalanobis_modsel(dataset, baseline_model, num_batches, batch_size,
         ) for alpha in alphas]
 
         growing_training_datasets = [GrowingNumpyDataSet(num_batches, batch_size, train_dataset.dimension) for _ in range(num_alphas)]
-
 
 
 
@@ -898,6 +897,7 @@ def train_mahalanobis_modsel(dataset, baseline_model, num_batches, batch_size,
             
         ### Sample epsilon using model selection
         sample_idx = modsel_manager.sample_base_index()
+        model_samples[sample_idx] += 1
         alpha = alphas[sample_idx]
         print("Modselalgo {}".format(modselalgo))
         print(i, " batch number ", " sample alpha ", alpha)
@@ -909,6 +909,8 @@ def train_mahalanobis_modsel(dataset, baseline_model, num_batches, batch_size,
         else:
             model = models[sample_idx]
             growing_training_dataset = growing_training_datasets[sample_idx]
+
+
 
         modselect_info.append(modsel_manager.get_distribution())
 
@@ -1012,8 +1014,10 @@ def train_mahalanobis_modsel(dataset, baseline_model, num_batches, batch_size,
 
         #### Filter the batch using the predictions
         #### Add the accepted points and their labels to the growing training dataset
-        if i%retraining_frequency == 0 or i== burn_in:
+        if i%retraining_frequency == 0 or (i== burn_in)*(split==False) or (model_samples[sample_idx] == burn_in)*split:
             #IPython.embed()
+
+
             print("Training Model --- iteration {}".format(i))
             model = train_model( model, num_opt_steps, 
                     growing_training_dataset, opt_batch_size, 
