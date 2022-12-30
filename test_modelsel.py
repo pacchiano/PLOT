@@ -832,6 +832,8 @@ if __name__ == "__main__":
 	opt_regs = experiment_specific_params["opt_regs"]
 
 
+	#IPython.embed()
+
 	## TODO: this should ideally be larger than max(num_experiments, len(hyperparams))
 	colors = list(matplotlib.colors.TABLEAU_COLORS.keys())
 
