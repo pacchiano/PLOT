@@ -25,18 +25,18 @@ def process_results(results_list):
     return mean, standard_dev
 
 
-def get_pickle_modsel_filename_stub(dataset, algo_name, modselalgo, num_batches,batch_size,repres_layers_name, split):
+def get_pickle_modsel_filename_stub(experiment_name, dataset, algo_name, modselalgo, num_batches,batch_size,repres_layers_name, split):
 	if not split:
-		filename_stub = "results_{}_{}_{}_T{}_B{}_N_{}".format(dataset, algo_name, modselalgo, num_batches,batch_size,repres_layers_name )
+		filename_stub = "{}_results_{}_{}_{}_T{}_B{}_N_{}".format(experiment_name, dataset, algo_name, modselalgo, num_batches,batch_size,repres_layers_name )
 
 	else:
-		filename_stub = "results-split_{}_{}_{}_T{}_B{}_N_{}".format(dataset, algo_name, modselalgo, num_batches,batch_size,repres_layers_name )
+		filename_stub = "{}_results-split_{}_{}_{}_T{}_B{}_N_{}".format(experiment_name, dataset, algo_name, modselalgo, num_batches,batch_size,repres_layers_name )
 
 	return filename_stub
 
-def get_pickle_base_filename_stub(dataset, algo_name, num_batches,batch_size,repres_layers_name):
+def get_pickle_base_filename_stub(experiment_name, dataset, algo_name, num_batches,batch_size,repres_layers_name):
 	
-	filename_stub = "results_bases_{}_{}_T{}_B{}_N_{}".format(dataset, algo_name, num_batches,batch_size,repres_layers_name )
+	filename_stub = "{}_results_bases_{}_{}_T{}_B{}_N_{}".format(experiment_name, dataset, algo_name, num_batches,batch_size,repres_layers_name )
 
 
 	return filename_stub
@@ -150,7 +150,9 @@ def run_base_mahalanobis_experiments(dataset, alphas, num_experiments, baseline_
 
 	mahalanobis_results_list = []
 
-	for alpha in alphas:
+	reduced_alpha_sequence = list(set(alphas))
+
+	for alpha in reduced_alpha_sequence:
 
 		if USE_RAY:
 
@@ -245,7 +247,7 @@ def run_modsel_opt_reg_experiments(dataset, regs, modselalgo, num_experiments, b
 
 
 
-def plot_modsel_probabilities(algo_name, dataset, num_batches, batch_size, modselalgo, 
+def plot_modsel_probabilities(experiment_name, algo_name, dataset, num_batches, batch_size, modselalgo, 
 	results_dictionary, hyperparams, colors, representation_layer_sizes, averaging_window = 1,
 	split = False):
 
@@ -290,10 +292,10 @@ def plot_modsel_probabilities(algo_name, dataset, num_batches, batch_size, modse
 	plt.legend(fontsize=8, loc="upper left")
 
 	if not split:
-		filename = "{}/modsel_probabilities-{}_{}_{}_T{}_B{}_N_{}.png".format(logging_dir,modselalgo,algo_name, dataset,num_batches,batch_size, repres_layers_name)
+		filename = "{}/{}_modsel_probabilities-{}_{}_{}_T{}_B{}_N_{}.png".format(logging_dir, experiment_name,modselalgo,algo_name, dataset,num_batches,batch_size, repres_layers_name)
 		plt.title("Probs {} {} B{} N {}".format(modselalgo, dataset, batch_size, repres_layers_name))
 	else:
-		filename = "{}/modsel_probabilities-split-{}_{}_{}_T{}_B{}_N_{}.png".format(logging_dir,modselalgo,algo_name, dataset,num_batches,batch_size, repres_layers_name)
+		filename = "{}/{}_modsel_probabilities-split-{}_{}_{}_T{}_B{}_N_{}.png".format(logging_dir, experiment_name,modselalgo,algo_name, dataset,num_batches,batch_size, repres_layers_name)
 		plt.title("Probs split {} {} B{} N {}".format(modselalgo, dataset, batch_size, repres_layers_name))
 	plt.savefig(filename)
 	plt.close("all")
@@ -301,7 +303,7 @@ def plot_modsel_probabilities(algo_name, dataset, num_batches, batch_size, modse
 
 
 
-def plot_optimism_pessimism(algo_name,dataset, num_batches, batch_size, results_dictionary, 
+def plot_optimism_pessimism(experiment_name, algo_name,dataset, num_batches, batch_size, results_dictionary, 
 	hyperparams, colors, representation_layer_sizes, averaging_window = 1):
 
 	Ts = (np.arange(num_batches/averaging_window)+1)*averaging_window
@@ -381,7 +383,7 @@ def plot_optimism_pessimism(algo_name,dataset, num_batches, batch_size, results_
 	# plt.legend(bbox_to_anchor=(1.05, 1), fontsize=8, loc="upper left")
 	plt.legend(fontsize=8, loc="upper left")
 
-	filename = "{}/opt_pess_{}_{}_T{}_B{}_N_{}.png".format(logging_dir, algo_name,dataset, 
+	filename = "{}/{}_opt_pess_{}_{}_T{}_B{}_N_{}.png".format(logging_dir, experiment_name,algo_name,dataset, 
 		num_batches, batch_size, repres_layers_name)
 
 	plt.savefig(filename)
@@ -463,8 +465,8 @@ def plot_base(algo_name, dataset, results_type, num_batches, batch_size,
 
 	if sqrt_scaled:
 		#IPython.embed()
-		hyperparam_results_mean *= 1.0/np.sqrt(Ts)
-		hyperparam_results_std *= 1.0/np.sqrt(Ts)
+		hyperparam_results_mean *= 1.0/np.sqrt(Ts*np.log(Ts+1))
+		hyperparam_results_std *= 1.0/np.sqrt(Ts*np.log(Ts+1))
 
 	plt.plot(Ts, hyperparam_results_mean, color = "black",  label = "mean", linestyle = "dashed", linewidth = 5)
 	plt.fill_between(Ts, hyperparam_results_mean-.5*hyperparam_results_std, 
@@ -481,7 +483,7 @@ def plot_base(algo_name, dataset, results_type, num_batches, batch_size,
 
 		if sqrt_scaled:
 			#IPython.embed()
-			plot_data *= 1.0/np.sqrt(Ts)
+			plot_data *= 1.0/np.sqrt(Ts*np.log(Ts+1))
 		
 
 
@@ -502,7 +504,7 @@ def plot_base(algo_name, dataset, results_type, num_batches, batch_size,
 
 
 
-def plot_results(algo_name, dataset, results_type, num_batches, batch_size, modselalgo, 
+def plot_results(experiment_name, algo_name, dataset, results_type, num_batches, batch_size, modselalgo, 
 	results_dictionary, hyperparams, colors, representation_layer_sizes, cummulative_plot = False, 
 	averaging_window = 1 , split=False, sqrt_scaled = False):
 
@@ -552,8 +554,8 @@ def plot_results(algo_name, dataset, results_type, num_batches, batch_size, mods
 
 		if sqrt_scaled:
 			#IPython.embed()
-			hyperparam_results_mean *= 1.0/np.sqrt(Ts)
-			hyperparam_results_std *= 1.0/np.sqrt(Ts)
+			hyperparam_results_mean *= 1.0/np.sqrt(Ts*np.log(Ts+1))
+			hyperparam_results_std *= 1.0/np.sqrt(Ts*np.log(Ts+1))
 
 		hyperparam_results_mean = np.mean(hyperparam_results_mean.reshape(int(num_batches/averaging_window), averaging_window), 1)
 		hyperparam_results_std = np.mean(hyperparam_results_std.reshape(int(num_batches/averaging_window), averaging_window), 1)
@@ -615,12 +617,12 @@ def plot_results(algo_name, dataset, results_type, num_batches, batch_size, mods
 	plt.legend(fontsize=8, loc="upper left")
 
 	if not split:
-		filename = "{}/{}_cum_{}-{}_{}_{}_T{}_B{}_N_{}.png".format(logging_dir,results_type, cummulative_plot, 
+		filename = "{}/{}_{}_cum_{}-{}_{}_{}_T{}_B{}_N_{}.png".format(logging_dir, experiment_name, results_type, cummulative_plot, 
 			algo_name, modselalgo,dataset, num_batches, batch_size, repres_layers_name)
 		plt.title("{} {} {} B{} N {}".format( label, modselalgo, dataset, batch_size, repres_layers_name))	
 	else:
 
-		filename = "{}/{}-split_cum_{}-{}_{}_{}_T{}_B{}_N_{}.png".format(logging_dir,results_type, cummulative_plot, 
+		filename = "{}/{}_{}-split_cum_{}-{}_{}_{}_T{}_B{}_N_{}.png".format(logging_dir,experiment_name, results_type, cummulative_plot, 
 			algo_name, modselalgo,dataset, num_batches, batch_size, repres_layers_name)
 		plt.title("{} {} split {} B{} N {}".format( label, modselalgo, dataset, batch_size, repres_layers_name))
 	
@@ -630,7 +632,7 @@ def plot_results(algo_name, dataset, results_type, num_batches, batch_size, mods
 
 
 
-def plot_contrast_modsel_results(algo_name, dataset, results_type, num_batches, batch_size, 
+def plot_contrast_modsel_results(experiment_name, algo_name, dataset, results_type, num_batches, batch_size, 
 	modselalgos, modsel_keys, 
 	results_dictionary, colors, representation_layer_sizes, cummulative_plot = False, 
 	averaging_window = 1 , split=False, sqrt_scaled = False):
@@ -681,8 +683,8 @@ def plot_contrast_modsel_results(algo_name, dataset, results_type, num_batches, 
 		modsel_stat_std = np.mean(modsel_stat_std.reshape(int(num_batches/averaging_window), averaging_window), 1)
 		
 		if sqrt_scaled:
-				modsel_stat_mean *= 1.0/np.sqrt(Ts)
-				modsel_stat_std *= 1.0/np.sqrt(Ts)
+				modsel_stat_mean *= 1.0/np.sqrt(Ts*np.log(Ts+1))
+				modsel_stat_std *= 1.0/np.sqrt(Ts*np.log(Ts+1))
 
 
 		plt.plot(Ts, modsel_stat_mean, color = colors[color_index] ,  label = "{} {}".format(algo_name, modselalgo))
@@ -705,13 +707,13 @@ def plot_contrast_modsel_results(algo_name, dataset, results_type, num_batches, 
 	plt.legend(fontsize=8, loc="upper left")
 
 	if not split:
-		filename = "{}/combined_{}_cum_{}-{}_{}_T{}_B{}_N_{}.png".format(logging_dir,results_type, cummulative_plot, 
+		filename = "{}/{}_combined_{}_cum_{}-{}_{}_T{}_B{}_N_{}.png".format(logging_dir,experiment_name,results_type, cummulative_plot, 
 			algo_name,dataset, num_batches, batch_size, repres_layers_name)
 		plt.title("{} {} B{} N {}".format( label, dataset, batch_size, repres_layers_name))
 
 	else:
 
-		filename = "{}/combined_{}-split_cum_{}-{}_{}_T{}_B{}_N_{}.png".format(logging_dir,results_type, cummulative_plot, 
+		filename = "{}/{}_combined_{}-split_cum_{}-{}_{}_T{}_B{}_N_{}.png".format(logging_dir,experiment_name,results_type, cummulative_plot, 
 			algo_name,dataset, num_batches, batch_size, repres_layers_name)
 		plt.title("{} split {} B{} N {}".format( label, dataset, batch_size, repres_layers_name))
 
@@ -739,49 +741,43 @@ def get_architecture_name(representation_layer_sizes):
 	return repres_layers_name
 
 
-def plot_all(dataset, results_dictionary, num_batches, batch_size, split, hyperparams,
+def plot_all(experiment_name,dataset, results_dictionary, num_batches, batch_size, split, hyperparams,
 	algo_type_key, modselalgo, colors, representation_layer_sizes, 
 	averaging_window, modsel_keys):
 
 
-	plot_modsel_probabilities(algo_type_key, dataset, num_batches, batch_size, modselalgo, 
+	plot_modsel_probabilities(experiment_name,algo_type_key, dataset, num_batches, batch_size, modselalgo, 
 			results_dictionary, hyperparams, colors, representation_layer_sizes = representation_layer_sizes, split = split)
 
-	plot_results(algo_type_key, dataset, "instantaneous_regrets", num_batches, batch_size, modselalgo, 
+	plot_results(experiment_name,algo_type_key, dataset, "instantaneous_regrets", num_batches, batch_size, modselalgo, 
 			results_dictionary, hyperparams, colors, representation_layer_sizes = representation_layer_sizes,
 			 cummulative_plot = True , averaging_window = averaging_window, split = split, sqrt_scaled = True)
 
-	plot_results(algo_type_key, dataset, "instantaneous_accuracies", num_batches, batch_size, modselalgo, 
+	plot_results(experiment_name,algo_type_key, dataset, "instantaneous_accuracies", num_batches, batch_size, modselalgo, 
 			results_dictionary, hyperparams, colors, representation_layer_sizes = representation_layer_sizes,
 			cummulative_plot = False, averaging_window = averaging_window, split = split)
 
 	if PLOT_ALL_STATS:
-		plot_results(algo_type_key, dataset, "num_negatives", num_batches, batch_size, modselalgo, 
+		plot_results(experiment_name,algo_type_key, dataset, "num_negatives", num_batches, batch_size, modselalgo, 
 				results_dictionary, hyperparams, colors, representation_layer_sizes = representation_layer_sizes,
 				 cummulative_plot = False, averaging_window = averaging_window, split = split)
 
-		plot_results(algo_type_key, dataset, "num_positives", num_batches, batch_size, modselalgo, 
+		plot_results(experiment_name,algo_type_key, dataset, "num_positives", num_batches, batch_size, modselalgo, 
 				results_dictionary, hyperparams, colors, representation_layer_sizes = representation_layer_sizes,
 				 cummulative_plot = False, averaging_window = averaging_window, split = split)
 
-		plot_results(algo_type_key, dataset, "false_neg_rates", num_batches, batch_size, modselalgo, 
+		plot_results(experiment_name,algo_type_key, dataset, "false_neg_rates", num_batches, batch_size, modselalgo, 
 				results_dictionary, hyperparams, colors, representation_layer_sizes = representation_layer_sizes,
 				 cummulative_plot = False, averaging_window = averaging_window, split = split)
 
-		plot_results(algo_type_key, dataset, "false_positive_rates", num_batches, batch_size, modselalgo, 
+		plot_results(experiment_name,algo_type_key, dataset, "false_positive_rates", num_batches, batch_size, modselalgo, 
 				results_dictionary, hyperparams, colors, representation_layer_sizes = representation_layer_sizes,
 				cummulative_plot = False, averaging_window = averaging_window, split = split)
 
 
-	plot_optimism_pessimism(algo_type_key, dataset, num_batches, batch_size, results_dictionary, 
+	plot_optimism_pessimism(experiment_name,algo_type_key, dataset, num_batches, batch_size, results_dictionary, 
 		hyperparams, colors, representation_layer_sizes, averaging_window = averaging_window)
 
-
-
-	# ## plot all the model selection results together
-	# plot_contrast_modsel_results(algo_type_key, dataset, "instantaneous_regrets", num_batches, batch_size, modselalgos, modsel_keys, 
-	# 	results_dictionary, colors, representation_layer_sizes, cummulative_plot = True, 
-	# 	averaging_window = averaging_window , split=split, sqrt_scaled = True)
 
 
 
@@ -823,16 +819,31 @@ if __name__ == "__main__":
 	if sys.argv[7] not in ["True", "False"]:
 		raise ValueError("RUN_EXPS key not in [True, False]")
 
-	### Import parameters
+	experiment_name = sys.argv[8]
+
+	### Import GLOBAL parameters
 	from parameters_uci import *
+	#IPython.embed()
 
+	### set experiment specific parameters
+	experiment_specific_params = experiment_parameter_map[experiment_name]
+	alphas = experiment_specific_params["alphas"]
+	epsilons = experiment_specific_params["epsilons"]
+	opt_regs = experiment_specific_params["opt_regs"]
+
+
+	## TODO: this should ideally be larger than max(num_experiments, len(hyperparams))
 	colors = list(matplotlib.colors.TABLEAU_COLORS.keys())
-	repres_layers_name = get_architecture_name(representation_layer_sizes)
 
+
+
+	repres_layers_name = get_architecture_name(representation_layer_sizes)
 	results_dictionary = dict([])
 
 	path = os.getcwd()
 	base_data_dir = "{}/ModselResults".format(path)
+
+
 
 
 	if algo_name == "epsilon":
@@ -852,7 +863,7 @@ if __name__ == "__main__":
 	for dataset in datasets:
 
 		### Get data file name
-		base_algorithms_file_name = get_pickle_base_filename_stub(dataset, algo_name, num_batches,batch_size,repres_layers_name)
+		base_algorithms_file_name = get_pickle_base_filename_stub(experiment_name, dataset, algo_name, num_batches,batch_size,repres_layers_name)
 
 
 		if RUN_EXPS:
@@ -884,11 +895,9 @@ if __name__ == "__main__":
 					results_dictionary[opt_reg_res_tuple[0]] = opt_reg_res_tuple[1]	
 
 			#### Save the base algorithms data
-
 			pickle_and_zip(results_dictionary, base_algorithms_file_name, base_data_dir, is_zip_file = True)
 
 
-		
 		else: 
 
 			results_dictionary = {**results_dictionary, **unzip_and_load_pickle(base_data_dir, base_algorithms_file_name, is_zip_file = True)}
@@ -902,7 +911,7 @@ if __name__ == "__main__":
 			modsel_keys = []
 			for modselalgo in modselalgos:
 				
-				pickle_modsel_results_filename_stub = get_pickle_modsel_filename_stub(dataset, algo_name, modselalgo, num_batches,batch_size,repres_layers_name, split)
+				pickle_modsel_results_filename_stub = get_pickle_modsel_filename_stub(experiment_name,dataset, algo_name, modselalgo, num_batches,batch_size,repres_layers_name, split)
 
 				if RUN_EXPS:
 
@@ -932,7 +941,6 @@ if __name__ == "__main__":
 												opt_batch_size = opt_batch_size, representation_layer_sizes = representation_layer_sizes, 
 												restart_model_full_minimization = restart_model_full_minimization, split = split, retraining_frequency = retraining_frequency)
 
-
 						results_dictionary[mahalanobis_modsel_results_tuple[0]] = mahalanobis_modsel_results_tuple[1]
 
 
@@ -959,18 +967,19 @@ if __name__ == "__main__":
 				else:
 
 					modsel_result = unzip_and_load_pickle(base_data_dir, pickle_modsel_results_filename_stub, is_zip_file = True)
+					modsel_keys.append(modsel_result[0])
 
 					results_dictionary[modsel_result[0]] = modsel_result[1]
 
 
 
-				plot_all(dataset, results_dictionary, num_batches, batch_size, split, hyperparams,
+				plot_all(experiment_name,dataset, results_dictionary, num_batches, batch_size, split, hyperparams,
 					algo_type_key, modselalgo, colors, representation_layer_sizes, 
 					averaging_window, modsel_keys)
 
 
 
-			plot_contrast_modsel_results(algo_type_key, dataset, "instantaneous_regrets", num_batches, batch_size, modselalgos, modsel_keys, 
+			plot_contrast_modsel_results(experiment_name,algo_type_key, dataset, "instantaneous_regrets", num_batches, batch_size, modselalgos, modsel_keys, 
 				results_dictionary, colors, representation_layer_sizes, cummulative_plot = True, 
 				averaging_window = averaging_window , split=split, sqrt_scaled = True)
 

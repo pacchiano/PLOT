@@ -1,0 +1,7 @@
+python test_modelsel.py mahalanobis 1000 10 Adult,German 100_10 True True
+
+python test_modelsel.py mahalanobis 1000 10 Adult,German 100_10 True True
+
+
+
+
