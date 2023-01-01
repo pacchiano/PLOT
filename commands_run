@@ -1,7 +1,7 @@
-python test_modelsel.py mahalanobis 2000 10 Adult,German,Bank,Crime 100_10 True True classic
-python test_modelsel.py mahalanobis 2000 10 Adult,German,Bank,Crime 100_10 True True self
+python test_modelsel.py mahalanobis 2000 10 Adult,German,Bank,Crime 100_10 True True classic; sh commit.sh; python test_modelsel.py mahalanobis 2000 10 Adult,German,Bank,Crime 10_10_10 True True classic; sh commit.sh
 
 
 
+python test_modelsel.py mahalanobis 2000 10 Adult,German,Bank,Crime 100_10 True True self; sh commit.sh; python test_modelsel.py mahalanobis 2000 10 Adult,German,Bank,Crime 10_10_10 True True self; sh commit.sh
 
 

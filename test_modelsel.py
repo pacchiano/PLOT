@@ -321,8 +321,10 @@ def plot_optimism_pessimism(experiment_name, algo_name,dataset, num_batches, bat
 		os.mkdir(logging_dir)
 
 
+	reduced_hyperparams = list(set(hyperparams))
 
-	for hyperparam in hyperparams:
+
+	for hyperparam in reduced_hyperparams:
 
 		hyperparam_results = results_dictionary["{}-{}".format(algo_name, hyperparam)] 
 		hyperparam_rewards = np.array([np.cumsum(x["rewards"]) for x in hyperparam_results])
@@ -534,7 +536,9 @@ def plot_results(experiment_name, algo_name, dataset, results_type, num_batches,
 
 	# Plot hyper sweep results
 
-	for hyperparam in hyperparams:
+	reduced_hyperparams = list(set(hyperparams))
+
+	for hyperparam in reduced_hyperparams:
 
 		hyperparam_results = results_dictionary["{}-{}".format(algo_name, hyperparam)] 
 		if cummulative_plot:
