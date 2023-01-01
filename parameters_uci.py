@@ -1,7 +1,7 @@
 num_opt_steps = 2000
 num_baseline_steps = 20000
 opt_batch_size = 20
-burn_in = 0
+burn_in = -1
 retraining_frequency = 40
 averaging_window = 1
 restart_model_full_minimization = True
