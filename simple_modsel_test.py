@@ -237,7 +237,7 @@ if __name__ == "__main__":
 		means = [.7, .8]
 		stds = []
 		scalings = []
-		confidence_radii = [.16,.16,.16,.16 ] ## increase radii
+		confidence_radii = [.16,.16,.16,.16, .16, .16, .16, .16, .16 ] ## increase radii
 		algotype = "bernoulli"
 		experiment_name = "exp6"
 
@@ -267,7 +267,7 @@ if __name__ == "__main__":
 
 
 	colors = ["red", "orange", "violet", "black", "brown", "yellow", "green", "gray"]	
-	modselalgos = ['BalancingSharp']#, 'BalancingDoResurrectClassic','BalancingDoResurrectDown', "BalancingDoResurrect"]#"BalancingDoubling"]# "BalancingDoubling"]#"BalancingDoResurrect", "BalancingSharp", "UCB", "EXP3", "Corral" ]
+	modselalgos = ["UCB", 'BalancingSharp',  "EXP3", "Corral", 'BalancingDoResurrectClassic','BalancingDoResurrectDown', "BalancingDoResurrect"]#"BalancingDoubling"]# "BalancingDoubling"]#"BalancingDoResurrect", "BalancingSharp", "UCB", "EXP3", "Corral" ]
 
 	normalization_visualization = 1.0/np.sqrt( np.arange(num_timesteps) + 1)
 	normalization_visualization *= 1.0/np.log( np.arange(num_timesteps) + 2)
