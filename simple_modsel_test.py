@@ -277,7 +277,9 @@ if __name__ == "__main__":
 	#### RUN THE BASELINES
 	baselines_results = []
 
-	for confidence_radius in confidence_radii:
+	reduced_confidence_radii = list(set(confidence_radii))
+
+	for confidence_radius in reduced_confidence_radii:
 			cum_regrets_all = []	
 			#confidence_radius_pulls_all = []
 			for _ in range(num_experiments):
@@ -342,8 +344,6 @@ if __name__ == "__main__":
 					label = str(confidence_radius), color = color )
 				plt.fill_between(np.arange(num_timesteps) + 1, mean_probabilities[:,i] - .5*std_probabilities[:,i],
 						mean_probabilities[:,i] + .5*std_probabilities[:,i], alpha = .1, color = color)
-				#plt.fill_between(np.arange(num_timesteps) + 1, mean_probabilities[:,i],
-				#		mean_probabilities[:,i] , alpha = .1, color = color)
 
 
 			plt.title("Probabilities Evolution {} {}".format(modselalgo, split_tag))
@@ -387,9 +387,6 @@ if __name__ == "__main__":
 
 
 
-
-
-
 			### plot all the model selection together .... Add an extra plot. 
 			### Implement SuperClassic^2 --- original version (with elimination)
 
@@ -422,7 +419,7 @@ if __name__ == "__main__":
 
 
 
-			for confidence_radius, baseline_result_tuple, color in zip(confidence_radii, baselines_results, colors):
+			for confidence_radius, baseline_result_tuple, color in zip(reduced_confidence_radii, baselines_results, colors):
 				mean_cum_regrets, std_cum_regrets = baseline_result_tuple
 				plt.plot(np.arange(num_timesteps) + 1, mean_cum_regrets, label = "radius {}".format(confidence_radius), color = color )
 				plt.fill_between(np.arange(num_timesteps) + 1,mean_cum_regrets - .5*std_cum_regrets,mean_cum_regrets + .5*std_cum_regrets, alpha = .2 , color = color )
@@ -456,7 +453,7 @@ if __name__ == "__main__":
 					plt.plot(np.arange(num_timesteps) + 1, modsel_cum_regrets_all[i], label = modselalgo, color = "blue" )
 					#plt.fill_between(np.arange(num_timesteps) + 1,mean_modsel_cum_regrets -.5*std_modsel_cum_regrets, mean_modsel_cum_regrets +.5*std_modsel_cum_regrets, color = "blue", alpha = .2   )
 
-					for confidence_radius, info_list, color in zip(confidence_radii, per_algorithm_regrets_stats[i], colors):
+					for confidence_radius, info_list, color in zip(reduced_confidence_radii, per_algorithm_regrets_stats[i], colors):
 							cum_regret = np.cumsum(info_list)
 							plt.plot(np.arange(len(cum_regret)) + 1, cum_regret, label = "radius {}".format(confidence_radius), color = color )
 							#plt.fill_between(np.arange(num_timesteps) + 1,mean_cum_regrets - .5*std_cum_regrets,mean_cum_regrets + .5*std_cum_regrets, alpha = .2 , color = color )
