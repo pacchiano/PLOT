@@ -233,6 +233,14 @@ if __name__ == "__main__":
 		confidence_radii = [.08, .16, .64, 1.24, 2.5, 5, 10, 25	] ## increase radii
 		algotype = "gaussian"
 		experiment_name = "exp5"
+	elif exp_type == "exp6":
+		means = [.7, .8]
+		stds = []
+		scalings = []
+		confidence_radii = [.16,.16,.16,.16 ] ## increase radii
+		algotype = "bernoulli"
+		experiment_name = "exp6"
+
 
 	else:
 		raise ValueError("experiment type not recognized")
@@ -259,7 +267,7 @@ if __name__ == "__main__":
 
 
 	colors = ["red", "orange", "violet", "black", "brown", "yellow", "green", "gray"]	
-	modselalgos = ['BalancingDoResurrectClassic','BalancingDoResurrectDown', "BalancingDoResurrect"]#"BalancingDoubling"]# "BalancingDoubling"]#"BalancingDoResurrect", "BalancingSharp", "UCB", "EXP3", "Corral" ]
+	modselalgos = ['BalancingSharp']#, 'BalancingDoResurrectClassic','BalancingDoResurrectDown', "BalancingDoResurrect"]#"BalancingDoubling"]# "BalancingDoubling"]#"BalancingDoResurrect", "BalancingSharp", "UCB", "EXP3", "Corral" ]
 
 	normalization_visualization = 1.0/np.sqrt( np.arange(num_timesteps) + 1)
 	normalization_visualization *= 1.0/np.log( np.arange(num_timesteps) + 2)

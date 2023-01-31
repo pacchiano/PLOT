@@ -594,8 +594,8 @@ def plot_results(experiment_name, algo_name, dataset, results_type, num_batches,
 	modsel_stat_std = np.mean(modsel_stat_std.reshape(int(num_batches/averaging_window), averaging_window), 1)
 	
 	if sqrt_scaled:
-			modsel_stat_mean *= 1.0/np.sqrt(Ts)
-			modsel_stat_std *= 1.0/np.sqrt(Ts)
+			modsel_stat_mean *= 1.0/np.sqrt(Ts*log(Ts+1))
+			modsel_stat_std *= 1.0/np.sqrt(Ts*log(Ts+1))
 
 
 
