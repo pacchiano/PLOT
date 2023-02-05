@@ -107,7 +107,10 @@ def test_MAB_modsel(means, stds, scalings, num_timesteps, confidence_radii,
 	elif modselalgo == "BalancingDoResurrectClassic":
 		modsel_manager = BalancingHyperparamDoubling(len(confidence_radii), min(confidence_radii), 
 			resurrecting = True, classic = True)
-
+	elif modselalgo == "Greedy":
+		modsel_manager = UCBHyperparam(len(confidence_radii), confidence_radius = 0)
+	elif modselalgo == "EpsilonGreedy":
+		modsel_manager = UCBHyperparam(len(confidence_radii), confidence_radius = 0, epsilon = 0.05)
 	else:
 		raise ValueError("Modselalgo type {} not recognized.".format(modselalgo))
 
@@ -122,6 +125,8 @@ def test_MAB_modsel(means, stds, scalings, num_timesteps, confidence_radii,
 
 	num_arms = len(means)
 	#empirical_means = [0 for _ in range(num_arms)]
+
+
 
 
 	# play_arm_index = random.choice(range(num_arms))
@@ -144,6 +149,8 @@ def test_MAB_modsel(means, stds, scalings, num_timesteps, confidence_radii,
 	arm_pulls = [0 for _ in range(num_arms)]
 	confidence_radius_pulls = [0 for _ in range(len(confidence_radii))]
 
+	modsel_infos = []
+
 	for t in range(num_timesteps):
 		print("Timestep {}".format(t))
 		modsel_sample_idx = modsel_manager.sample_base_index()
@@ -164,6 +171,8 @@ def test_MAB_modsel(means, stds, scalings, num_timesteps, confidence_radii,
 		modsel_info["optimistic_reward_predictions"] = ucb_arm_value
 		modsel_info["pessimistic_reward_predictions"] = lcb_arm_value
 
+		modsel_infos.append(modsel_info)
+
 		ucb_algorithm.update_arm_statistics(play_arm_index, reward)
 		
 		mean_reward = bandit.get_arm_mean(play_arm_index)
@@ -181,7 +190,7 @@ def test_MAB_modsel(means, stds, scalings, num_timesteps, confidence_radii,
 
 		per_algorithm_regrets[modsel_sample_idx].append(instantaneous_regret)
 
-	return rewards, mean_rewards, instantaneous_regrets, arm_pulls, confidence_radius_pulls, probabilities, per_algorithm_regrets
+	return rewards, mean_rewards, instantaneous_regrets, arm_pulls, confidence_radius_pulls, probabilities, per_algorithm_regrets, modsel_infos
 
 
 
@@ -204,7 +213,7 @@ if __name__ == "__main__":
 
 	elif exp_type == "exp2":
 		means = [.7, .8]
-		stds = [.01, 5]
+		stds = []
 		scalings = []
 		confidence_radii = [.08, .16, .64, 1.24, 2.5, 5, 10, 25	] ## increase radii
 		algotype = "gaussian"
@@ -267,7 +276,7 @@ if __name__ == "__main__":
 
 
 	colors = ["red", "orange", "violet", "black", "brown", "yellow", "green", "gray"]	
-	modselalgos = ["UCB", 'BalancingSharp',  "EXP3", "Corral", 'BalancingDoResurrectClassic','BalancingDoResurrectDown', "BalancingDoResurrect"]#"BalancingDoubling"]# "BalancingDoubling"]#"BalancingDoResurrect", "BalancingSharp", "UCB", "EXP3", "Corral" ]
+	modselalgos = ["EpsilonGreedy"]#"UCB", 'BalancingSharp',  "EXP3", "Corral", 'BalancingDoResurrectClassic','BalancingDoResurrectDown', "BalancingDoResurrect"]#"BalancingDoubling"]# "BalancingDoubling"]#"BalancingDoResurrect", "BalancingSharp", "UCB", "EXP3", "Corral" ]
 
 	normalization_visualization = 1.0/np.sqrt( np.arange(num_timesteps) + 1)
 	normalization_visualization *= 1.0/np.log( np.arange(num_timesteps) + 2)
@@ -284,7 +293,7 @@ if __name__ == "__main__":
 			#confidence_radius_pulls_all = []
 			for _ in range(num_experiments):
 
-				rewards, mean_rewards, instantaneous_regrets, arm_pulls,_, _, _ = test_MAB_modsel(means, stds, scalings, num_timesteps, 
+				rewards, mean_rewards, instantaneous_regrets, arm_pulls,_, _, _, _ = test_MAB_modsel(means, stds, scalings, num_timesteps, 
 					[confidence_radius],  modselalgo = "Corral", algotype = algotype) ### Here we can use any modselalgo, it is dummy in this case.
 
 				cum_regrets_all.append(np.cumsum(instantaneous_regrets))
@@ -316,7 +325,7 @@ if __name__ == "__main__":
 			probabilities_all = []
 			per_algorithm_regrets_stats = []
 			for _ in range(num_experiments):
-				modsel_rewards, modsel_mean_rewards, modsel_instantaneous_regrets, modsel_arm_pulls, modsel_confidence_radius_pulls, probabilities_modsel, per_algorithm_regrets = test_MAB_modsel(means, stds, scalings, 
+				modsel_rewards, modsel_mean_rewards, modsel_instantaneous_regrets, modsel_arm_pulls, modsel_confidence_radius_pulls, probabilities_modsel, per_algorithm_regrets, _ = test_MAB_modsel(means, stds, scalings, 
 					num_timesteps, 
 					confidence_radii,  modselalgo = modselalgo, 
 					split = split, algotype = algotype)
@@ -416,6 +425,13 @@ if __name__ == "__main__":
 			## Is doubling too aggressive? This is a hyperparameter. 
 
 			
+
+
+
+
+			### Run Greedy algorithm... pick the learner that has the highest average reward. UCB with zero confidence.
+
+			### Implement Epsilon-greedy
 
 
 

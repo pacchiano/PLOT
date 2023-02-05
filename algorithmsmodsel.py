@@ -53,7 +53,7 @@ def binary_search(func,xmin,xmax,tol=1e-5):
     return x
 
 class UCBalgorithm:
-    def __init__(self, num_arms, burn_in = 1, min_range = -float("inf"), max_range = float("inf")):
+    def __init__(self, num_arms, burn_in = 1, min_range = -float("inf"), max_range = float("inf"), epsilon = 0):
         self.num_arms = num_arms
         self.mean_estimators = [0 for _ in range(num_arms)]
         self.counts = [0 for _ in range(num_arms)]
@@ -61,6 +61,7 @@ class UCBalgorithm:
         self.burn_in = burn_in
         self.min_range = min_range
         self.max_range = max_range
+        self.epsilon = epsilon
 
     def update_arm_statistics(self, arm_index, reward):
         self.counts[arm_index] += 1
@@ -69,6 +70,9 @@ class UCBalgorithm:
 
 
     def get_ucb_arm(self, confidence_radius ):
+
+
+
         if sum(self.counts) <=  self.burn_in:
             #print("HERE")
             ucb_arm_index = random.choice(range(self.num_arms))
@@ -79,10 +83,14 @@ class UCBalgorithm:
             ucb_arm_values = [min(self.mean_estimators[i] + ucb_bonuses[i], self.max_range) for i in range(self.num_arms)]
             #ucb_arm_index = np.argmax(ucb_arm_values)
             ucb_arm_values = np.array(ucb_arm_values)
-            ucb_arm_index = np.random.choice(np.flatnonzero(ucb_arm_values == ucb_arm_values.max()))
-            ucb_arm_value = ucb_arm_values[ucb_arm_index]
             lcb_arm_values = [max(self.mean_estimators[i] - ucb_bonuses[i], self.min_range) for i in range(self.num_arms)]
 
+            if np.random.random() <= self.epsilon:
+                ucb_arm_index = np.random.choice(range(self.num_arms))
+            else:
+                ucb_arm_index = np.random.choice(np.flatnonzero(ucb_arm_values == ucb_arm_values.max()))
+            
+            ucb_arm_value = ucb_arm_values[ucb_arm_index]
             lcb_arm_value = lcb_arm_values[ucb_arm_index]
         return ucb_arm_index, ucb_arm_value, lcb_arm_value
 
@@ -90,9 +98,9 @@ class UCBalgorithm:
 class UCBHyperparam:
 
     def __init__(self,m, burn_in = 1, confidence_radius = 2, 
-        min_range = 0, max_range = 1):
+        min_range = 0, max_range = 1, epsilon = 0):
         #self.hyperparam_list = hyperparam_list
-        self.ucb_algorithm = UCBalgorithm(m, burn_in = 1, min_range = 0, max_range = 1)
+        self.ucb_algorithm = UCBalgorithm(m, burn_in = 1, min_range = 0, max_range = 1, epsilon = epsilon)
         #self.discount_factor = discount_factor
         #self.forced_exploration_factor = forced_exploration_factor
         self.m = m
