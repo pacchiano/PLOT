@@ -216,7 +216,7 @@ if __name__ == "__main__":
 		stds = []
 		scalings = []
 		confidence_radii = [.08, .16, .64, 1.24, 2.5, 5, 10, 25	] ## increase radii
-		algotype = "gaussian"
+		algotype = "bernoulli"
 		experiment_name = "exp2"
 
 	elif exp_type == "exp3":
