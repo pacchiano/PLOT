@@ -773,11 +773,13 @@ def train_epsilon_greedy_modsel(dataset, baseline_model, num_batches, batch_size
 
 
 
-
-
-def get_modsel_manager(modselalgo, parameters, num_batches):
+def get_modsel_manager(modselalgo, parameters, num_batches ):
     if modselalgo == "Corral":
         modsel_manager = CorralHyperparam(len(parameters), T = num_batches) ### hack
+    elif modselalgo == "CorralHigh":
+        modsel_manager = CorralHyperparam(len(parameters),  eta = 10, T = num_batches) ### hack
+    elif modselalgo == "CorralLow":
+        modsel_manager = CorralHyperparam(len(parameters),  eta = .01, T = num_batches) ### hack
     elif modselalgo == "CorralAnytime":
         modsel_manager = CorralHyperparam(len(parameters), T = num_batches, eta = 1.0/np.sqrt(num_batches), anytime = True) 
     elif modselalgo == "EXP3":
@@ -786,12 +788,10 @@ def get_modsel_manager(modselalgo, parameters, num_batches):
         modsel_manager = EXP3Hyperparam(len(parameters), T = num_batches, anytime = True)
     elif modselalgo == "UCB":
         modsel_manager = UCBHyperparam(len(parameters))
-    elif modselalgo == "BalancingSharp":
-        modsel_manager = BalancingHyperparamSharp(len(parameters), [max(x, .0000000001) for x in parameters])
-    elif modselalgo == "BalancingDoubling":
-        modsel_manager = BalancingHyperparamDoubling(len(parameters), min(parameters))
-    elif modselalgo == "BalancingDoResurrect":
-        modsel_manager = BalancingHyperparamDoubling(len(parameters), min(parameters), resurrecting = True)
+    elif modselalgo == "EXP3Low":
+            modsel_manager = EXP3Hyperparam(len(parameters), T = num_batches, eta_multiplier = .1)
+    elif modselalgo == "EXP3High":
+            modsel_manager = EXP3Hyperparam(len(parameters), T = num_batches, eta_multiplier = 10)
     elif modselalgo == "BalancingSharp":
         modsel_manager = BalancingHyperparamSharp(len(parameters), [max(x, .0000000001) for x in parameters])
     elif modselalgo == "BalancingDoubling":
@@ -803,10 +803,51 @@ def get_modsel_manager(modselalgo, parameters, num_batches):
     elif modselalgo == "BalancingDoResurrectClassic":
         modsel_manager = BalancingHyperparamDoubling(len(parameters), min(parameters), 
             resurrecting = True, classic = True)
+    elif modselalgo == "Greedy":
+        modsel_manager = UCBHyperparam(len(parameters), confidence_radius = 0)
+    elif modselalgo == "EpsilonGreedy":
+        modsel_manager = UCBHyperparam(len(parameters), confidence_radius = 0, epsilon = 0.05)
     else:
         raise ValueError("Modselalgo type {} not recognized.".format(modselalgo))
 
+
     return modsel_manager
+
+
+
+
+# def get_modsel_manager(modselalgo, parameters, num_batches):
+#     if modselalgo == "Corral":
+#         modsel_manager = CorralHyperparam(len(parameters), T = num_batches) ### hack
+#     elif modselalgo == "CorralAnytime":
+#         modsel_manager = CorralHyperparam(len(parameters), T = num_batches, eta = 1.0/np.sqrt(num_batches), anytime = True) 
+#     elif modselalgo == "EXP3":
+#         modsel_manager = EXP3Hyperparam(len(parameters), T = num_batches)
+#     elif modselalgo == "EXP3Anytime":
+#         modsel_manager = EXP3Hyperparam(len(parameters), T = num_batches, anytime = True)
+#     elif modselalgo == "UCB":
+#         modsel_manager = UCBHyperparam(len(parameters))
+#     elif modselalgo == "BalancingSharp":
+#         modsel_manager = BalancingHyperparamSharp(len(parameters), [max(x, .0000000001) for x in parameters])
+#     elif modselalgo == "BalancingDoubling":
+#         modsel_manager = BalancingHyperparamDoubling(len(parameters), min(parameters))
+#     elif modselalgo == "BalancingDoResurrect":
+#         modsel_manager = BalancingHyperparamDoubling(len(parameters), min(parameters), resurrecting = True)
+#     elif modselalgo == "BalancingSharp":
+#         modsel_manager = BalancingHyperparamSharp(len(parameters), [max(x, .0000000001) for x in parameters])
+#     elif modselalgo == "BalancingDoubling":
+#         modsel_manager = BalancingHyperparamDoubling(len(parameters), min(parameters))
+#     elif modselalgo == "BalancingDoResurrect":
+#         modsel_manager = BalancingHyperparamDoubling(len(parameters), min(parameters), resurrecting = True)
+#     elif modselalgo == "BalancingDoResurrectDown":
+#         modsel_manager = BalancingHyperparamDoubling(len(parameters), 10, resurrecting = True)
+#     elif modselalgo == "BalancingDoResurrectClassic":
+#         modsel_manager = BalancingHyperparamDoubling(len(parameters), min(parameters), 
+#             resurrecting = True, classic = True)
+#     else:
+#         raise ValueError("Modselalgo type {} not recognized.".format(modselalgo))
+
+#     return modsel_manager
 
 
 

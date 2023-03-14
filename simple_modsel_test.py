@@ -11,6 +11,51 @@ from algorithmsmodsel import UCBalgorithm
 np.random.seed(1000)
 random.seed(1000)
 
+
+def get_modsel_manager(modselalgo,confidence_radii, num_timesteps ):
+	if modselalgo == "Corral":
+		modsel_manager = CorralHyperparam(len(confidence_radii), T = num_timesteps) ### hack
+	elif modselalgo == "CorralHigh":
+		modsel_manager = CorralHyperparam(len(confidence_radii),  eta = 10, T = num_timesteps) ### hack
+	elif modselalgo == "CorralLow":
+		modsel_manager = CorralHyperparam(len(confidence_radii),  eta = .01, T = num_timesteps) ### hack
+	elif modselalgo == "CorralAnytime":
+		modsel_manager = CorralHyperparam(len(confidence_radii), T = num_timesteps, eta = 1.0/np.sqrt(num_timesteps), anytime = True) 
+	elif modselalgo == "EXP3":
+		modsel_manager = EXP3Hyperparam(len(confidence_radii), T = num_timesteps)
+	elif modselalgo == "EXP3Anytime":
+		modsel_manager = EXP3Hyperparam(len(confidence_radii), T = num_timesteps, anytime = True)
+	elif modselalgo == "UCB":
+		modsel_manager = UCBHyperparam(len(confidence_radii))
+	
+	elif modselalgo == "EXP3Low":
+			modsel_manager = EXP3Hyperparam(len(confidence_radii), T = num_timesteps, eta_multiplier = .1)
+
+	elif modselalgo == "EXP3High":
+			modsel_manager = EXP3Hyperparam(len(confidence_radii), T = num_timesteps, eta_multiplier = 10)
+
+	elif modselalgo == "BalancingSharp":
+		modsel_manager = BalancingHyperparamSharp(len(confidence_radii), [max(x, .0000000001) for x in confidence_radii])
+	elif modselalgo == "BalancingDoubling":
+		modsel_manager = BalancingHyperparamDoubling(len(confidence_radii), min(confidence_radii))
+	elif modselalgo == "BalancingDoResurrect":
+		modsel_manager = BalancingHyperparamDoubling(len(confidence_radii), min(confidence_radii), resurrecting = True)
+	elif modselalgo == "BalancingDoResurrectDown":
+		modsel_manager = BalancingHyperparamDoubling(len(confidence_radii), 10, resurrecting = True)
+	elif modselalgo == "BalancingDoResurrectClassic":
+		modsel_manager = BalancingHyperparamDoubling(len(confidence_radii), min(confidence_radii), 
+			resurrecting = True, classic = True)
+	elif modselalgo == "Greedy":
+		modsel_manager = UCBHyperparam(len(confidence_radii), confidence_radius = 0)
+	elif modselalgo == "EpsilonGreedy":
+		modsel_manager = UCBHyperparam(len(confidence_radii), confidence_radius = 0, epsilon = 0.05)
+	else:
+		raise ValueError("Modselalgo type {} not recognized.".format(modselalgo))
+
+
+	return modsel_manager
+
+
 class BernoulliBandit:
 	def __init__(self, base_means, scalings = []):
 		self.base_means = base_means
@@ -68,55 +113,34 @@ class GaussianBandit:
 
 
 
+# def test_modsel_split_data(inst_reward_data, inst_regret_data, num_timesteps,modselalgo = "Corral" ):
+# 	num_base_algorithms = len(inst_reward_data)
+# 	index_per_algorithm = [0 for _ in range(num_base_algorithms)]
+
+# 	modselmanager = get_modsel_manager(modselalgo,confidence_radii, num_timesteps )
+
+
+
+# 	rewards = []
+# 	mean_rewards = []
+# 	instantaneous_regrets = []
+# 	probabilities = []
+
+
+# 	for i in range(num_timesteps):
+
+# 		pass
+
+
+
+
 
 def test_MAB_modsel(means, stds, scalings, num_timesteps, confidence_radii,  
 	modselalgo = "Corral", split = False, algotype = "bernoulli"):
 	
-
-
-
-	if modselalgo == "Corral":
-		modsel_manager = CorralHyperparam(len(confidence_radii), T = num_timesteps) ### hack
-	elif modselalgo == "CorralHigh":
-		modsel_manager = CorralHyperparam(len(confidence_radii),  eta = 10, T = num_timesteps) ### hack
-	elif modselalgo == "CorralLow":
-		modsel_manager = CorralHyperparam(len(confidence_radii),  eta = .01, T = num_timesteps) ### hack
-	elif modselalgo == "CorralAnytime":
-		modsel_manager = CorralHyperparam(len(confidence_radii), T = num_timesteps, eta = 1.0/np.sqrt(num_timesteps), anytime = True) 
-	elif modselalgo == "EXP3":
-		modsel_manager = EXP3Hyperparam(len(confidence_radii), T = num_timesteps)
-	elif modselalgo == "EXP3Anytime":
-		modsel_manager = EXP3Hyperparam(len(confidence_radii), T = num_timesteps, anytime = True)
-	elif modselalgo == "UCB":
-		modsel_manager = UCBHyperparam(len(confidence_radii))
-	
-	elif modselalgo == "EXP3Low":
-			modsel_manager = EXP3Hyperparam(len(confidence_radii), T = num_timesteps, eta_multiplier = .1)
-
-	elif modselalgo == "EXP3High":
-			modsel_manager = EXP3Hyperparam(len(confidence_radii), T = num_timesteps, eta_multiplier = 10)
-
-	elif modselalgo == "BalancingSharp":
-		modsel_manager = BalancingHyperparamSharp(len(confidence_radii), [max(x, .0000000001) for x in confidence_radii])
-	elif modselalgo == "BalancingDoubling":
-		modsel_manager = BalancingHyperparamDoubling(len(confidence_radii), min(confidence_radii))
-	elif modselalgo == "BalancingDoResurrect":
-		modsel_manager = BalancingHyperparamDoubling(len(confidence_radii), min(confidence_radii), resurrecting = True)
-	elif modselalgo == "BalancingDoResurrectDown":
-		modsel_manager = BalancingHyperparamDoubling(len(confidence_radii), 10, resurrecting = True)
-	elif modselalgo == "BalancingDoResurrectClassic":
-		modsel_manager = BalancingHyperparamDoubling(len(confidence_radii), min(confidence_radii), 
-			resurrecting = True, classic = True)
-	elif modselalgo == "Greedy":
-		modsel_manager = UCBHyperparam(len(confidence_radii), confidence_radius = 0)
-	elif modselalgo == "EpsilonGreedy":
-		modsel_manager = UCBHyperparam(len(confidence_radii), confidence_radius = 0, epsilon = 0.05)
-	else:
-		raise ValueError("Modselalgo type {} not recognized.".format(modselalgo))
-
+	modselmanager = get_modsel_manager(modselalgo,confidence_radii, num_timesteps )
 
 	if algotype == "bernoulli":
-
 		bandit = BernoulliBandit(means, scalings)
 	elif algotype == "gaussian":
 		bandit = GaussianBandit(means, stds)
@@ -124,18 +148,14 @@ def test_MAB_modsel(means, stds, scalings, num_timesteps, confidence_radii,
 		raise ValueError("unrecognized bandit type {}".format(algotype))
 
 	num_arms = len(means)
-	#empirical_means = [0 for _ in range(num_arms)]
-
-
-
-
-	# play_arm_index = random.choice(range(num_arms))
 
 	if split:
 		ucb_algorithms = [UCBalgorithm(num_arms) for _ in range(len(confidence_radii))]
-
 	else:
 		ucb_algorithm = UCBalgorithm(num_arms)
+
+
+
 
 
 	rewards = []
@@ -215,7 +235,7 @@ if __name__ == "__main__":
 		means = [.7, .8]
 		stds = []
 		scalings = []
-		confidence_radii = [.08, .16, .64, 1.24, 2.5, 5, 10, 25	] ## increase radii
+		confidence_radii = [.08, .16, .64, 1.24	] ## increase radii
 		algotype = "bernoulli"
 		experiment_name = "exp2"
 
@@ -256,6 +276,8 @@ if __name__ == "__main__":
 
 
 	PLOT_ALL_STATS = False
+	REUSE_SPLIT_DATA = False
+
 
 	exp_data_dir = "./debugModsel/{}".format(experiment_name)
 	exp_info = "means - {} \n conf_radii - {}".format(means, confidence_radii)
@@ -276,7 +298,7 @@ if __name__ == "__main__":
 
 
 	colors = ["red", "orange", "violet", "black", "brown", "yellow", "green", "gray"]	
-	modselalgos = ["EpsilonGreedy"]#"UCB", 'BalancingSharp',  "EXP3", "Corral", 'BalancingDoResurrectClassic','BalancingDoResurrectDown', "BalancingDoResurrect"]#"BalancingDoubling"]# "BalancingDoubling"]#"BalancingDoResurrect", "BalancingSharp", "UCB", "EXP3", "Corral" ]
+	modselalgos = ['BalancingDoResurrectClassic']#"EpsilonGreedy"]#"UCB", 'BalancingSharp',  "EXP3", "Corral", 'BalancingDoResurrectClassic','BalancingDoResurrectDown', "BalancingDoResurrect"]#"BalancingDoubling"]# "BalancingDoubling"]#"BalancingDoResurrect", "BalancingSharp", "UCB", "EXP3", "Corral" ]
 
 	normalization_visualization = 1.0/np.sqrt( np.arange(num_timesteps) + 1)
 	normalization_visualization *= 1.0/np.log( np.arange(num_timesteps) + 2)
@@ -287,6 +309,8 @@ if __name__ == "__main__":
 	baselines_results = []
 
 	reduced_confidence_radii = list(set(confidence_radii))
+
+	reduced_confidence_radii.sort()
 
 	for confidence_radius in reduced_confidence_radii:
 			cum_regrets_all = []	
@@ -325,15 +349,31 @@ if __name__ == "__main__":
 			probabilities_all = []
 			per_algorithm_regrets_stats = []
 			for _ in range(num_experiments):
-				modsel_rewards, modsel_mean_rewards, modsel_instantaneous_regrets, modsel_arm_pulls, modsel_confidence_radius_pulls, probabilities_modsel, per_algorithm_regrets, _ = test_MAB_modsel(means, stds, scalings, 
-					num_timesteps, 
-					confidence_radii,  modselalgo = modselalgo, 
-					split = split, algotype = algotype)
+
+
+				if REUSE_SPLIT_DATA:
+					modsel_rewards, modsel_mean_rewards, modsel_instantaneous_regrets, modsel_arm_pulls, modsel_confidence_radius_pulls, probabilities_modsel, per_algorithm_regrets, _ = test_MAB_modsel(
+						means, 
+						stds, 
+						scalings, 
+						num_timesteps, 
+						confidence_radii,  
+						modselalgo = modselalgo, 
+						split = split, 
+						algotype = algotype)
+
+				else:
+					modsel_rewards, modsel_mean_rewards, modsel_instantaneous_regrets, modsel_arm_pulls, modsel_confidence_radius_pulls, probabilities_modsel, per_algorithm_regrets, _ = test_MAB_modsel(means, stds, scalings, 
+						num_timesteps, 
+						confidence_radii,  modselalgo = modselalgo, 
+						split = split, algotype = algotype)
 				
 				modsel_cum_regrets_all.append(np.cumsum(modsel_instantaneous_regrets))
 				modsel_confidence_radius_pulls_all.append(modsel_confidence_radius_pulls)
 				probabilities_all.append(probabilities_modsel)
 				per_algorithm_regrets_stats.append(per_algorithm_regrets)
+
+
 
 
 
@@ -376,9 +416,9 @@ if __name__ == "__main__":
 
 
 			#IPython.embed()
-			plt.plot(np.arange(num_timesteps) + 1, mean_modsel_cum_regrets, label = modselalgo, color = "blue" )
+			plt.plot(np.arange(num_timesteps) + 1, mean_modsel_cum_regrets, label = modselalgo, color = "blue", linewidth = 3, linestyle = "dashed" )
 
-			plt.fill_between(np.arange(num_timesteps) + 1,mean_modsel_cum_regrets -.5*std_modsel_cum_regrets, mean_modsel_cum_regrets +.5*std_modsel_cum_regrets, color = "blue", alpha = .2   )
+			#plt.fill_between(np.arange(num_timesteps) + 1,mean_modsel_cum_regrets -.5*std_modsel_cum_regrets, mean_modsel_cum_regrets +.5*std_modsel_cum_regrets, color = "blue", alpha = .2   )
 
 			mean_modsel_confidence_radius_pulls = np.mean( modsel_confidence_radius_pulls_all, 0)
 
@@ -437,13 +477,17 @@ if __name__ == "__main__":
 
 			for confidence_radius, baseline_result_tuple, color in zip(reduced_confidence_radii, baselines_results, colors):
 				mean_cum_regrets, std_cum_regrets = baseline_result_tuple
-				plt.plot(np.arange(num_timesteps) + 1, mean_cum_regrets, label = "radius {}".format(confidence_radius), color = color )
-				plt.fill_between(np.arange(num_timesteps) + 1,mean_cum_regrets - .5*std_cum_regrets,mean_cum_regrets + .5*std_cum_regrets, alpha = .2 , color = color )
+				plt.plot(np.arange(num_timesteps) + 1, mean_cum_regrets, label = " conf. radius {}".format(confidence_radius), color = color )
+				#plt.fill_between(np.arange(num_timesteps) + 1,mean_cum_regrets - .5*std_cum_regrets,mean_cum_regrets + .5*std_cum_regrets, alpha = .2 , color = color )
 
 
 
 			#plt.show()
-			plt.title("Cumulative Regret - {}".format(split_tag))
+			if split:
+				plt.title("Normalized Cumulative Regret - {}".format(split_tag))
+			else:
+				plt.title("Normalized Cumulative Regret")
+
 			plt.legend(fontsize=8, loc="upper left")
 			#plt.ylim(0,50)
 			#plt.show()
