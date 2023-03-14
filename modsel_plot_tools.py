@@ -198,7 +198,7 @@ def plot_base(algo_name, dataset, results_type, num_batches, batch_size,
 	repres_layers_name = get_architecture_name(representation_layer_sizes)
 
 
-	color_index = 0
+	#color_index = 0
 	
 	logging_dir = "./ModselResults/T{}".format(num_batches)
 	if not os.path.exists(logging_dir):
@@ -245,8 +245,8 @@ def plot_base(algo_name, dataset, results_type, num_batches, batch_size,
 	#color_index += 1
 	#IPython.embed()
 
-	if len(colors) < num_experiments:
-		raise ValueError("Number of colors < number of experiments. Base plot will fail.")
+	# if len(colors) < num_experiments:
+	# 	raise ValueError("Number of colors < number of experiments. Base plot will fail.")
 
 	for i in range(num_experiments):
 		plot_data = hyperparam_stats[i,:]
@@ -258,7 +258,7 @@ def plot_base(algo_name, dataset, results_type, num_batches, batch_size,
 
 
 		plt.plot(Ts, plot_data, color = 'blue')
-		color_index += 1
+		#color_index += 1
 	plt.xlabel("Number of batches")
 
 	plt.ylabel(get_results_label(results_type, cummulative_plot))
