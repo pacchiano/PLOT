@@ -303,7 +303,7 @@ if __name__ == "__main__":
 
 	## TODO: this should ideally be larger than max(num_experiments, len(hyperparams))
 	colors = list(matplotlib.colors.TABLEAU_COLORS.keys())
-
+	#IPython.embed()
 
 
 	repres_layers_name = get_architecture_name(representation_layer_sizes)
@@ -376,7 +376,7 @@ if __name__ == "__main__":
 
 		for hyperparam in hyperparams:
 			plot_base(algo_type_key, dataset, "instantaneous_regrets", num_batches, batch_size, results_dictionary, 
-				hyperparam, colors, averaging_window, representation_layer_sizes, cummulative_plot = True)
+				hyperparam, averaging_window, representation_layer_sizes, cummulative_plot = True)
 
 
 		for split in [True, False]:

@@ -184,7 +184,7 @@ def get_results_label(results_type, cummulative_plot):
 	return label
 
 def plot_base(algo_name, dataset, results_type, num_batches, batch_size, 
-	results_dictionary, hyperparam, colors, averaging_window, representation_layer_sizes, 
+	results_dictionary, hyperparam, averaging_window, representation_layer_sizes, 
 	cummulative_plot = True, sqrt_scaled = True):
 	
 	Ts = (np.arange(num_batches/averaging_window)+1)*averaging_window
@@ -257,13 +257,13 @@ def plot_base(algo_name, dataset, results_type, num_batches, batch_size,
 		
 
 
-		plt.plot(Ts, plot_data, color = colors[color_index],  label = "exp{}".format(i+1))
+		plt.plot(Ts, plot_data, color = 'blue')
 		color_index += 1
 	plt.xlabel("Number of batches")
 
 	plt.ylabel(get_results_label(results_type, cummulative_plot))
 	# plt.legend(bbox_to_anchor=(1.05, 1), fontsize=8, loc="upper left")
-	plt.legend(fontsize=8, loc="upper left")
+	#plt.legend(fontsize=8, loc="upper left")
 	plt.title("Regrets {} {}".format(algo_name, hyperparam))
 	filename = "{}/bases_{}_cum_{}-{}-{}_{}_T{}_B{}_N_{}.png".format(logging_dir,results_type, cummulative_plot, 
 			algo_name, hyperparam, dataset, num_batches, batch_size, repres_layers_name)
